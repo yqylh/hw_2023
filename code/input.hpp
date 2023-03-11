@@ -74,8 +74,13 @@ void solveFrame() {
     printf("%d\n", nowTime);
     TESTOUTPUT(fout << nowTime << std::endl;)
 
+    std::fill(canBuy, canBuy + MAX_Item_Type_Num + 1, 0);
     for (int i = 0; i <= worktableNum; i++) {
+        worktables[i].checkCanBuy();
         // TESTOUTPUT(worktables[i].outputTest();)
+    }
+    for (int i = 0; i <= robotNum; i++) {
+        robots[i].checkCanBuy();
     }
     for (int i = 0; i <= robotNum; i++) {
         robots[i].action();

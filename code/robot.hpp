@@ -87,6 +87,7 @@ struct Robot{
         // 机器人没有携带原材料
         if (worktableId == -1) return; // 机器人不在工作台附近
         // 机器人正在工作台附近
+        if (canBuy[createMap[worktables[worktableId].type]] <= 0) return; // 这种物品已经足够多了
         if (worktables[worktableId].output == true && money >= buyMoneyMap[createMap[worktables[worktableId].type]]) {
             TESTOUTPUT(fout << "buy " << id << std::endl;)
             printf("buy %d\n", id);
@@ -98,7 +99,7 @@ struct Robot{
         std::vector<std::pair<int, double>> distance;
         // 找到所有可以买的工作台
         for (int i = 0; i <= worktableNum; i++) {
-            if (worktables[i].output == true && money >= buyMoneyMap[createMap[worktables[i].type]]) {
+            if (worktables[i].output == true && money >= buyMoneyMap[createMap[worktables[i].type]] && canBuy[createMap[worktables[i].type]] > 0) {
                 distance.push_back(std::make_pair(i, (x - worktables[i].x) * (x - worktables[i].x) + (y - worktables[i].y) * (y - worktables[i].y)));
             }
         }
@@ -265,6 +266,11 @@ struct Robot{
         Sell();
         Buy();
         FindMove();
+    }
+    void checkCanBuy() {
+        if (bringId != 0) {
+            canBuy[bringId]--;
+        }
     }
 };
 

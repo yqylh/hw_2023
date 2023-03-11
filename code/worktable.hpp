@@ -52,6 +52,15 @@ struct Worktable{
         }
         TESTOUTPUT(fout << std::endl;)
     }
+    void checkCanBuy() {
+        for (int i = 1; i <= MAX_Item_Type_Num; i++) {
+            if (sellSet.find(std::make_pair(i, this->type)) != sellSet.end()) {
+                if (this->inputId[i] == 0) {
+                    canBuy[i]++;
+                }
+            }
+        }
+    }
 };
 Worktable worktables[MAX_Worktable_Num];
 

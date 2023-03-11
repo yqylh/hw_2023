@@ -39,12 +39,12 @@ std::map<int, int> buyMoneyMap{
     std::pair<int, int>(1, 3000), std::pair<int, int>(2, 4400), std::pair<int, int>(3, 5800),
     std::pair<int, int>(4, 15400), std::pair<int, int>(5, 17200), std::pair<int, int>(6, 19200),
     std::pair<int, int>(7, 76000) 
-};// 可以购买的物品, 对于 <x,y>, x为物品类型, y为金钱, 即可以在y金钱的情况下购买x类型的物品
+};// 购买价格, 对于 <x,y>, x为物品类型, y为金钱, 即可以在y金钱的情况下购买x类型的物品
 std::map<int, int> sellMoneyMap{
     std::pair<int, int>(1, 6000), std::pair<int, int>(2, 7600), std::pair<int, int>(3, 9200),
     std::pair<int, int>(4, 22500), std::pair<int, int>(5, 25000), std::pair<int, int>(6, 27500),
     std::pair<int, int>(7, 105000) 
-};// 可以卖出的物品, 对于 <x,y>, x为物品类型, y为金钱, 即可以在y金钱的情况下卖出x类型的物品
+};// 卖出价格, 对于 <x,y>, x为物品类型, y为金钱, 即可以在y金钱的情况下卖出x类型的物品
 
 
 
@@ -52,6 +52,7 @@ int robotNum = -1; // 当前机器人标号,实际数量-1, 0-robotNum
 int worktableNum = -1; // 当前工作台标号,实际数量-1, 0-worktableNum
 int money = 0; // 当前金钱
 int nowTime = 0; // 当前帧数
+int canBuy[MAX_Item_Type_Num + 1] = {0}; // 当前可以购买的物品数
 #ifdef EBUG
     std::ofstream fout("output.txt"); // 测试用输出
     void quit() {
