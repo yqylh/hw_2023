@@ -1,0 +1,7 @@
+# 文件夹
+.vscode/
+judge-1/
+upload/*
+
+*.txt
+*.zip
