@@ -147,24 +147,8 @@ struct Robot{
         });
         // 如果没有可以卖的工作台
         if (distance.size() == 0) {
-            std::vector<std::pair<int, int>> timeLess;
-            // 那么就找一个可以卖企鹅生产剩余时间最少的工作台
-            for (int i = 0; i <= worktableNum; i++) {
-                if (sellSet.find(std::make_pair(bringId, worktables[i].type)) != sellSet.end()) {
-                    timeLess.push_back(std::make_pair(i, worktables[i].remainTime));
-                }
-            }
-            std::sort(timeLess.begin(), timeLess.end(), [](std::pair<int, int> a, std::pair<int, int> b) {
-                return a.second < b.second;
-            });
-            // 如果这个工作台这回合没人去
-            for (auto & i : timeLess) {
-                if (worktables[i.first].anyOneChooseSell[bringId] != nowTime) {
-                    worktables[i.first].anyOneChooseSell[bringId] = nowTime;
-                    return i.first;
-                }
-            }
-            return timeLess[0].first;
+            // todo 选一个生产剩余时间最少 且 材料满了
+            return -1;
         }
         // 如果这个工作台这回合没人去
         for (auto & i : distance) {
@@ -256,6 +240,11 @@ struct Robot{
         TESTOUTPUT(fout << "rotate " << id << " " << rotate << std::endl;)
         printf("rotate %d %lf\n", id, rotate);
     }
+    // 如果没地方卖,就销毁
+    void Destroy() {
+        TESTOUTPUT(fout << "destroy " << id << std::endl;)
+        printf("destroy %d\n", id);
+    }
     // 查找下一个目的地
     void FindMove() {
         int worktableTogo = -1;
@@ -263,6 +252,10 @@ struct Robot{
             worktableTogo = FindBuy();
         } else { // 找地方去卖
             worktableTogo = FindSell();
+            if (worktableTogo == -1) { // 如果没有可以卖的地方
+                Destroy();
+                worktableTogo = FindBuy(); // 找地方去买
+            }
         }
         TESTOUTPUT(fout << "robot" << id << " want-go " << worktableTogo << " type=" << worktables[worktableTogo].type << std::endl;)
         Move(worktableTogo);
