@@ -151,6 +151,15 @@ struct Robot{
             // todo 选一个生产剩余时间最少 且 材料满了
             return -1;
         }
+        // 如果这个工作台这回合没人去 且 这个工作台的材料不满
+        for (auto & i : distance) {
+            if (worktables[i.first].isWaiting == true) {
+                if (worktables[i.first].anyOneChooseSell[bringId] != nowTime) {
+                    worktables[i.first].anyOneChooseSell[bringId] = nowTime;
+                    return i.first;
+                }
+            }
+        }
         // 如果这个工作台这回合没人去
         for (auto & i : distance) {
             if (worktables[i.first].anyOneChooseSell[bringId] != nowTime) {

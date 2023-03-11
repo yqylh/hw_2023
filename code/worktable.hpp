@@ -12,7 +12,7 @@ struct Worktable{
     int inputId[MAX_Item_Type_Num + 1]; // 工作台的输入物品的 id, 0 表示没有
     int anyOneChooseBuy; // 是否有人选择了这个工作台
     int anyOneChooseSell[MAX_Item_Type_Num + 1]; // 是否有人选择了这个工作台卖出
-
+    bool isWaiting; // 是否在等待
     Worktable() {
         this->id = -1;
         this->x = -1;
@@ -53,12 +53,34 @@ struct Worktable{
         TESTOUTPUT(fout << std::endl;)
     }
     void checkCanBuy() {
+        // 检查对哪些物品有需求
         for (int i = 1; i <= MAX_Item_Type_Num; i++) {
             if (sellSet.find(std::make_pair(i, this->type)) != sellSet.end()) {
                 if (this->inputId[i] == 0) {
                     canBuy[i]++;
                 }
             }
+        }
+    }
+    void checkWait() {
+        int all = 0;
+        int have = 0;
+        // 检查是否在等待多个
+        for (int i = 1; i <= MAX_Item_Type_Num; i++) {
+            if (sellSet.find(std::make_pair(i, this->type)) != sellSet.end()) {
+                all++;
+                if (this->inputId[i] == 1) {
+                    have++;
+                }
+            }
+        }
+        // // 这个机器至少有两个输入,且已经有一个了
+        // if (all > have && have >= 1) {
+        // 这个机器至少有两个输入
+        if (all >= 2) {
+            this->isWaiting = true;
+        } else {
+            this->isWaiting = false;
         }
     }
 };
