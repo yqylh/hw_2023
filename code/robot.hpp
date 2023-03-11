@@ -189,36 +189,72 @@ struct Robot{
         if (vec1[0] * vec2[1] - vec1[1] * vec2[0] < 0) {
             angle = -angle;
         }
-        // 考虑 角度和速度
-        // 考虑 速度和距离
-        // 考虑 角度和距离
-        double speed = 1.2;
-        if (std::abs(angle - direction) < M_PI / 15) {
-            speed = 0.8;
-            TESTOUTPUT(fout << "forward " << id << " 6" << std::endl;)
-            printf("forward %d 6\n", id);
-        } else {
-            TESTOUTPUT(fout << "forward " << id << " 1" << std::endl;)
-            printf("forward %d 1\n", id);
-        }
-
+        /*
+            决定一下转向的大小
+        */
+        double rotate = 0;
         if (angle > direction) {
-            if (std::abs(angle - direction) < M_PI) {
-                TESTOUTPUT(fout << "rotate " << id << " " << std::abs(angle - direction) * 1.2 << std::endl;)
-                printf("rotate %d %lf\n", id, std::abs(angle - direction) * 1.2); // 正数 逆时针转
-            } else {
-                TESTOUTPUT(fout << "rotate " << id << " " << -(M_PI*2-std::abs(angle - direction)) * 1.2 << std::endl;)
-                printf("rotate %d %lf\n", id, -(M_PI*2-std::abs(angle - direction)) * 1.2); // 负数 顺时针转 大小是2pi-差值
+            if (std::abs(angle - direction) < M_PI) { // 如果角度差小于180°
+                rotate = std::abs(angle - direction); // 就直接逆时针转过去
+            } else { // 如果角度差大于180°
+                rotate = -(M_PI*2-std::abs(angle - direction)); // 就顺时针转过去
             }
-        } else {
-            if (std::abs(angle - direction) < M_PI) {
-                TESTOUTPUT(fout << "rotate " << id << " " << -(std::abs(angle - direction)) * 1.2 << std::endl;)
-                printf("rotate %d %lf\n", id, -(std::abs(angle - direction)) * 1.2); // 负数 顺时针转
-            } else {
-                TESTOUTPUT(fout << "rotate " << id << " " << M_PI*2-std::abs(angle - direction) * 1.2 << std::endl;)
-                printf("rotate %d %lf\n", id, M_PI*2-std::abs(angle - direction) * 1.2); // 正数 逆时针转 大小是2pi-差值
+        } else { 
+            if (std::abs(angle - direction) < M_PI) { // 如果角度差小于180°
+                rotate = -(std::abs(angle - direction)); // 就直接顺时针转过去
+            } else { // 如果角度差大于180°
+                rotate = M_PI*2-std::abs(angle - direction); // 就逆时针转过去
             }
         }
+        double absRotate = std::abs(rotate);
+        double length = sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1]);
+        /*
+            决定一下速度
+        */
+        double speed = 0;
+        // 由于判定范围是 0.4m,所以如果度数满足这个条件, 就直接冲过去
+        if (absRotate < asin(0.4 / length)) {
+            speed = 6;
+        // } else if (absRotate < M_PI / 18) {
+        //     // 如果度数小于10°, 就直接加速冲过去
+        //     speed = 6;
+        // } else if (absRotate < M_PI / 4) {
+        //     // 如果度数大于10°小于 45° 距离大于10 就加速冲过去, 不然先转过去
+        //     if (length > 10) {
+        //         speed = 6;
+        //     } else {
+        //         speed = 0.5;
+        //     }
+        } else if (absRotate < M_PI / 4) {
+            // 如果度数大于x小于45° 
+            // 如果转向时间的路程不会更长,就可以走
+            if (absRotate > 0.0001)
+                speed = length * 50 / (absRotate / 3.6 + 1);
+            if (speed > 6) {
+                speed = 6;
+            }
+        } else if (absRotate < M_PI / 2) {
+            // 如果度数大于45°小于 90°
+            speed = 0;
+        } else {
+            // 如果度数大于90°, 就先倒退转过去
+            speed = -2;
+        }
+        TESTOUTPUT(fout << "forward " << id << " " << speed << std::endl;)
+        printf("forward %d %lf\n", id, speed);
+        /*
+            由于转向决定的是速度,所以 1s 最多转3.6°
+            如果转向大于3.6°, 就直接最大速度转向
+            如果转向小于3.6°, 就按照比例转向
+        */
+        if (absRotate < M_PI / 50) {
+            double Ratio = absRotate / (M_PI / 50); 
+            rotate = rotate / absRotate * M_PI * Ratio;
+        } else {
+            rotate = rotate / absRotate * M_PI;
+        }
+        TESTOUTPUT(fout << "rotate " << id << " " << rotate << std::endl;)
+        printf("rotate %d %lf\n", id, rotate);
     }
     // 查找下一个目的地
     void FindMove() {
@@ -228,6 +264,7 @@ struct Robot{
         } else { // 找地方去卖
             worktableTogo = FindSell();
         }
+        TESTOUTPUT(fout << "robot" << id << " want-go " << worktableTogo << " type=" << worktables[worktableTogo].type << std::endl;)
         Move(worktableTogo);
     }
     // 机器人具体的行为

@@ -53,15 +53,12 @@ bool inputFrame() {
 
         worktables[i].output = outputStatus;
         // 处理原材料对应的信息
-        int bitnum = 0;
-        while (inputStatus) {
-            if (inputStatus & 1) {
+        for (int bitnum = 1; bitnum <= MAX_Item_Type_Num; bitnum++) {
+            if (inputStatus & (1 << bitnum)) {
                 worktables[i].inputId[bitnum] = 1;
             } else {
                 worktables[i].inputId[bitnum] = 0;
             }
-            inputStatus >>= 1;
-            bitnum++;
         }
     }
     // 处理机器人的信息
@@ -77,12 +74,12 @@ void solveFrame() {
     printf("%d\n", nowTime);
     TESTOUTPUT(fout << nowTime << std::endl;)
 
+    for (int i = 0; i <= worktableNum; i++) {
+        // TESTOUTPUT(worktables[i].outputTest();)
+    }
     for (int i = 0; i <= robotNum; i++) {
         robots[i].action();
-        TESTOUTPUT(robots[i].outputTest();) 
-    }
-    for (int i = 0; i <= worktableNum; i++) {
-        TESTOUTPUT(worktables[i].outputTest();)
+        // TESTOUTPUT(robots[i].outputTest();) 
     }
 
     puts("OK");
