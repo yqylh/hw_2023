@@ -182,7 +182,10 @@ struct Robot{
         }
         // 如果这个工作台这回合没人去 且 按照优先级高到低进行
         for (int priority = 5; priority >= 2; priority--) {
+            int index;
             for (auto & i : distance) {
+                index++;
+                if (index > distance.size() / 3) break;
                 if (worktables[i.first].waitPriority == priority) {
                     if (worktables[i.first].anyOneChooseSell[bringId] != nowTime) {
                         worktables[i.first].anyOneChooseSell[bringId] = nowTime;
