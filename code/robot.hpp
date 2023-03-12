@@ -230,11 +230,8 @@ struct Robot{
             }
         }
         int detecteStatus = DetecteCollision();
-        if (detecteStatus == 1) {
-            rotate += M_PI / 6;
-        }
-        if (detecteStatus == -1) {
-            rotate -= M_PI / 6;
+        if (detecteStatus != 0) {
+            rotate += (M_PI / 36) * detecteStatus;
         }
 
         double absRotate = std::abs(rotate);
@@ -278,11 +275,13 @@ struct Robot{
             如果转向大于3.6°, 就直接最大速度转向
             如果转向小于3.6°, 就按照比例转向
         */
-        if (absRotate < M_PI / 50) {
-            double Ratio = absRotate / (M_PI / 50); 
-            rotate = rotate / absRotate * M_PI * Ratio;
-        } else {
-            rotate = rotate / absRotate * M_PI;
+        if (absRotate > 0.0001){
+            if (absRotate < M_PI / 50) {
+                double Ratio = absRotate / (M_PI / 50); 
+                rotate = rotate / absRotate * M_PI * Ratio;
+            } else {
+                rotate = rotate / absRotate * M_PI;
+            }
         }
         TESTOUTPUT(fout << "rotate " << id << " " << rotate << std::endl;)
         printf("rotate %d %lf\n", id, rotate);
@@ -366,11 +365,13 @@ int Robot::DetecteCollision() {
         }
         int otherX = robots[i].x;
         int otherY = robots[i].y;
-        if (sqrt((nowX - otherX) * (nowX - otherX) + (nowY - otherY) * (nowY - otherY)) <= radii_now + radii_other + upStep * 4) {
-            if (i < id) {
-                return 1;
-            } else {
-                return -1;
+        for (int step = 1; step <= 9; step++) {
+            if (sqrt((nowX - otherX) * (nowX - otherX) + (nowY - otherY) * (nowY - otherY)) <= radii_now + radii_other + upStep * step) {
+                if (i < id) {
+                    return (9 - step + 1);
+                } else {
+                    return -(9 - step + 1);
+                }
             }
         }
     }
