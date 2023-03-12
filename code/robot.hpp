@@ -116,6 +116,7 @@ struct Robot{
                 worktables[worktableId].dontBuy = true;
                 return;
             }
+            canBuy[createMap[worktables[worktableId].type]]--;
             TESTOUTPUT(fout << "buy " << id << std::endl;)
             printf("buy %d\n", id);
             bringId = worktables[worktableId].type;
@@ -139,7 +140,7 @@ struct Robot{
         // 那么就找一个生产剩余时间最少的工作台(>0)
         if (distance.size() == 0) {
             std::vector<std::pair<int, int>> timeLess;
-            for (int i = 0; i <= worktableNum; i++) /*if (worktables[i].remainTime != -1)*/{
+            for (int i = 0; i <= worktableNum; i++) if (worktables[i].remainTime != -1) { // 真的在生产
                 timeLess.push_back(std::make_pair(i, worktables[i].remainTime));
             }
             std::sort(timeLess.begin(), timeLess.end(), [](std::pair<int, int> a, std::pair<int, int> b) {
@@ -179,7 +180,6 @@ struct Robot{
         });
         // 如果没有可以卖的工作台
         if (distance.size() == 0) {
-            // todo 选一个生产剩余时间最少 且 材料满了
             return -1;
         }
         // 如果这个工作台这回合没人去 且 按照优先级高到低进行
@@ -198,7 +198,7 @@ struct Robot{
         }
         return distance[0].first;
     }
-    bool DetecteCollision();
+    int DetecteCollision();
 
     void Move(int worktableTogo) {
         std::vector<double> vec1 = {1, 0};
@@ -262,6 +262,10 @@ struct Robot{
             // 如果度数大于90°, 就先倒退转过去
             speed = -2;
         }
+        int detecteStatus = DetecteCollision();
+        if (detecteStatus == 2) {
+            speed = -2;
+        }
         TESTOUTPUT(fout << "forward " << id << " " << speed << std::endl;)
         printf("forward %d %lf\n", id, speed);
         /*
@@ -275,8 +279,12 @@ struct Robot{
         } else {
             rotate = rotate / absRotate * M_PI;
         }
-        if (DetecteCollision()) {
-            rotate = -rotate;
+        if (detecteStatus == 1) {
+            if (std::abs(rotate) > M_PI / 2) {
+                rotate = -rotate;
+            } else {
+                rotate = rotate / std::abs(rotate) * M_PI;
+            }
         }
         TESTOUTPUT(fout << "rotate " << id << " " << rotate << std::endl;)
         printf("rotate %d %lf\n", id, rotate);
@@ -286,23 +294,23 @@ struct Robot{
         /**
          * 特殊情况，有个工作台快做完了，而且材料全了（没啥用，暂时弃用）
         */
-        // for (auto i : worktables) {
-        //     if (i.remainTime > 0 && sellSet.find(std::make_pair(bringId, i.type)) != sellSet.end()) {
-        //         int all = 0;
-        //         int have = 0;
-        //         for (int item = 1; item <= MAX_Item_Type_Num; item++) {
-        //             if (sellSet.find(std::make_pair(item, i.type)) != sellSet.end()) {
-        //                 all++;
-        //                 if (i.inputId[item] > 0) {
-        //                     have++;
-        //                 }
-        //             }
-        //         }
-        //         if (have == all) {
-        //             return i.id;
-        //         }
-        //     }
-        // }
+        for (auto i : worktables) {
+            if (i.remainTime > 0 && sellSet.find(std::make_pair(bringId, i.type)) != sellSet.end()) {
+                int all = 0;
+                int have = 0;
+                for (int item = 1; item <= MAX_Item_Type_Num; item++) {
+                    if (sellSet.find(std::make_pair(item, i.type)) != sellSet.end()) {
+                        all++;
+                        if (i.inputId[item] > 0) {
+                            have++;
+                        }
+                    }
+                }
+                if (have == all) {
+                    return i.id;
+                }
+            }
+        }
         TESTOUTPUT(fout << "destroy " << id << std::endl;)
         printf("destroy %d\n", id);
         return -1;
@@ -341,29 +349,33 @@ struct Robot{
 
 Robot robots[MAX_Robot_Num];
 
-bool Robot::DetecteCollision() {
-    // double aStep = 0.12;
-    // double radii_now;
-    // if (bringId == -1) {
-    //     radii_now = 0.45 + aStep;
-    // } else {
-    //     radii_now = 0.53 + aStep;
-    // }
-    // int nowX = x;
-    // int nowY = y;
-    // for (int i = 0; i <= robotNum; i++) if (i != id){
-    //     double radii_other;
-    //     if (robots[i].bringId == -1) {
-    //         radii_other = 0.45 + aStep;
-    //     } else {
-    //         radii_other = 0.53 + aStep;
-    //     }
-    //     int otherX = robots[i].x;
-    //     int otherY = robots[i].y;
-    //     if (sqrt((nowX - otherX) * (nowX - otherX) + (nowY - otherY) * (nowY - otherY)) <= radii_now + radii_other + aStep * 3) {
-    //         return true;
-    //     }
-    // }
-    return false;
+int Robot::DetecteCollision() {
+    double upStep = 0.12;
+    double downStep = 0.02;
+    double radii_now;
+    if (bringId == -1) {
+        radii_now = 0.45;
+    } else {
+        radii_now = 0.53;
+    }
+    int nowX = x;
+    int nowY = y;
+    for (int i = 0; i <= robotNum; i++) if (i != id){
+        double radii_other;
+        if (robots[i].bringId == -1) {
+            radii_other = 0.45;
+        } else {
+            radii_other = 0.53;
+        }
+        int otherX = robots[i].x;
+        int otherY = robots[i].y;
+        if (sqrt((nowX - otherX) * (nowX - otherX) + (nowY - otherY) * (nowY - otherY)) <= radii_now + radii_other + upStep + downStep) {
+            return 2;
+        }
+        if (sqrt((nowX - otherX) * (nowX - otherX) + (nowY - otherY) * (nowY - otherY)) <= radii_now + radii_other + upStep * 4) {
+            return 1;
+        }
+    }
+    return 0;
 }
 #endif
