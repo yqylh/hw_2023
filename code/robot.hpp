@@ -136,10 +136,10 @@ struct Robot{
             return a.second < b.second;
         });
         // 如果没有可以买的工作台
-        // 那么就找一个生产剩余时间最少的工作台
+        // 那么就找一个生产剩余时间最少的工作台(>0)
         if (distance.size() == 0) {
             std::vector<std::pair<int, int>> timeLess;
-            for (int i = 0; i <= worktableNum; i++) {
+            for (int i = 0; i <= worktableNum; i++) /*if (worktables[i].remainTime != -1)*/{
                 timeLess.push_back(std::make_pair(i, worktables[i].remainTime));
             }
             std::sort(timeLess.begin(), timeLess.end(), [](std::pair<int, int> a, std::pair<int, int> b) {
@@ -152,6 +152,8 @@ struct Robot{
                     return i.first;
                 }
             }
+            // 如果一个都没找到可以去的,就去最中间
+            if (timeLess.size() == 0) return worktableNum / 2;
             return timeLess[0].first;
         }
         // 如果这个工作台这回合没人去买
@@ -196,9 +198,8 @@ struct Robot{
         }
         return distance[0].first;
     }
-    bool DetecteCollision() {
-        return false;
-    }
+    bool DetecteCollision();
+
     void Move(int worktableTogo) {
         std::vector<double> vec1 = {1, 0};
         std::vector<double> vec2 = {worktables[worktableTogo].x - x, worktables[worktableTogo].y - y};
@@ -274,13 +275,37 @@ struct Robot{
         } else {
             rotate = rotate / absRotate * M_PI;
         }
+        if (DetecteCollision()) {
+            rotate = -rotate;
+        }
         TESTOUTPUT(fout << "rotate " << id << " " << rotate << std::endl;)
         printf("rotate %d %lf\n", id, rotate);
     }
     // 如果没地方卖,就销毁
-    void Destroy() {
+    int Destroy() {
+        /**
+         * 特殊情况，有个工作台快做完了，而且材料全了（没啥用，暂时弃用）
+        */
+        // for (auto i : worktables) {
+        //     if (i.remainTime > 0 && sellSet.find(std::make_pair(bringId, i.type)) != sellSet.end()) {
+        //         int all = 0;
+        //         int have = 0;
+        //         for (int item = 1; item <= MAX_Item_Type_Num; item++) {
+        //             if (sellSet.find(std::make_pair(item, i.type)) != sellSet.end()) {
+        //                 all++;
+        //                 if (i.inputId[item] > 0) {
+        //                     have++;
+        //                 }
+        //             }
+        //         }
+        //         if (have == all) {
+        //             return i.id;
+        //         }
+        //     }
+        // }
         TESTOUTPUT(fout << "destroy " << id << std::endl;)
         printf("destroy %d\n", id);
+        return -1;
     }
     // 查找下一个目的地
     void FindMove() {
@@ -290,8 +315,12 @@ struct Robot{
         } else { // 找地方去卖
             worktableTogo = FindSell();
             if (worktableTogo == -1) { // 如果没有可以卖的地方
-                Destroy();
-                worktableTogo = FindBuy(); // 找地方去买
+                int haveDestory = Destroy();
+                if (haveDestory == -1) {
+                    worktableTogo = FindBuy(); // 找地方去买
+                } else {
+                    worktableTogo = haveDestory;
+                }
             }
         }
         TESTOUTPUT(fout << "robot" << id << " want-go " << worktableTogo << " type=" << worktables[worktableTogo].type << std::endl;)
@@ -312,4 +341,29 @@ struct Robot{
 
 Robot robots[MAX_Robot_Num];
 
+bool Robot::DetecteCollision() {
+    // double aStep = 0.12;
+    // double radii_now;
+    // if (bringId == -1) {
+    //     radii_now = 0.45 + aStep;
+    // } else {
+    //     radii_now = 0.53 + aStep;
+    // }
+    // int nowX = x;
+    // int nowY = y;
+    // for (int i = 0; i <= robotNum; i++) if (i != id){
+    //     double radii_other;
+    //     if (robots[i].bringId == -1) {
+    //         radii_other = 0.45 + aStep;
+    //     } else {
+    //         radii_other = 0.53 + aStep;
+    //     }
+    //     int otherX = robots[i].x;
+    //     int otherY = robots[i].y;
+    //     if (sqrt((nowX - otherX) * (nowX - otherX) + (nowY - otherY) * (nowY - otherY)) <= radii_now + radii_other + aStep * 3) {
+    //         return true;
+    //     }
+    // }
+    return false;
+}
 #endif
