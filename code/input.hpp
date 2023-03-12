@@ -78,18 +78,11 @@ void solveFrame() {
     for (int i = 0; i <= worktableNum; i++) {
         worktables[i].checkCanBuy();
         worktables[i].checkWait();
-        TESTOUTPUT(worktables[i].outputTest();)
+        // TESTOUTPUT(worktables[i].outputTest();)
     }
     for (int i = 0; i <= robotNum; i++) {
         robots[i].checkCanBuy();
     }
-    TESTOUTPUT(
-        for (int i = 1; i <= MAX_Item_Type_Num; i++) {
-            if (canBuy[i]) {
-                fout << "canBuy " << i << " " << canBuy[i] << std::endl;
-            }
-        }
-    )
     for (int i = 0; i <= robotNum; i++) {
         robots[i].action();
         // TESTOUTPUT(robots[i].outputTest();) 

@@ -116,7 +116,8 @@ struct Robot{
                 worktables[worktableId].dontBuy = true;
                 return;
             }
-            canBuy[createMap[worktables[worktableId].type]]--;
+            // 未启用功能
+            // canBuy[createMap[worktables[worktableId].type]]--;
             TESTOUTPUT(fout << "buy " << id << std::endl;)
             printf("buy %d\n", id);
             bringId = worktables[worktableId].type;
@@ -140,7 +141,7 @@ struct Robot{
         // 那么就找一个生产剩余时间最少的工作台(>0)
         if (distance.size() == 0) {
             std::vector<std::pair<int, int>> timeLess;
-            for (int i = 0; i <= worktableNum; i++) if (worktables[i].remainTime != -1) { // 真的在生产
+            for (int i = 0; i <= worktableNum; i++) /*if (worktables[i].remainTime != -1)*/ { // 真的在生产 !未启用功能
                 timeLess.push_back(std::make_pair(i, worktables[i].remainTime));
             }
             std::sort(timeLess.begin(), timeLess.end(), [](std::pair<int, int> a, std::pair<int, int> b) {
@@ -228,6 +229,14 @@ struct Robot{
                 rotate = M_PI*2-std::abs(angle - direction); // 就逆时针转过去
             }
         }
+        int detecteStatus = DetecteCollision();
+        if (detecteStatus == 1) {
+            rotate += M_PI / 6;
+        }
+        if (detecteStatus == -1) {
+            rotate -= M_PI / 6;
+        }
+
         double absRotate = std::abs(rotate);
         double length = sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1]);
         /*
@@ -262,10 +271,6 @@ struct Robot{
             // 如果度数大于90°, 就先倒退转过去
             speed = -2;
         }
-        int detecteStatus = DetecteCollision();
-        if (detecteStatus == 2) {
-            speed = -2;
-        }
         TESTOUTPUT(fout << "forward " << id << " " << speed << std::endl;)
         printf("forward %d %lf\n", id, speed);
         /*
@@ -278,13 +283,6 @@ struct Robot{
             rotate = rotate / absRotate * M_PI * Ratio;
         } else {
             rotate = rotate / absRotate * M_PI;
-        }
-        if (detecteStatus == 1) {
-            if (std::abs(rotate) > M_PI / 2) {
-                rotate = -rotate;
-            } else {
-                rotate = rotate / std::abs(rotate) * M_PI;
-            }
         }
         TESTOUTPUT(fout << "rotate " << id << " " << rotate << std::endl;)
         printf("rotate %d %lf\n", id, rotate);
@@ -351,7 +349,6 @@ Robot robots[MAX_Robot_Num];
 
 int Robot::DetecteCollision() {
     double upStep = 0.12;
-    double downStep = 0.02;
     double radii_now;
     if (bringId == -1) {
         radii_now = 0.45;
@@ -360,7 +357,7 @@ int Robot::DetecteCollision() {
     }
     int nowX = x;
     int nowY = y;
-    for (int i = 0; i <= robotNum; i++) if (i != id){
+    for (int i = 0; i <= robotNum; i++) if (i != id) {
         double radii_other;
         if (robots[i].bringId == -1) {
             radii_other = 0.45;
@@ -369,11 +366,12 @@ int Robot::DetecteCollision() {
         }
         int otherX = robots[i].x;
         int otherY = robots[i].y;
-        if (sqrt((nowX - otherX) * (nowX - otherX) + (nowY - otherY) * (nowY - otherY)) <= radii_now + radii_other + upStep + downStep) {
-            return 2;
-        }
         if (sqrt((nowX - otherX) * (nowX - otherX) + (nowY - otherY) * (nowY - otherY)) <= radii_now + radii_other + upStep * 4) {
-            return 1;
+            if (i < id) {
+                return 1;
+            } else {
+                return -1;
+            }
         }
     }
     return 0;
