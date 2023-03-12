@@ -14,6 +14,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
+#include <climits>
 
 struct Robot{
     int id; // 机器人的 id
@@ -81,6 +82,27 @@ struct Robot{
             bringId = 0;
         }
     }
+    // 检查卖出去最少需要多少时间
+    int minSellTime(int worktableId) {
+        // 找到所有可以卖的工作台
+        double minDistance = INT_MAX;
+        int minId = -1;
+        int sellID = createMap[worktables[worktableId].type];
+        for (int i = 0; i <= worktableNum; i++) {
+            // 对于每一个记录一下距离
+            if (worktables[i].inputId[sellID] == 0 && sellSet.find(std::make_pair(sellID, worktables[i].type)) != sellSet.end()) {
+                double distance = sqrt((x - worktables[i].x) * (x - worktables[i].x) + (y - worktables[i].y) * (y - worktables[i].y));
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    minId = i;
+                }
+            }
+        }
+        if (minId == -1) return MAX_TIME;
+        // 0.12 是机器人的一帧的速度
+        int minTime = minDistance / 0.12;
+        return minTime;
+    }
     // 买商品的函数
     void Buy() {
         if (bringId != 0) return;// 机器人已经携带原材料
@@ -89,6 +111,11 @@ struct Robot{
         // 机器人正在工作台附近
         if (canBuy[createMap[worktables[worktableId].type]] <= 0) return; // 这种物品已经足够多了
         if (worktables[worktableId].output == true && money >= buyMoneyMap[createMap[worktables[worktableId].type]]) {
+            // 如果买了卖不出去
+            if (nowTime + 25 + minSellTime(worktableId) > MAX_TIME) {
+                worktables[worktableId].dontBuy = true;
+                return;
+            }
             TESTOUTPUT(fout << "buy " << id << std::endl;)
             printf("buy %d\n", id);
             bringId = worktables[worktableId].type;
@@ -99,7 +126,9 @@ struct Robot{
         std::vector<std::pair<int, double>> distance;
         // 找到所有可以买的工作台
         for (int i = 0; i <= worktableNum; i++) {
-            if (worktables[i].output == true && money >= buyMoneyMap[createMap[worktables[i].type]] && canBuy[createMap[worktables[i].type]] > 0) {
+            // 有生产的物品 && 买得起 && 还有可以买的
+            if (worktables[i].output == true && money >= buyMoneyMap[createMap[worktables[i].type]] 
+                && canBuy[createMap[worktables[i].type]] > 0 && worktables[i].dontBuy == false) {
                 distance.push_back(std::make_pair(i, (x - worktables[i].x) * (x - worktables[i].x) + (y - worktables[i].y) * (y - worktables[i].y)));
             }
         }

@@ -13,6 +13,7 @@ struct Worktable{
     int anyOneChooseBuy; // 是否有人选择了这个工作台
     int anyOneChooseSell[MAX_Item_Type_Num + 1]; // 是否有人选择了这个工作台卖出
     bool isWaiting; // 是否在等待
+    bool dontBuy; // 如果最后时间有限,不买了
     Worktable() {
         this->id = -1;
         this->x = -1;
@@ -25,6 +26,7 @@ struct Worktable{
             this->anyOneChooseSell[i] = 0;
         }
         this->anyOneChooseBuy = -1;
+        dontBuy = 0;
     }
     Worktable(int id, double x, double y, int type) {
         this->id = id;
@@ -38,6 +40,7 @@ struct Worktable{
             this->anyOneChooseSell[i] = 0;
         }
         this->anyOneChooseBuy = -1;
+        dontBuy = 0;
     }
     void outputTest() {
         TESTOUTPUT(fout << "Worktable id: " << id << std::endl;)
@@ -74,10 +77,12 @@ struct Worktable{
                 }
             }
         }
-        // // 这个机器至少有两个输入,且已经有一个了
+        // 这个机器至少有两个输入,且已经有一个了
         // if (all > have && have >= 1) {
         // 这个机器至少有两个输入
-        if (all >= 2) {
+        // if (all >= 2) {
+        // 这个机器有输入
+        if (all > 0) {
             this->isWaiting = true;
         } else {
             this->isWaiting = false;
