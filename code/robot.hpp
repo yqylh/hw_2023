@@ -103,6 +103,12 @@ struct Robot{
         int minTime = minDistance / 0.12;
         return minTime;
     }
+    double getDistance(int worktableId) {
+        return sqrt((x - worktables[worktableId].x) * (x - worktables[worktableId].x) + (y - worktables[worktableId].y) * (y - worktables[worktableId].y));
+    }
+    int getMinGoToTime(int worktableId) {
+        return getDistance(worktableId) / 0.12 + 25;
+    }
     // 买商品的函数
     void Buy() {
         if (bringId != 0) return;// 机器人已经携带原材料
@@ -143,6 +149,7 @@ struct Robot{
             std::vector<std::pair<int, int>> timeLess;
             for (int i = 0; i <= worktableNum; i++) /*if (worktables[i].remainTime != -1)*/ { // 真的在生产 !未启用功能
                 timeLess.push_back(std::make_pair(i, worktables[i].remainTime));
+                // timeLess.push_back(std::make_pair(i, getDistance(i)));
             }
             std::sort(timeLess.begin(), timeLess.end(), [](std::pair<int, int> a, std::pair<int, int> b) {
                 return a.second < b.second;
@@ -268,6 +275,9 @@ struct Robot{
             // 如果度数大于90°, 就先倒退转过去
             speed = -2;
         }
+        // if (detecteStatus == 9 || detecteStatus == -9) {
+        //     speed = detecteStatus / 9 * 2;
+        // }
         TESTOUTPUT(fout << "forward " << id << " " << speed << std::endl;)
         printf("forward %d %lf\n", id, speed);
         /*
