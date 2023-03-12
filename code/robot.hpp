@@ -180,20 +180,15 @@ struct Robot{
             // todo 选一个生产剩余时间最少 且 材料满了
             return -1;
         }
-        // 如果这个工作台这回合没人去 且 这个工作台的材料不满
-        for (auto & i : distance) {
-            if (worktables[i.first].isWaiting == true) {
-                if (worktables[i.first].anyOneChooseSell[bringId] != nowTime) {
-                    worktables[i.first].anyOneChooseSell[bringId] = nowTime;
-                    return i.first;
+        // 如果这个工作台这回合没人去 且 按照优先级高到低进行
+        for (int priority = 5; priority >= 2; priority--) {
+            for (auto & i : distance) {
+                if (worktables[i.first].waitPriority == priority) {
+                    if (worktables[i.first].anyOneChooseSell[bringId] != nowTime) {
+                        worktables[i.first].anyOneChooseSell[bringId] = nowTime;
+                        return i.first;
+                    }
                 }
-            }
-        }
-        // 如果这个工作台这回合没人去
-        for (auto & i : distance) {
-            if (worktables[i.first].anyOneChooseSell[bringId] != nowTime) {
-                worktables[i.first].anyOneChooseSell[bringId] = nowTime;
-                return i.first;
             }
         }
         return distance[0].first;

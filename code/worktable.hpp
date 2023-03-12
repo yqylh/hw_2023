@@ -12,7 +12,7 @@ struct Worktable{
     int inputId[MAX_Item_Type_Num + 1]; // 工作台的输入物品的 id, 0 表示没有
     int anyOneChooseBuy; // 是否有人选择了这个工作台
     int anyOneChooseSell[MAX_Item_Type_Num + 1]; // 是否有人选择了这个工作台卖出
-    bool isWaiting; // 是否在等待
+    int waitPriority; // 是否在等待
     bool dontBuy; // 如果最后时间有限,不买了
     Worktable() {
         this->id = -1;
@@ -77,16 +77,31 @@ struct Worktable{
                 }
             }
         }
-        // 这个机器至少有两个输入,且已经有一个了
-        // if (all > have && have >= 1) {
-        // 这个机器至少有两个输入
-        // if (all >= 2) {
-        // 这个机器有输入
-        if (all > 0) {
-            this->isWaiting = true;
-        } else {
-            this->isWaiting = false;
+        // 分四级
+        // 4 5 6 存在一个输入
+        if (all == 2 && have == 1) {
+            this->waitPriority = 4;
         }
+        // 7 存在两个输入
+        if (all == 3 && have == 2) {
+            this->waitPriority = 5;
+        }
+        // 7 存在一个输入
+        if (all == 3 && have >= 1) {
+            this->waitPriority = 4;
+        }
+        // 4 5 6 7 不存在输入
+        if (have == 0) {
+            this->waitPriority = 3;
+        }
+        // 8 || 9 结果最差, 将其设置为 0
+        if (all == 7 || all == 1) this->waitPriority = 2;
+        // // 不分级
+        // this->waitPriority = 2;
+        // // 分两级
+        // this->waitPriority = 3;
+        // // 8 || 9 结果最差, 将其设置为 0
+        // if (all == 7 || all == 1) this->waitPriority = 2;
     }
 };
 Worktable worktables[MAX_Worktable_Num];
