@@ -87,6 +87,18 @@ void solveFrame() {
         robots[i].action();
         // TESTOUTPUT(robots[i].outputTest();) 
     }
+    for (int i = 0; i <= robotNum; i++) {
+        robots[i].collisionRotate = -1;
+        robots[i].collisionSpeed = -1;
+    }
+    for (int i = 0; i <= robotNum; i++) {
+        for (int j = i + 1; j <= robotNum; j++) {
+            DetecteCollision(i, j);
+        }
+    }
+    for (int i = 0; i <= robotNum; i++) {
+        robots[i].Move();
+    }
 
     puts("OK");
     TESTOUTPUT(fout << "OK" << std::endl;)

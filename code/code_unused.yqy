@@ -1,0 +1,172 @@
+void DetecteCollision1(int robot1, int robot2) {
+    double robot1X = robots[robot1].x;
+    double robot1Y = robots[robot1].y;
+    double robot2X = robots[robot2].x;
+    double robot2Y = robots[robot2].y;
+    double worktable1X = worktables[robots[robot1].worktableTogo].x;
+    double worktable1Y = worktables[robots[robot1].worktableTogo].y;
+    double worktable2X = worktables[robots[robot2].worktableTogo].x;
+    double worktable2Y = worktables[robots[robot2].worktableTogo].y;
+    // 距离太远 即 跳转 45°(13hz)*0.12m/s * 2
+    if (Vector2D(robot1X - robot2X, robot1Y - robot2Y).length() > 13 * 0.12 * 2) {
+        return;
+    }
+    // 向量一
+    Vector2D vec1 = Vector2D(worktable1X - robot1X, worktable1Y - robot1Y);
+    // 向量二
+    Vector2D vec2 = Vector2D(worktable2X - robot2X, worktable2Y - robot2Y);
+    // 向量角度
+    double angle = vec1.angle(vec2);
+    // 一半角度的 sin
+    double halfAngleSin = sin(angle / 2);
+    // 碰撞范围
+    double collisionRange = 0.54 / halfAngleSin;
+
+    // TESTOUTPUT(fout << "robot" << robot1 << " and robot" << robot2 << " 距离符合" << std::endl;)
+    // 计算两条线段的交点
+    Vector2D intersectPoint = intersect(robot1X, robot1Y, worktable1X, worktable1Y, robot2X, robot2Y, worktable2X, worktable2Y, collisionRange);
+    if (intersectPoint.status == 0) {
+        TESTOUTPUT(
+            fout << "robot" << robot1 << ": (" << robot1X << "," << robot1Y << ") worktable: (" << worktable1X << "," << worktable1Y << ")" << std::endl;
+            fout << "robot" << robot2 << ": (" << robot2X << "," << robot2Y << ") worktable: (" << worktable2X << "," << worktable2Y << ")" << std::endl;
+        )
+        return;
+    }
+    // TESTOUTPUT(fout << "robot" << robot1 << " and robot" << robot2 << " 有交点" << std::endl;)
+
+    // 机器人一到碰撞交点的距离
+    double robot1ToIntersect = (intersectPoint-Vector2D(robot1X, robot1Y)).length();
+    // 机器人二到碰撞交点的距离
+    double robot2ToIntersect = (intersectPoint-Vector2D(robot2X, robot2Y)).length();
+    // 机器人一到碰撞范围的时间
+    double robot1ToCollisionTime = (robot1ToIntersect - collisionRange) / 0.12;
+    // 机器人二到碰撞范围的时间
+    double robot2ToCollisionTime = (robot2ToIntersect - collisionRange) / 0.12;
+
+    // 检测是否会碰撞 如果到达碰撞范围的时间差大于 行使碰撞范围的两倍距离的时间 , 则不会碰撞
+    if (std::abs(robot1ToCollisionTime - robot2ToCollisionTime) >= collisionRange * 2 / 0.12) {
+        return;
+    }
+    TESTOUTPUT(fout << "robot" << robot1 << " and robot" << robot2 << " will collision" << std::endl;)
+    // 会碰撞
+    int slowId = -1;
+    if (angle < M_PI / 4) {// 0~45
+        int status = Vector2D(robots[robot1].x, robots[robot1].y)^Vector2D(robots[robot2].x, robots[robot2].y);
+        status = status > 0 ? 1 : -1;
+        // 叉积 > 0 逆时针到达对方. < 0 顺时针到达对方
+        robots[robot1].collisionRotate = -status * M_PI;
+        robots[robot2].collisionRotate = status * M_PI;
+        robots[robot1].collisionSpeed = 6;
+        robots[robot2].collisionSpeed = 6;
+    } else if (angle > M_PI * 3 / 4) { // 135~180  ! 或许都是一个方向会比较好用
+        int status = Vector2D(robots[robot1].x, robots[robot1].y)^Vector2D(robots[robot2].x, robots[robot2].y);
+        status = status > 0 ? 1 : -1;
+        // 叉积 > 0 逆时针到达对方. < 0 顺时针到达对方
+        robots[robot1].collisionRotate = status * M_PI;
+        robots[robot2].collisionRotate = -status * M_PI;
+        robots[robot1].collisionSpeed = 6;
+        robots[robot2].collisionSpeed = 6;
+    } else {// 45~135 || 
+        // 选后面的减速
+        slowId = robot2;
+    }
+    if (angle < M_PI / 4 || angle > M_PI * 3 / 4) {
+        if (robot1ToCollisionTime < 13 && robot2ToCollisionTime < 13) {
+            slowId = robot2;
+        } else if (robot1ToCollisionTime < 13) {// robot1 时间不够转向
+            slowId = robot1;
+        } else if (robot2ToCollisionTime < 13) {// robot2 时间不够转向
+            slowId = robot2;
+        }
+    }
+    if (slowId != -1) {
+        robots[robot1].collisionRotate = -1;
+        robots[robot2].collisionRotate = -1;
+        if (slowId == robot1) {
+            double fastTime = robot2ToCollisionTime + collisionRange * 2 / 0.12;
+            double slowSpeed = (robot1ToIntersect - collisionRange) / fastTime;
+            robots[robot1].collisionSpeed = slowSpeed;
+            robots[robot2].collisionSpeed = 6;
+        } else {
+            double fastTime = robot1ToCollisionTime + collisionRange * 2 / 0.12;
+            double slowSpeed = (robot2ToIntersect - collisionRange) / fastTime;
+            robots[robot2].collisionSpeed = slowSpeed;
+            robots[robot1].collisionSpeed = 6;
+        }
+    }
+}
+
+Vector2D intersect(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, double range) {
+    Vector2D ret(0, 0);
+    double x, y;
+    // 计算两条直线的斜率和截距
+    double k1, b1, k2, b2;
+    if (x1 == x2) {
+        k1 = INFINITY;
+        b1 = x1;
+    } else {
+        k1 = (y2 - y1) / (x2 - x1);
+        b1 = y1 - k1 * x1;
+    }
+    if (x3 == x4) {
+        k2 = INFINITY;
+        b2 = x3;
+    } else {
+        k2 = (y4 - y3) / (x4 - x3);
+        b2 = y3 - k2 * x3;
+    }
+    
+    // 判断两条直线是否平行
+    if (k1 == k2) {
+        // 判断两条直线是否重合
+        if (std::abs(b1-b1) < 1.06) {
+            // 判断两条直线是否方向相向
+            if ((x2 < x4 && x2 > x1 && x3 < x4 && x3 > x1) || (x2 < x1 && x2 > x4 && x3 < x1 && x3 > x4) || (y2 < y4 && y2 > y1 && y3 < y4 && y3 > y1) || (y2 < y1 && y2 > y4 && y3 < y1 && y3 > y4)) {
+                x = (x1 + x4) / 2;
+                y = (y1 + y4) / 2;
+                ret.status = true;
+                return ret;
+            }
+        }
+        ret.status = false;
+        return ret;
+    }
+    
+    // 计算交点
+    if (k1 == INFINITY) {
+        x = b1;
+        y = k2 * x + b2;
+    } else if (k2 == INFINITY) {
+        x = b2;
+        y = k1 * x + b1;
+    } else if (k1 == 0) {
+        y = b1;
+        x = (y - b2) / k2;
+    } else if (k2 == 0) {
+        y = b2;
+        x = (y - b1) / k1;
+    } else {
+        x = (b2 - b1) / (k1 - k2);
+        y = k1 * x + b1;
+    }
+    if ((Vector2D(x,y)-Vector2D(x1,y1)).length() > range || (Vector2D(x,y)-Vector2D(x2,y2)).length() > range || (Vector2D(x,y)-Vector2D(x3,y3)).length() > range || (Vector2D(x,y)-Vector2D(x4,y4)).length() > range) {
+        ret.status = true;
+        ret.x = x;
+        ret.y = y;
+        return ret;
+    }
+    
+    // 判断交点是否在两条线段上
+    if (x < std::min(x1, x2) || x > std::max(x1, x2) || x < std::min(x3, x4) || x > std::max(x3, x4)) {
+        ret.status = false;
+        return ret;
+    }
+    if (y < std::min(y1, y2) || y > std::max(y1, y2) || y < std::min(y3, y4) || y > std::max(y3, y4)) {
+        ret.status = false;
+        return ret;
+    }
+    ret.status = true;
+    ret.x = x;
+    ret.y = y;
+    return ret;
+}

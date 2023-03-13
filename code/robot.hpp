@@ -3,6 +3,7 @@
 
 #include "config.hpp"
 #include "worktable.hpp"
+#include "vector.hpp"
 #include <fstream>
 #include <set>
 #include <map>
@@ -28,6 +29,9 @@ struct Robot{
     double linearSpeedX; // 机器人的线速度X
     double linearSpeedY; // 机器人的线速度Y
     double direction; // 机器人的方向
+    int worktableTogo; // 机器人要去的工作台的 id
+    double collisionRotate; // 机器人为防止碰撞的旋转角度
+    double collisionSpeed; // 机器人为防止碰撞的线速度
     Robot() {
         this->id = -1;
         this->x = -1;
@@ -67,6 +71,9 @@ struct Robot{
         TESTOUTPUT(fout << "linearSpeedX: " << linearSpeedX << std::endl;)
         TESTOUTPUT(fout << "linearSpeedY: " << linearSpeedY << std::endl;)
         TESTOUTPUT(fout << "direction: " << direction << std::endl;)
+        TESTOUTPUT(fout << "worktableTogo: " << worktableTogo << std::endl;)
+        TESTOUTPUT(fout << "collisionRotate: " << collisionRotate << std::endl;)
+        TESTOUTPUT(fout << "collisionSpeed: " << collisionSpeed << std::endl;)
     }
     // 卖材料的函数
     void Sell() {
@@ -162,8 +169,9 @@ struct Robot{
                 }
             }
             // 如果一个都没找到可以去的,就去最中间
-            if (timeLess.size() == 0) return worktableNum / 2;
-            return timeLess[0].first;
+            // if (timeLess.size() == 0) return worktableNum / 2;
+            // return timeLess[0].first;
+            return worktableNum / 2;
         }
         // 如果这个工作台这回合没人去买
         for (auto & i : distance) {
@@ -204,11 +212,17 @@ struct Robot{
                 }
             }
         }
+        // 按照优先级前1/3没找到的话就随便找一个
+        for (auto & i : distance) {
+            if (worktables[i.first].anyOneChooseSell[bringId] != nowTime) {
+                worktables[i.first].anyOneChooseSell[bringId] = nowTime;
+                return i.first;
+            }
+        }
         return distance[0].first;
     }
-    int DetecteCollision();
 
-    void Move(int worktableTogo) {
+    void Move() {
         std::vector<double> vec1 = {1, 0};
         std::vector<double> vec2 = {worktables[worktableTogo].x - x, worktables[worktableTogo].y - y};
         double cos = (vec1[0] * vec2[0] + vec1[1] * vec2[1]) / (sqrt(vec1[0] * vec1[0] + vec1[1] * vec1[1]) * sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1]));
@@ -235,10 +249,6 @@ struct Robot{
             } else { // 如果角度差大于180°
                 rotate = M_PI*2-std::abs(angle - direction); // 就逆时针转过去
             }
-        }
-        int detecteStatus = DetecteCollision();
-        if (detecteStatus != 0) {
-            rotate += (M_PI / 36) * detecteStatus;
         }
 
         double absRotate = std::abs(rotate);
@@ -275,9 +285,9 @@ struct Robot{
             // 如果度数大于90°, 就先倒退转过去
             speed = -2;
         }
-        // if (detecteStatus == 9 || detecteStatus == -9) {
-        //     speed = detecteStatus / 9 * 2;
-        // }
+        if (collisionSpeed != -1) {
+            speed = collisionSpeed;
+        }
         TESTOUTPUT(fout << "forward " << id << " " << speed << std::endl;)
         printf("forward %d %lf\n", id, speed);
         /*
@@ -292,6 +302,9 @@ struct Robot{
             } else {
                 rotate = rotate / absRotate * M_PI;
             }
+        }
+        if (collisionRotate != -1) {
+            rotate = collisionRotate;
         }
         TESTOUTPUT(fout << "rotate " << id << " " << rotate << std::endl;)
         printf("rotate %d %lf\n", id, rotate);
@@ -323,7 +336,7 @@ struct Robot{
         return -1;
     }
     // 查找下一个目的地
-    void FindMove() {
+    int FindMove() {
         int worktableTogo = -1;
         if (bringId == 0) { // 找地方去买
             worktableTogo = FindBuy();
@@ -339,13 +352,13 @@ struct Robot{
             }
         }
         TESTOUTPUT(fout << "robot" << id << " want-go " << worktableTogo << " type=" << worktables[worktableTogo].type << std::endl;)
-        Move(worktableTogo);
+        return worktableTogo;
     }
     // 机器人具体的行为
     void action(){
         Sell();
         Buy();
-        FindMove();
+        worktableTogo = FindMove();
     }
     void checkCanBuy() {
         if (bringId != 0) {
@@ -356,35 +369,72 @@ struct Robot{
 
 Robot robots[MAX_Robot_Num];
 
-int Robot::DetecteCollision() {
-    double upStep = 0.12;
-    double radii_now;
-    if (bringId == -1) {
-        radii_now = 0.45;
-    } else {
-        radii_now = 0.53;
+void DetecteCollision(int robot1, int robot2) {
+    Vector2D robot1Pos = Vector2D(robots[robot1].x, robots[robot1].y);
+    Vector2D robot2Pos = Vector2D(robots[robot2].x, robots[robot2].y);
+    double robot1Radii = robots[robot1].bringId == 0 ? 0.45 : 0.53;
+    double robot2Radii = robots[robot2].bringId == 0 ? 0.45 : 0.53;
+
+    int futureTime = 13;
+    // 距离太远 即 13hz*0.12m/s * 2=3.12m
+    if ((robot1Pos-robot2Pos).length() > futureTime * 0.12 * 2) {
+        return;
     }
-    int nowX = x;
-    int nowY = y;
-    for (int i = 0; i <= robotNum; i++) if (i != id) {
-        double radii_other;
-        if (robots[i].bringId == -1) {
-            radii_other = 0.45;
-        } else {
-            radii_other = 0.53;
+    bool isCollision = false;
+    for (int i = 0; i <= futureTime; i++) {
+        auto robot1PosTemp = robot1Pos + Vector2D(robots[robot1].linearSpeedX * 0.02 * i, robots[robot1].linearSpeedY * 0.02 * i);
+        auto robot2PosTemp = robot2Pos + Vector2D(robots[robot2].linearSpeedX * 0.02 * i, robots[robot2].linearSpeedY * 0.02 * i);
+        if ((robot1PosTemp-robot2PosTemp).length() <= robot1Radii + robot2Radii + 0.3) {
+            isCollision = true;
+            break;
         }
-        int otherX = robots[i].x;
-        int otherY = robots[i].y;
-        for (int step = 1; step <= 9; step++) {
-            if (sqrt((nowX - otherX) * (nowX - otherX) + (nowY - otherY) * (nowY - otherY)) <= radii_now + radii_other + upStep * step) {
-                if (i < id) {
-                    return (9 - step + 1);
-                } else {
-                    return -(9 - step + 1);
-                }
+    }
+    if (!isCollision) {
+        return;
+    }
+    TESTOUTPUT(fout << "robot" << robot1 << " and robot" << robot2 << " 检测碰撞" << std::endl;)
+
+    double speed1 = Vector2D(robots[robot1].linearSpeedX, robots[robot1].linearSpeedY).length();
+    double speed2 = Vector2D(robots[robot2].linearSpeedX, robots[robot2].linearSpeedY).length();
+
+    for (double speed = 6; speed >= -2; speed -= 0.1) {
+        bool isCollision = false;
+        Vector2D robot1PosTemp;
+        Vector2D robot2PosTemp;
+        int Realless1 = (6 - speed1) * 0.02 / 2;
+        int Realless2 = (speed - speed2) * 0.02 / 2;
+        for (int i = 0; i <= futureTime; i++) {
+            robot1PosTemp = robot1Pos + Vector2D(6 / speed1 * robots[robot1].linearSpeedX * 0.02 * i - Realless1, 6 / speed1 * robots[robot1].linearSpeedY * 0.02 * i - Realless1);
+            robot2PosTemp = robot2Pos + Vector2D(speed / speed2 * robots[robot2].linearSpeedX * 0.02 * i - Realless2 , speed / speed2 * robots[robot2].linearSpeedY * 0.02 * i - Realless2);
+            if ((robot1PosTemp-robot2PosTemp).length() <= robot1Radii + robot2Radii + 1) {
+                isCollision = true;
+                break;
             }
         }
+        if (!isCollision) {
+            robots[robot2].collisionSpeed = speed;
+            robots[robot2].collisionRotate = 0;
+            robots[robot1].collisionSpeed = 6;
+            robots[robot1].collisionRotate = 0;
+            return;
+        }
     }
-    return 0;
+    // double angle = Vector2D(robots[robot1].linearSpeedX, robots[robot1].linearSpeedY).angle(Vector2D(robots[robot2].linearSpeedX, robots[robot2].linearSpeedY));
+    // if (angle < M_PI / 4) {// 0~45
+    //     int status = Vector2D(robots[robot1].linearSpeedX, robots[robot1].linearSpeedY)^Vector2D(robots[robot2].linearSpeedX, robots[robot2].linearSpeedY);
+    //     status = status > 0 ? 1 : -1;
+    //     // 叉积 > 0 逆时针到达对方. < 0 顺时针到达对方
+    //     robots[robot1].collisionRotate = -status * M_PI;
+    //     robots[robot2].collisionRotate = status * M_PI;
+    // } else if (angle > M_PI * 3 / 4) { // 135~180  ! 或许都是一个方向会比较好用
+    //     robots[robot1].collisionRotate = M_PI;
+    //     robots[robot2].collisionRotate = M_PI;
+    // } else {
+        // 旋转 > 135 同向 < 45 反向远离
+        robots[robot1].collisionSpeed = 6;
+        robots[robot1].collisionRotate = M_PI;
+        robots[robot2].collisionSpeed = -2;
+        robots[robot2].collisionRotate = -M_PI;
+    // }
 }
 #endif
