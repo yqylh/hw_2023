@@ -242,8 +242,8 @@ struct Robot{
     void Move() {
         std::vector<double> vec1 = {1, 0};
         std::vector<double> vec2 = {worktables[worktableTogo].x - x, worktables[worktableTogo].y - y};
-        double cos = (vec1[0] * vec2[0] + vec1[1] * vec2[1]) / (sqrt(vec1[0] * vec1[0] + vec1[1] * vec1[1]) * sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1]));
-        double angle = acos(cos);
+        double cosAns = (vec1[0] * vec2[0] + vec1[1] * vec2[1]) / (sqrt(vec1[0] * vec1[0] + vec1[1] * vec1[1]) * sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1]));
+        double angle = acos(cosAns);
         // 通过叉乘判断方向
         // > 0 逆时针 在上面
         // < 0 顺时针 在下面
@@ -308,7 +308,10 @@ struct Robot{
         } else {
             if (collisionTime > 0) {
                 collisionTime--;
-                speed = 0;
+                speed = Vector2D(linearSpeedX, linearSpeedY).length();
+                if (sin(direction) * linearSpeedY < 0 || cos(direction) * linearSpeedX < 0) {
+                    speed = -speed;
+                }
             }
         }
         TESTOUTPUT(fout << "forward " << id << " " << speed << std::endl;)
@@ -524,19 +527,21 @@ void DetecteCollision(int robot1, int robot2) {
                 continue;
             }
             if (!isCollision) {
-    //             // TESTOUTPUT(
-    //             //     fout << "robot" << robot1 << " 速度改变" << accelerationTime1 << " 帧" << std::endl;
-    //             //     fout << "robot" << robot2 << " 速度改变" << accelerationTime2 << " 帧" << std::endl;
-    //             //     fout << "robot" << robot1 << " 速度从" << speed1 << "->" << testSpeed1 << std::endl;
-    //             //     fout << "robot" << robot2 << " 速度从" << speed2 << "->" << testSpeed2 << std::endl;
-    //             // )
+                TESTOUTPUT(
+                    fout << "robot" << robot1 << " 速度改变" << accelerationTime1 << " 帧" << std::endl;
+                    fout << "robot" << robot2 << " 速度改变" << accelerationTime2 << " 帧" << std::endl;
+                    fout << "robot" << robot1 << " 速度从" << speed1 << "->" << testSpeed1 << std::endl;
+                    fout << "robot" << robot2 << " 速度从" << speed2 << "->" << testSpeed2 << std::endl;
+                )
                 if (accelerationTime1 != 0) {
                     robots[robot1].collisionSpeed = 6 * accelerationTime1 / std::abs(accelerationTime1);
+                    // robots[robot1].collisionTime = collisionTime - 2;
                 } else {
                     robots[robot1].collisionSpeed = speed1;
                 }
                 if (accelerationTime2 != 0) {
                     robots[robot2].collisionSpeed =  6 * accelerationTime2 / std::abs(accelerationTime2);
+                    // robots[robot2].collisionTime = collisionTime - 2;
                 } else {
                     robots[robot2].collisionSpeed = speed2;
                 }
