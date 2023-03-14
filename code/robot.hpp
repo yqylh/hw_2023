@@ -414,8 +414,8 @@ void DetecteCollision(int robot1, int robot2) {
     Vector2D robot1Pos = Vector2D(robots[robot1].x, robots[robot1].y);
     Vector2D robot2Pos = Vector2D(robots[robot2].x, robots[robot2].y);
     // robot1 robot2 的半径
-    double robot1Radii = robots[robot1].bringId == 0 ? 0.45 : 0.53;
-    double robot2Radii = robots[robot2].bringId == 0 ? 0.45 : 0.53;
+    double robot1Radii = robots[robot1].bringId == 0 ? 0.451 : 0.531;
+    double robot2Radii = robots[robot2].bringId == 0 ? 0.451 : 0.531;
     // 距离太远
     if ((robot1Pos-robot2Pos).length() > futureTime * 0.12 * 2 + robot1Radii + robot2Radii) {
         return;
@@ -425,7 +425,7 @@ void DetecteCollision(int robot1, int robot2) {
     for (int i = 0; i <= futureTime; i++) {
         auto robot1PosTemp = robot1Pos + Vector2D(robots[robot1].linearSpeedX * 0.02 * i, robots[robot1].linearSpeedY * 0.02 * i);
         auto robot2PosTemp = robot2Pos + Vector2D(robots[robot2].linearSpeedX * 0.02 * i, robots[robot2].linearSpeedY * 0.02 * i);
-        if ((robot1PosTemp-robot2PosTemp).length() <= robot1Radii + robot2Radii + 0.25) {
+        if ((robot1PosTemp-robot2PosTemp).length() <= robot1Radii + robot2Radii + 0.24) {
             isCollision = true;
             collisionTime = i;
             break;
@@ -471,8 +471,8 @@ void DetecteCollision(int robot1, int robot2) {
     // 根据牵引力 大小 密度 算出来的加速度
     double acceleration1 = 250 / (20 * M_PI * robot1Radii * robot1Radii * 50);
     double acceleration2 = 250 / (20 * M_PI * robot2Radii * robot2Radii * 50);
-    for (int accelerationTime1 = 27; accelerationTime1 >= -27; accelerationTime1--) {
-        for (int accelerationTime2 = 27; accelerationTime2 >= -27; accelerationTime2--) {
+    for (int accelerationTime1 = futureTime; accelerationTime1 >= -futureTime; accelerationTime1--) {
+        for (int accelerationTime2 = futureTime; accelerationTime2 >= -futureTime; accelerationTime2--) {
             // 枚举每个机器人速度改变的帧率数量
             Vector2D robot1PosTemp = robot1Pos;
             Vector2D robot2PosTemp = robot2Pos;
@@ -498,7 +498,7 @@ void DetecteCollision(int robot1, int robot2) {
             for (int i = 2; i <= futureTime; i++) {
                 robot1PosTemp = robot1PosTemp + Vector2D(testSpeed1 * cos(robots[robot1].direction) * 0.02, testSpeed1 * sin (robots[robot1].direction) * 0.02);
                 robot2PosTemp = robot2PosTemp + Vector2D(testSpeed2 * cos(robots[robot2].direction) * 0.02 , testSpeed2 * sin (robots[robot2].direction) * 0.02);
-                if ((robot1PosTemp-robot2PosTemp).length() <= robot1Radii + robot2Radii + 0.25) {
+                if ((robot1PosTemp-robot2PosTemp).length() <= robot1Radii + robot2Radii + 0.24) {
                     isCollision = true;
                     break;
                 }
