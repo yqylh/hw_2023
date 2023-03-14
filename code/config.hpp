@@ -19,6 +19,8 @@ const int MAX_Robot_Num = 4; // 最大机器人数
 const int MAP_Line_Length = 100; // 地图有多少行
 const int MAP_Col_Length = 100; // 地图有多少列
 const int MAX_TIME = 3 * 60 * 50; // 最大帧数
+const int futureTime = 27;     // 预测的时间, 从 6->-2需要 27 帧
+
 
 std::set<std::pair<int, int> > sellSet = {
     std::pair<int, int>(1, 4), std::pair<int, int>(1, 5), std::pair<int, int>(1, 9),
@@ -46,6 +48,11 @@ std::map<int, int> sellMoneyMap{
     std::pair<int, int>(7, 105000) 
 };// 卖出价格, 对于 <x,y>, x为物品类型, y为金钱, 即可以在y金钱的情况下卖出x类型的物品
 
+std::map<int, int> buyPrioriryMap{
+    std::pair<int, int>(1, 1), std::pair<int, int>(2, 1), std::pair<int, int>(3, 1),
+    std::pair<int, int>(4, 2), std::pair<int, int>(5, 2), std::pair<int, int>(6, 2),
+    std::pair<int, int>(7, 3) 
+};// 购买优先级, 对于 <x,y>, x为工作台, y为优先级, 即可以在y优先级的情况下购买x工作台的物品
 
 
 int robotNum = -1; // 当前机器人标号,实际数量-1, 0-robotNum

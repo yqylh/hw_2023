@@ -170,3 +170,46 @@ Vector2D intersect(double x1, double y1, double x2, double y2, double x3, double
     ret.y = y;
     return ret;
 }
+
+for (double speed = 6; speed >= -2; speed -= 0.05) {
+        // TESTOUTPUT(fout << "speedTest: " << speed << std::endl;)
+        // if (speed < 2 && speed2 > 0.5 ) break;
+        bool isCollision = false;
+        // 当前帧位置 i = 0
+        Vector2D robot1PosTemp = robot1Pos;
+        Vector2D robot2PosTemp = robot2Pos;
+        // 下一帧位置 i = 1 第一帧不论速度怎么设, 仍然维持之前的速度
+        robot1PosTemp = robot1PosTemp + Vector2D(robots[robot1].linearSpeedX * 0.02, robots[robot1].linearSpeedY * 0.02);
+        robot2PosTemp = robot2PosTemp + Vector2D(robots[robot2].linearSpeedX * 0.02, robots[robot2].linearSpeedY * 0.02);
+        // 从第二帧开始检测
+        for (int i = 2; i <= futureTime; i++) {
+            robot1PosTemp = robot1PosTemp + Vector2D(6 / speed1 * robots[robot1].linearSpeedX * 0.02, 6 / speed1 * robots[robot1].linearSpeedY * 0.02);
+            robot2PosTemp = robot2PosTemp + Vector2D(speed / speed2 * robots[robot2].linearSpeedX * 0.02 , speed / speed2 * robots[robot2].linearSpeedY * 0.02);
+            if ((robot1PosTemp-robot2PosTemp).length() <= robot1Radii + robot2Radii + 0.25) {
+                // TESTOUTPUT(fout << "ERRORtime=" << nowTime + i << " robot" << robot1 << " (" << robot1PosTemp.x << "," << robot1PosTemp.y << ") robot" << robot2 << " (" << robot2PosTemp.x << "," << robot2PosTemp.y << ")" << std::endl;)
+                isCollision = true;
+                break;
+            }
+        }
+        if (!isCollision) {
+            Vector2D robot1PosTemp = robot1Pos;
+            Vector2D robot2PosTemp = robot2Pos;
+            // 下一帧位置 i = 1 第一帧不论速度怎么设, 仍然维持之前的速度
+            robot1PosTemp = robot1PosTemp + Vector2D(robots[robot1].linearSpeedX * 0.02, robots[robot1].linearSpeedY * 0.02);
+            robot2PosTemp = robot2PosTemp + Vector2D(robots[robot2].linearSpeedX * 0.02, robots[robot2].linearSpeedY * 0.02);
+            TESTOUTPUT(fout << "time=" << nowTime << " robot" << robot1 << " (" << robot1Pos.x << "," << robot1Pos.y << ") robot" << robot2 << " (" << robot2Pos.x << "," << robot2Pos.y << ")" << std::endl;)
+            TESTOUTPUT(fout << "now Speed" << " robot" << robot1 << "=" << speed1 << " robot" << robot2 << "=" << speed2 << std::endl;) 
+            TESTOUTPUT(fout << "time=" << nowTime + 1 << " robot" << robot1 << " (" << robot1PosTemp.x << "," << robot1PosTemp.y << ") robot" << robot2 << " (" << robot2PosTemp.x << "," << robot2PosTemp.y << ")" << std::endl;)
+            // 从第二帧开始检测
+            for (int i = 2; i <= futureTime; i++) {
+                robot1PosTemp = robot1PosTemp + Vector2D(6 / speed1 * robots[robot1].linearSpeedX * 0.02, 6 / speed1 * robots[robot1].linearSpeedY * 0.02);
+                robot2PosTemp = robot2PosTemp + Vector2D(speed / speed2 * robots[robot2].linearSpeedX * 0.02 , speed / speed2 * robots[robot2].linearSpeedY * 0.02);
+                TESTOUTPUT(fout << "time=" << nowTime + i << " robot" << robot1 << " (" << robot1PosTemp.x << "," << robot1PosTemp.y << ") robot" << robot2 << " (" << robot2PosTemp.x << "," << robot2PosTemp.y << ")" << std::endl;)
+            }
+            robots[robot2].collisionSpeed = speed;
+            robots[robot2].collisionRotate = 0;
+            robots[robot1].collisionSpeed = 6;
+            robots[robot1].collisionRotate = 0;
+            return;
+        }
+    }
