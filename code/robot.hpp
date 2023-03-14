@@ -302,7 +302,7 @@ struct Robot{
             // 如果度数大于90°, 就先倒退转过去
             speed = -2;
         }
-        if (collisionSpeed != -1) {
+        if (collisionSpeed != -3) {
             // collisionTime = futureTime;
             speed = collisionSpeed;
         } else {
@@ -454,6 +454,21 @@ void DetecteCollision(int robot1, int robot2) {
         robots[robot2].collisionRotate = -status2 * M_PI;
         robots[robot1].collisionSpeed = 6;
         robots[robot2].collisionSpeed = 6;
+        // robots[robot1].collisionTime = 10;
+        // robots[robot2].collisionTime = 10;
+        if ((robot1Pos-robot2Pos).length() - robot1Radii - robot2Radii - 0.25 < 0) {
+            // 距离比较近的情况
+            // 不管
+            // robots[robot1].collisionSpeed = -3;
+            // robots[robot2].collisionSpeed = -3;
+            // robots[robot1].collisionRotate = -1;
+            // robots[robot2].collisionRotate = -1;
+            // 随缘
+            // robots[robot1].collisionRotate = -status1 * M_PI;
+            // robots[robot2].collisionRotate = -status2 * M_PI;
+            // robots[robot1].collisionSpeed = 6;
+            // robots[robot2].collisionSpeed = -2;
+        }
         return;
     }
 

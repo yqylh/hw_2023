@@ -89,7 +89,7 @@ void solveFrame() {
     }
     for (int i = 0; i <= robotNum; i++) {
         robots[i].collisionRotate = -1;
-        robots[i].collisionSpeed = -1;
+        robots[i].collisionSpeed = -3;
     }
     for (int i = 0; i <= robotNum; i++) {
         for (int j = i + 1; j <= robotNum; j++) {
