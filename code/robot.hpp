@@ -397,6 +397,61 @@ struct Robot{
             canBuy[bringId]--;
         }
     }
+    void checkWall() {
+        bool wallnear = false;
+        double toWallX = std::min(worktables[worktableTogo].y - 0.53 - 0.1, 50 - 0.53 - 0.1 -worktables[worktableTogo].y);
+        double toWallY = std::min(worktables[worktableTogo].x - 0.53 - 0.1, 50 - 0.53 - 0.1 -worktables[worktableTogo].x);
+        // 刹车最常的距离
+        if (toWallX < 0.02 * 3 * 31 || toWallY < 0.02 * 3 * 31) {
+            wallnear = true;
+        }
+        if (wallnear == false) return;
+        if (worktables[worktableTogo].type == 9 || worktables[worktableTogo].type == 8) {
+            return;
+        }
+        if (bringId > 0 && worktables[worktableTogo].output == false) {
+            return;
+        }
+        double speed = Vector2D(linearSpeedX, linearSpeedY).length();
+        double length = 0;
+        int costTime = 0;
+        while (speed > 0) {
+            length += speed * 0.02 * cos(3.6 * costTime);
+            costTime++;
+            speed -= 0.3;
+        }
+        toWallX = std::min(y - 0.53 - 0.1, 50 - 0.53 - 0.1 -y);
+        toWallY = std::min(x - 0.53 - 0.1, 50 - 0.53 - 0.1 -x);
+        if (toWallX < length * sin(direction) || toWallY < length * cos(direction)) {
+            TESTOUTPUT(fout << "robot" << id << " 有撞墙风险 " << std::endl;)
+            // Vector2D normal(0, 0);
+            // if (toWallX < length * sin(direction) && toWallX == y-0.53-0.1) {
+            //     normal = Vector2D(0, -1);
+            // } else if (toWallX < length * sin(direction) && toWallX == 50-0.53-0.1-y) {
+            //     normal = Vector2D(0, 1);
+            // } else if (toWallY < length * cos(direction) && toWallY == x-0.53-0.1) {
+            //     normal = Vector2D(-1, 0);
+            // } else if (toWallY < length * cos(direction) && toWallY == 50-0.53-0.1-x) {
+            //     normal = Vector2D(1, 0);
+            // }
+            // if (sin(direction) * linearSpeedY < 0 || cos(direction) * linearSpeedX < 0) {
+            //     collisionSpeed = 6;
+            //     collisionRotate = normal^Vector2D(cos(direction), sin(direction)) * M_PI;
+            // } else {
+            //     collisionSpeed = -2;
+            //     collisionRotate = normal^Vector2D(cos(direction), sin(direction)) * M_PI;
+            // }
+            // if (sin(direction) * linearSpeedY < 0 || cos(direction) * linearSpeedX < 0) {
+            //     collisionSpeed = 6;
+            //     collisionRotate = M_PI;
+            // } else {
+            //     collisionSpeed = -2;
+            //     collisionRotate = M_PI;
+            // }
+            collisionSpeed = -2;
+            collisionRotate = M_PI;
+        }
+    }
 };
 
 Robot robots[MAX_Robot_Num];

@@ -92,6 +92,9 @@ void solveFrame() {
         robots[i].collisionSpeed = -3;
     }
     for (int i = 0; i <= robotNum; i++) {
+        robots[i].checkWall();
+    }
+    for (int i = 0; i <= robotNum; i++) {
         for (int j = i + 1; j <= robotNum; j++) {
             DetecteCollision(i, j);
         }
