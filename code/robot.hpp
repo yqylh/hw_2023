@@ -434,20 +434,8 @@ struct Robot{
             // } else if (toWallY < length * cos(direction) && toWallY == 50-0.53-0.1-x) {
             //     normal = Vector2D(1, 0);
             // }
-            // if (sin(direction) * linearSpeedY < 0 || cos(direction) * linearSpeedX < 0) {
-            //     collisionSpeed = 6;
-            //     collisionRotate = normal^Vector2D(cos(direction), sin(direction)) * M_PI;
-            // } else {
-            //     collisionSpeed = -2;
-            //     collisionRotate = normal^Vector2D(cos(direction), sin(direction)) * M_PI;
-            // }
-            // if (sin(direction) * linearSpeedY < 0 || cos(direction) * linearSpeedX < 0) {
-            //     collisionSpeed = 6;
-            //     collisionRotate = M_PI;
-            // } else {
-            //     collisionSpeed = -2;
-            //     collisionRotate = M_PI;
-            // }
+            // collisionSpeed = -2;
+            // collisionRotate = normal^Vector2D(cos(direction), sin(direction)) * M_PI;
             collisionSpeed = -2;
             collisionRotate = M_PI;
         }
@@ -500,6 +488,15 @@ void DetecteCollision(int robot1, int robot2) {
         angle = 2 * M_PI - angle;
     }
     TESTOUTPUT(fout << "碰撞角度" << angle << std::endl;)
+    if ((robot1Pos-robot2Pos).length() - robot1Radii - robot2Radii - 0.25 - 0.25 < 0) {
+        TESTOUTPUT(fout << "collision need go back" << std::endl;)
+        // 距离比较近的情况, 考虑到预测范围没预测到,或者发生了被赢拽回来了的情况
+        // robots[robot1].collisionRotate = 0;
+        // robots[robot2].collisionRotate = 0;
+        // robots[robot1].collisionSpeed = 6;
+        // robots[robot2].collisionSpeed = -2;
+        // return;
+    }
 
     if (angle > M_PI * 135 / 180) { // 135~180  ! 或许都是一个方向会比较好用
         TESTOUTPUT(fout << "collision need rotate" << std::endl;)
@@ -512,21 +509,8 @@ void DetecteCollision(int robot1, int robot2) {
         robots[robot2].collisionRotate = -status2 * M_PI;
         robots[robot1].collisionSpeed = 6;
         robots[robot2].collisionSpeed = 6;
-        // robots[robot1].collisionTime = 10;
-        // robots[robot2].collisionTime = 10;
-        if ((robot1Pos-robot2Pos).length() - robot1Radii - robot2Radii - 0.25 < 0) {
-            // 距离比较近的情况
-            // 不管
-            // robots[robot1].collisionSpeed = -3;
-            // robots[robot2].collisionSpeed = -3;
-            // robots[robot1].collisionRotate = -1;
-            // robots[robot2].collisionRotate = -1;
-            // 随缘
-            // robots[robot1].collisionRotate = -status1 * M_PI;
-            // robots[robot2].collisionRotate = -status2 * M_PI;
-            // robots[robot1].collisionSpeed = 6;
-            // robots[robot2].collisionSpeed = -2;
-        }
+        // robots[robot1].collisionTime = 2;
+        // robots[robot2].collisionTime = 2;
         return;
     }
 
@@ -606,6 +590,7 @@ void DetecteCollision(int robot1, int robot2) {
             }
         }
     }
+    TESTOUTPUT(fout << "could not find a solution" << std::endl;)
     int status1 = Vector2D(robots[robot1].linearSpeedX, robots[robot1].linearSpeedY)^Vector2D(robots[2].x - robots[1].x, robots[2].y - robots[1].y);
     status1 = status1 > 0 ? 1 : -1;
     int status2 = Vector2D(robots[robot2].linearSpeedX, robots[robot2].linearSpeedY)^Vector2D(robots[1].x - robots[2].x, robots[1].y - robots[2].y);
