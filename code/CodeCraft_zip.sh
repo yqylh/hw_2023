@@ -11,7 +11,7 @@ then
     exit -1
 fi
 
-yesterday=`date +%Y-%m-%d--%H:%M:%S`
+yesterday=`date +%m-%d--%H:%M:%S`
 
 echo "Current date: $yesterday"
 zip -9 -r $yesterday.zip *.cpp *.cc *.c *.hpp *.h CMakeLists.txt

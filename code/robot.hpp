@@ -32,7 +32,8 @@ struct Robot{
     int worktableTogo; // 机器人要去的工作台的 id
     double collisionRotate; // 机器人为防止碰撞的旋转角度
     double collisionSpeed; // 机器人为防止碰撞的线速度
-    int collisionTime; // 机器人为防止碰撞的时间
+    int collisionSpeedTime; // 机器人为防止碰撞的调整速度的时间
+    int collisionRotateTime; // 机器人为防止碰撞的时间
     Robot() {
         this->id = -1;
         this->x = -1;
@@ -45,7 +46,8 @@ struct Robot{
         linearSpeedX = 0;
         linearSpeedY = 0;
         direction = 0;
-        collisionTime = 0;
+        collisionSpeedTime = 0;
+        collisionRotateTime = 0;
     }
     Robot(int id, double x, double y) {
         this->id = id;
@@ -59,7 +61,8 @@ struct Robot{
         linearSpeedX = 0;
         linearSpeedY = 0;
         direction = 0;
-        collisionTime = 0;
+        collisionSpeedTime = 0;
+        collisionRotateTime = 0;
     }
     void outputTest() {
         TESTOUTPUT(fout << "Robot id: " << id << std::endl;)
@@ -158,9 +161,7 @@ struct Robot{
         if (distance.size() == 0) {
             std::vector<std::pair<int, int>> timeLess;
             for (int i = 0; i <= worktableNum; i++) /*if (worktables[i].remainTime != -1)*/ { // 真的在生产 !未启用功能
-                timeLess.push_back(std::make_pair(i, worktables[i].remainTime));
-                // timeLess.push_back(std::make_pair(i, std::max(worktables[i].remainTime, getMinGoToTime(i))));
-                // timeLess.push_back(std::make_pair(i, getDistance(i)));
+                timeLess.push_back(std::make_pair(i, getDistance(i)));
             }
             std::sort(timeLess.begin(), timeLess.end(), [](std::pair<int, int> a, std::pair<int, int> b) {
                 return a.second < b.second;
@@ -302,17 +303,9 @@ struct Robot{
             // 如果度数大于90°, 就先倒退转过去
             speed = -2;
         }
-        if (collisionSpeed != -3) {
-            // collisionTime = futureTime;
+        if (collisionSpeedTime > 0) {
+            collisionSpeedTime--;
             speed = collisionSpeed;
-        } else {
-            if (collisionTime > 0) {
-                collisionTime--;
-                speed = Vector2D(linearSpeedX, linearSpeedY).length();
-                if (sin(direction) * linearSpeedY < 0 || cos(direction) * linearSpeedX < 0) {
-                    speed = -speed;
-                }
-            }
         }
         TESTOUTPUT(fout << "forward " << id << " " << speed << std::endl;)
         printf("forward %d %lf\n", id, speed);
@@ -329,14 +322,9 @@ struct Robot{
                 rotate = rotate / absRotate * M_PI;
             }
         }
-        if (collisionRotate != -1) {
-            // collisionTime = futureTime;
+        if (collisionRotateTime > 0) {
+            collisionRotateTime--;
             rotate = collisionRotate;
-        } else {
-            if (collisionTime > 0) {
-                collisionTime--;
-                rotate = 0;
-            }
         }
         TESTOUTPUT(fout << "rotate " << id << " " << rotate << std::endl;)
         printf("rotate %d %lf\n", id, rotate);
@@ -399,9 +387,9 @@ struct Robot{
     }
     void checkWall() {
         bool wallnear = false;
-        double toWallX = std::min(worktables[worktableTogo].y - 0.53 - 0.1, 50 - 0.53 - 0.1 -worktables[worktableTogo].y);
-        double toWallY = std::min(worktables[worktableTogo].x - 0.53 - 0.1, 50 - 0.53 - 0.1 -worktables[worktableTogo].x);
-        // 刹车最常的距离
+        double toWallX = std::min(worktables[worktableTogo].y - 0.53 - 0.12, 50 - 0.53 - 0.12 -worktables[worktableTogo].y);
+        double toWallY = std::min(worktables[worktableTogo].x - 0.53 - 0.12, 50 - 0.53 - 0.12 -worktables[worktableTogo].x);
+        // 刹车最常的距离 1.86
         if (toWallX < 0.02 * 3 * 31 || toWallY < 0.02 * 3 * 31) {
             wallnear = true;
         }
@@ -416,13 +404,17 @@ struct Robot{
         double length = 0;
         int costTime = 0;
         while (speed > 0) {
-            length += speed * 0.02 * cos(3.6 * costTime);
+            length += speed * 0.02;
             costTime++;
             speed -= 0.3;
         }
-        toWallX = std::min(y - 0.53 - 0.1, 50 - 0.53 - 0.1 -y);
-        toWallY = std::min(x - 0.53 - 0.1, 50 - 0.53 - 0.1 -x);
-        if (toWallX < length * sin(direction) || toWallY < length * cos(direction)) {
+        // double radii = bringId == 0 ? 0.45 : 0.53;
+        // double acceleration = 250 / (20 * M_PI * radii * radii * 50);
+        // double length = speed * speed / (2 * acceleration);
+        toWallX = std::min(y - 0.53 - 0.12, 50 - 0.53 - 0.12 -y);
+        toWallY = std::min(x - 0.53 - 0.12, 50 - 0.53 - 0.12 -x);
+        TESTOUTPUT(fout << "robot" << id << " length=" << length << " toWallX=" << toWallX << " toWallY=" << toWallY << std::endl;)
+        if (toWallX < std::abs(length * sin(direction)) || toWallY < std::abs(length * cos(direction))) {
             TESTOUTPUT(fout << "robot" << id << " 有撞墙风险 " << std::endl;)
             // Vector2D normal(0, 0);
             // if (toWallX < length * sin(direction) && toWallX == y-0.53-0.1) {
@@ -437,7 +429,9 @@ struct Robot{
             // collisionSpeed = -2;
             // collisionRotate = normal^Vector2D(cos(direction), sin(direction)) * M_PI;
             collisionSpeed = -2;
-            collisionRotate = M_PI;
+            collisionSpeedTime = costTime - 1;
+            // if (bringId != 0)
+            // collisionRotate = M_PI;
         }
     }
 };
@@ -500,8 +494,10 @@ void DetecteCollision(int robot1, int robot2) {
         robots[robot2].collisionRotate = -status2 * M_PI;
         robots[robot1].collisionSpeed = 6;
         robots[robot2].collisionSpeed = 6;
-        // robots[robot1].collisionTime = 2;
-        // robots[robot2].collisionTime = 2;
+        robots[robot1].collisionSpeedTime = 1;
+        robots[robot2].collisionSpeedTime = 1;
+        robots[robot1].collisionRotateTime = 1;
+        robots[robot2].collisionRotateTime = 1;
         if ((robot1Pos-robot2Pos).length() - robot1Radii - robot2Radii - 0.12 < 0) { // 12 最大角速度转向时间 16 角速度改变最大时间
             TESTOUTPUT(fout << "collision need go back" << std::endl;)
             // 距离比较近的情况, 考虑到预测范围没预测到,或者发生了被赢拽回来了的情况
@@ -509,6 +505,10 @@ void DetecteCollision(int robot1, int robot2) {
             robots[robot2].collisionRotate = M_PI;
             robots[robot1].collisionSpeed = 6;
             robots[robot2].collisionSpeed = 6;
+            robots[robot1].collisionSpeedTime = 1;
+            robots[robot2].collisionSpeedTime = 1;
+            robots[robot1].collisionRotateTime = 1;
+            robots[robot2].collisionRotateTime = 1;
             return;
         }
         return;
@@ -574,18 +574,16 @@ void DetecteCollision(int robot1, int robot2) {
                 )
                 if (accelerationTime1 != 0) {
                     robots[robot1].collisionSpeed = 6 * accelerationTime1 / std::abs(accelerationTime1);
-                    // robots[robot1].collisionTime = collisionTime - 2;
                 } else {
                     robots[robot1].collisionSpeed = speed1;
                 }
                 if (accelerationTime2 != 0) {
                     robots[robot2].collisionSpeed =  6 * accelerationTime2 / std::abs(accelerationTime2);
-                    // robots[robot2].collisionTime = collisionTime - 2;
                 } else {
                     robots[robot2].collisionSpeed = speed2;
                 }
-                robots[robot1].collisionRotate = 0;
-                robots[robot2].collisionRotate = 0;
+                robots[robot1].collisionSpeedTime = collisionTime - 1;
+                robots[robot2].collisionSpeedTime = collisionTime - 1;
                 return;
             }
         }
@@ -600,6 +598,10 @@ void DetecteCollision(int robot1, int robot2) {
     robots[robot2].collisionRotate = -status2 * M_PI;
     robots[robot1].collisionSpeed = 6;
     robots[robot2].collisionSpeed = -2;
+    robots[robot1].collisionSpeedTime = 1;
+    robots[robot2].collisionSpeedTime = 1;
+    robots[robot1].collisionRotateTime = 1;
+    robots[robot2].collisionRotateTime = 1;
     return;
 }
 #endif
