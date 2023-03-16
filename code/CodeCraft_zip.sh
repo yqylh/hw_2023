@@ -11,5 +11,7 @@ then
     exit -1
 fi
 
-rm -f CodeCraft-2023.zip
-zip -9 -r CodeCraft-2023.zip *.cpp *.cc *.c *.hpp *.h CMakeLists.txt
+yesterday=`date +%Y-%m-%d--%H:%M:%S`
+
+echo "Current date: $yesterday"
+zip -9 -r $yesterday.zip *.cpp *.cc *.c *.hpp *.h CMakeLists.txt
