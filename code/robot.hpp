@@ -588,6 +588,10 @@ void DetecteCollision(int robot1, int robot2) {
                 }
                 robots[robot1].collisionSpeedTime = collisionTime - 1;
                 robots[robot2].collisionSpeedTime = collisionTime - 1;
+                robots[robot1].collisionRotate = 0;
+                robots[robot2].collisionRotate = 0;
+                robots[robot1].collisionRotateTime = collisionTime - 6;
+                robots[robot2].collisionRotateTime = collisionTime - 6;
                 return;
             }
         }
