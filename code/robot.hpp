@@ -483,7 +483,7 @@ void DetecteCollision(int robot1, int robot2) {
     }
     TESTOUTPUT(fout << "碰撞角度" << angle << std::endl;)
 
-    if (angle > M_PI * 135 / 180) { // 135~180  ! 或许都是一个方向会比较好用
+    if (angle > M_PI * 150 / 180) { // 135~180  ! 或许都是一个方向会比较好用
         TESTOUTPUT(fout << "collision need rotate" << std::endl;)
         int status1 = Vector2D(robots[robot1].linearSpeedX, robots[robot1].linearSpeedY)^Vector2D(robots[2].x - robots[1].x, robots[2].y - robots[1].y);
         status1 = status1 > 0 ? 1 : -1;
