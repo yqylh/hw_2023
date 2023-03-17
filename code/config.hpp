@@ -60,9 +60,13 @@ int worktableNum = -1; // 当前工作台标号,实际数量-1, 0-worktableNum
 int money = 0; // 当前金钱
 int nowTime = 0; // 当前帧数
 int canBuy[MAX_Item_Type_Num + 1] = {0}; // 当前可以购买的物品数
+int lossCollMoney = 0; // 当前损失的金钱
+int lossTimeMoney = 0; // 当前每帧的金钱
 #ifdef EBUG
     std::ofstream fout("output.txt"); // 测试用输出
     void quit() {
+        fout << "lossCollMoney: " << lossCollMoney << std::endl;
+        fout << "lossTimeMoney: " << lossTimeMoney << std::endl;
         fout.close();
     }
 #endif

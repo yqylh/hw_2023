@@ -92,6 +92,8 @@ struct Robot{
             // 该工作台的此原料不满,且支持卖出
             TESTOUTPUT(fout << "sell " << id << std::endl;)
             printf("sell %d\n", id);
+            lossCollMoney += sellMoneyMap[worktables[worktableId].type] * (1 - crashCoef);
+            lossTimeMoney += sellMoneyMap[worktables[worktableId].type] * (1 - timeCoef);
             bringId = 0;
         }
     }
