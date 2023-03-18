@@ -5,19 +5,16 @@ struct Path{
     int buyWorktableId;
     int sellWorktableId;
     int robotId;
-    int earnedMoney;
-    int time;
-    double Parameters;
-    Path(int buyWorktableId, int sellWorktableId, int robotId, int earnedMoney, int time, double Parameters) {
+    double earnedMoney;
+    double time;
+    double parameters;
+    Path(int buyWorktableId, int sellWorktableId, int robotId, double earnedMoney, double time) {
         this->buyWorktableId = buyWorktableId;
         this->sellWorktableId = sellWorktableId;
         this->robotId = robotId;
         this->earnedMoney = earnedMoney;
         this->time = time;
-        this->Parameters = Parameters;
-    }
-    inline bool operator < (const Path &b) const {
-        return Parameters < b.Parameters;
+        this->parameters = earnedMoney / time;
     }
 };
 
