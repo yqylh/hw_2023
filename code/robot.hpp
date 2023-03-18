@@ -588,14 +588,14 @@ void DetecteCollision(int robot1, int robot2) {
                 if (accelerationTime1 > 0) {
                     robots[robot1].collisionSpeed = 6;
                 } else if (accelerationTime1 < 0) {
-                    robots[robot1].collisionSpeed = -6;
+                    robots[robot1].collisionSpeed = -2;
                 } else {
                     robots[robot1].collisionSpeed = speed1;
                 }
                 if (accelerationTime2 > 0) {
                     robots[robot2].collisionSpeed = 6;
                 } else if (accelerationTime2 < 0) {
-                    robots[robot2].collisionSpeed = -6;
+                    robots[robot2].collisionSpeed = -2;
                 } else {
                     robots[robot2].collisionSpeed = speed2;
                 }
