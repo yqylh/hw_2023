@@ -55,16 +55,6 @@ struct Worktable{
         }
         TESTOUTPUT(fout << std::endl;)
     }
-    void checkCanBuy() {
-        // 检查对哪些物品有需求
-        for (int i = 1; i <= MAX_Item_Type_Num; i++) {
-            if (sellSet.find(std::make_pair(i, this->type)) != sellSet.end()) {
-                if (this->inputId[i] == 0) {
-                    canBuy[i]++;
-                }
-            }
-        }
-    }
     void checkWait() {
         int all = 0;
         int have = 0;

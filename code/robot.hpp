@@ -133,117 +133,19 @@ struct Robot{
         // 机器人没有携带原材料
         if (worktableId == -1) return; // 机器人不在工作台附近
         // 机器人正在工作台附近
-        if (canBuy[createMap[worktables[worktableId].type]] <= 0) return; // 这种物品已经足够多了
         if (worktables[worktableId].output == true && money >= buyMoneyMap[createMap[worktables[worktableId].type]]) {
             // 如果买了卖不出去
             if (nowTime + 25 + minSellTime(worktableId) > MAX_TIME) {
                 worktables[worktableId].dontBuy = true;
                 return;
             }
-            // 未启用功能
-            // canBuy[createMap[worktables[worktableId].type]]--;
             TESTOUTPUT(fout << "buy " << id << std::endl;)
             printf("buy %d\n", id);
             bringId = worktables[worktableId].type;
             money -= buyMoneyMap[createMap[worktables[worktableId].type]];
         }
     }
-    int FindBuy() {
-        std::vector<std::pair<int, double>> distance;
-        // 找到所有可以买的工作台
-        for (int i = 0; i <= worktableNum; i++) {
-            // 有生产的物品 && 买得起 && 还有可以买的
-            if (worktables[i].output == true && money >= buyMoneyMap[createMap[worktables[i].type]] 
-                && canBuy[createMap[worktables[i].type]] > 0 && worktables[i].dontBuy == false) {
-                distance.push_back(std::make_pair(i, (x - worktables[i].x) * (x - worktables[i].x) + (y - worktables[i].y) * (y - worktables[i].y)));
-            }
-        }
-        std::sort(distance.begin(), distance.end(), [](std::pair<int, double> a, std::pair<int, double> b) {
-            return a.second < b.second;
-        });
-        // 如果没有可以买的工作台
-        // 那么就找一个生产剩余时间最少的工作台(>0)
-        if (distance.size() == 0) {
-            std::vector<std::pair<int, int>> timeLess;
-            for (int i = 0; i <= worktableNum; i++) /*if (worktables[i].remainTime != -1)*/ { // 真的在生产 !未启用功能
-                timeLess.push_back(std::make_pair(i, getDistance(i)));
-            }
-            std::sort(timeLess.begin(), timeLess.end(), [](std::pair<int, int> a, std::pair<int, int> b) {
-                return a.second < b.second;
-            });
-            // 如果这个工作台这回合没人去买
-            for (auto & i : timeLess) {
-                if (worktables[i.first].anyOneChooseBuy != nowTime) {
-                    worktables[i.first].anyOneChooseBuy = nowTime;
-                    return i.first;
-                }
-            }
-            // 如果一个都没找到可以去的,就去最中间
-            // if (timeLess.size() == 0) return worktableNum / 2;
-            // return timeLess[0].first;
-            return worktableNum / 2;
-        }
-        // // 如果这个工作台这回合没人去 且 按照优先级高到低进行
-        // for (int priority = 3; priority >= 1; priority--) {
-        //     int index;
-        //     for (auto & i : distance) {
-        //         if (i.second > distance[0].second * 1.5) break;
-        //         if (buyPrioriryMap[worktables[i.first].type] == priority) {
-        //             if (worktables[i.first].anyOneChooseBuy != nowTime) {
-        //                 worktables[i.first].anyOneChooseBuy = nowTime;
-        //                 return i.first;
-        //             }
-        //         }
-        //     }
-        // }
-        // 按照优先级前1/3没找到的话就随便找一个 如果这个工作台这回合没人去买
-        for (auto & i : distance) {
-            if (worktables[i.first].anyOneChooseBuy != nowTime) {
-                worktables[i.first].anyOneChooseBuy = nowTime;
-                return i.first;
-            }
-        }
-        return distance[0].first;
-    }
-    int FindSell() {
-        // 找到所有可以卖的工作台
-        std::vector<std::pair<int, double>> distance;
-        for (int i = 0; i <= worktableNum; i++) {
-            if (worktables[i].inputId[bringId] == 0 && sellSet.find(std::make_pair(bringId, worktables[i].type)) != sellSet.end()) {
-                distance.push_back(std::make_pair(i, (x - worktables[i].x) * (x - worktables[i].x) + (y - worktables[i].y) * (y - worktables[i].y)));
-            }
-        }
-        // 选一个距离最近的
-        std::sort(distance.begin(), distance.end(), [](std::pair<int, double> a, std::pair<int, double> b) {
-            return a.second < b.second;
-        });
-        // 如果没有可以卖的工作台
-        if (distance.size() == 0) {
-            return -1;
-        }
-        // 如果这个工作台这回合没人去 且 按照优先级高到低进行
-        for (int priority = 5; priority >= 2; priority--) {
-            int index;
-            for (auto & i : distance) {
-                index++;
-                if (index > distance.size() / 3) break;
-                if (worktables[i.first].waitPriority == priority) {
-                    if (worktables[i.first].anyOneChooseSell[bringId] != nowTime) {
-                        worktables[i.first].anyOneChooseSell[bringId] = nowTime;
-                        return i.first;
-                    }
-                }
-            }
-        }
-        // 按照优先级前1/3没找到的话就随便找一个
-        for (auto & i : distance) {
-            if (worktables[i.first].anyOneChooseSell[bringId] != nowTime) {
-                worktables[i.first].anyOneChooseSell[bringId] = nowTime;
-                return i.first;
-            }
-        }
-        return distance[0].first;
-    }
+
 
     void Move() {
         std::vector<double> vec1 = {1, 0};
@@ -366,19 +268,6 @@ struct Robot{
     // 查找下一个目的地
     int FindMove() {
         int worktableTogo = -1;
-        if (bringId == 0) { // 找地方去买
-            worktableTogo = FindBuy();
-        } else { // 找地方去卖
-            worktableTogo = FindSell();
-            if (worktableTogo == -1) { // 如果没有可以卖的地方
-                int haveDestory = Destroy();
-                if (haveDestory == -1) {
-                    worktableTogo = FindBuy(); // 找地方去买
-                } else {
-                    worktableTogo = haveDestory;
-                }
-            }
-        }
         TESTOUTPUT(fout << "robot" << id << " want-go " << worktableTogo << " type=" << worktables[worktableTogo].type << std::endl;)
         return worktableTogo;
     }
@@ -387,11 +276,6 @@ struct Robot{
         Sell();
         Buy();
         worktableTogo = FindMove();
-    }
-    void checkCanBuy() {
-        if (bringId != 0) {
-            canBuy[bringId]--;
-        }
     }
     void checkWall() {
         bool wallnear = false;
