@@ -93,6 +93,9 @@ struct Robot{
             TESTOUTPUT(fout << "sell " << id << std::endl;)
             printf("sell %d\n", id);
             lossCollMoney += sellMoneyMap[worktables[worktableId].type] * (1 - crashCoef);
+            if (crashCoef < 1) {
+                TESTOUTPUT(fout << "有碰撞损失: " << crashCoef << std::endl;)
+            }
             lossTimeMoney += sellMoneyMap[worktables[worktableId].type] * (1 - timeCoef);
             bringId = 0;
         }
@@ -317,8 +320,8 @@ struct Robot{
             如果转向小于3.6°, 就按照比例转向
         */
         if (absRotate > 0.0001){
-            if (absRotate < M_PI / 50) {
-                double Ratio = absRotate / (M_PI / 50); 
+            if (absRotate < M_PI / 25) {
+                double Ratio = absRotate / (M_PI / 25); 
                 rotate = rotate / absRotate * M_PI * Ratio;
             } else {
                 rotate = rotate / absRotate * M_PI;
@@ -486,10 +489,13 @@ void DetecteCollision(int robot1, int robot2) {
     TESTOUTPUT(fout << "碰撞角度" << angle << std::endl;)
 
     if (angle > M_PI * 150 / 180) { // 135~180  ! 或许都是一个方向会比较好用
+        if (robots[robot1].collisionRotateTime > 0) {
+            return;
+        }
         TESTOUTPUT(fout << "collision need rotate" << std::endl;)
-        int status1 = Vector2D(cos(robots[robot1].direction), sin(robots[robot1].direction))^Vector2D(robots[2].x - robots[1].x, robots[2].y - robots[1].y);
+        double status1 = Vector2D(cos(robots[robot1].direction), sin(robots[robot1].direction))^Vector2D(robots[robot2].x - robots[robot1].x, robots[robot2].y - robots[robot1].y);
         status1 = status1 > 0 ? 1 : -1;
-        int status2 = Vector2D(cos(robots[robot2].direction), sin(robots[robot2].direction))^Vector2D(robots[1].x - robots[2].x, robots[1].y - robots[2].y);
+        double status2 = Vector2D(cos(robots[robot2].direction), sin(robots[robot2].direction))^Vector2D(robots[robot1].x - robots[robot2].x, robots[robot1].y - robots[robot2].y);
         status2 = status2 > 0 ? 1 : -1;
         // 叉积 > 0 逆时针到达对方. < 0 顺时针到达对方
         robots[robot1].collisionRotate = -status1 * M_PI;
@@ -500,6 +506,11 @@ void DetecteCollision(int robot1, int robot2) {
         robots[robot2].collisionSpeedTime = 1;
         robots[robot1].collisionRotateTime = 1;
         robots[robot2].collisionRotateTime = 1;
+        if (angle > M_PI * 175 / 180) {
+            TESTOUTPUT(fout << "碰撞大角度" << std::endl;)
+            robots[robot1].collisionRotateTime = 8;
+            robots[robot2].collisionRotateTime = 8;
+        }
         if ((robot1Pos-robot2Pos).length() - robot1Radii - robot2Radii - 0.12 < 0) { // 12 最大角速度转向时间 16 角速度改变最大时间
             TESTOUTPUT(fout << "collision need go back" << std::endl;)
             // 距离比较近的情况, 考虑到预测范围没预测到,或者发生了被赢拽回来了的情况
@@ -599,9 +610,9 @@ void DetecteCollision(int robot1, int robot2) {
         }
     }
     TESTOUTPUT(fout << "could not find a solution" << std::endl;)
-    int status1 = Vector2D(cos(robots[robot1].direction), sin(robots[robot1].direction))^Vector2D(robots[2].x - robots[1].x, robots[2].y - robots[1].y);
+    double status1 = Vector2D(cos(robots[robot1].direction), sin(robots[robot1].direction))^Vector2D(robots[robot2].x - robots[robot1].x, robots[robot2].y - robots[robot1].y);
     status1 = status1 > 0 ? 1 : -1;
-    int status2 = Vector2D(cos(robots[robot2].direction), sin(robots[robot2].direction))^Vector2D(robots[1].x - robots[2].x, robots[1].y - robots[2].y);
+    double status2 = Vector2D(cos(robots[robot2].direction), sin(robots[robot2].direction))^Vector2D(robots[robot1].x - robots[robot2].x, robots[robot1].y - robots[robot2].y);
     status2 = status2 > 0 ? 1 : -1;
     // 叉积 > 0 逆时针到达对方. < 0 顺时针到达对方
     robots[robot1].collisionRotate = -status1 * M_PI;
