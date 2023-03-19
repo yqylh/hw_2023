@@ -281,8 +281,6 @@ struct Robot{
     }
     void FindAPath() {
         std::vector<Path *> paths;
-        std::vector<Path *> paths7;
-        std::vector<Path *> paths456Block;
         for (auto & buy : worktables) {
             /**
              * 有产物, 没人预约
@@ -327,42 +325,24 @@ struct Robot{
                 double earnMoney = sellMoneyMap[productId] * timeLoss - buyMoneyMap[productId];
                 // 尽量不卖给 9
                 if (sell.type == 9) earnMoney = earnMoney * 0.9;
-                Path * path = new Path(buy.id, sell.id, id, earnMoney, sumTime);
-                // if (productId == 7) {
-                //     paths7.push_back(path);
-                // } else 
-                // if ( (productId == 4 || productId == 5 || productId == 6) 
-                //             && (buy.remainTime == 0 || (buy.remainTime < goBuyTime && buy.output == true))
-                //             ) { // 456阻塞
-                //     paths456Block.push_back(path);
-                // } else 
-                {
-                    paths.push_back(path);
+                if ( (productId == 4 || productId == 5 || productId == 6 || productId == 7) && (buy.remainTime == 0 || (buy.remainTime < goBuyTime && buy.output == true))
+                ) {
+                    earnMoney = earnMoney * 1.1;
                 }
+                Path * path = new Path(buy.id, sell.id, id, earnMoney, sumTime);
+                paths.push_back(path);
             }
         }
         // 理论上只有快结束才出现
-        if (paths.size() == 0 && paths7.size() == 0 && paths456Block.size() == 0) {
+        if (paths.size() == 0) {
             TESTOUTPUT(fout << "error" << std::endl;)
             worktableTogo = -1;
             return;
         }
-        std::sort(paths.begin(), paths.end(), [](Path * a, Path * b) {
+        std::sort(paths.begin(), paths.begin() + paths.size(), [](Path * a, Path * b) {
             return a->parameters > b->parameters;
         });
-        std::sort(paths7.begin(), paths7.end(), [](Path * a, Path * b) {
-            return a->parameters > b->parameters;
-        });
-        std::sort(paths456Block.begin(), paths456Block.end(), [](Path * a, Path * b) {
-            return a->parameters > b->parameters;
-        });
-        if (paths7.size() > 0) {
-            path = paths7[0];
-        } else if (paths456Block.size() > 0) {
-            path = paths456Block[0];
-        } else {
-            path = paths[0];
-        }
+        path = paths[0];
         TESTOUTPUT(fout << "robot" << id << " find path " << path->buyWorktableId << " " << path->sellWorktableId << std::endl;)
         worktableTogo = path->buyWorktableId;
         worktables[path->buyWorktableId].someWillBuy++;
