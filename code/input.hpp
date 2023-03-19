@@ -80,7 +80,7 @@ void solveFrame() {
     }
     for (int i = 0; i <= robotNum; i++) {
         robots[i].action();
-        TESTOUTPUT(robots[i].outputTest();) 
+        // TESTOUTPUT(robots[i].outputTest();) 
     }
     for (int i = 0; i <= robotNum; i++) {
         robots[i].checkWall();

@@ -301,6 +301,7 @@ struct Robot{
             if (goBuyTime < waitBuyTime) continue;
             // 购买的产品
             int productId = createMap[buy.type];
+            // TESTOUTPUT(fout << "go " << buy.id << " buy" << productId << std::endl;)
             for (auto & sell : worktables) {
                 if (sell.id == -1) break;
                 // 确保这个工作台支持买,而且输入口是空的
@@ -309,10 +310,12 @@ struct Robot{
                  * 确保没人预约卖
                  * 或者类型是8 || 9
                 */
+                // TESTOUTPUT(fout << "空的" << sell.id << " sell" << productId << std::endl;)
                 if (sell.someWillSell[productId] == 0 || sell.type == 8 || sell.type == 9) {} else continue;
+                // TESTOUTPUT(fout << "没人预约" << sell.id << " sell" << productId << std::endl;)
                 // 时间消耗
                 double goSellTime = getMinGoToTime(buy.x, buy.y, sell.x, sell.y);
-                double sumTime = goBuyTime + goSellTime;
+                double sumTime = std::max(goBuyTime, waitBuyTime) + goSellTime;
                 if (sumTime + nowTime > MAX_TIME) continue;
                 // 时间损失
                 double timeLoss;
@@ -325,9 +328,9 @@ struct Robot{
                 double earnMoney = sellMoneyMap[productId] * timeLoss - buyMoneyMap[productId];
                 // 尽量不卖给 9
                 if (sell.type == 9) earnMoney = earnMoney * 0.9;
-                if ( (productId == 4 || productId == 5 || productId == 6 || productId == 7) && (buy.remainTime == 0 || (buy.remainTime < goBuyTime && buy.output == true))
+                if ( (productId == 4 || productId == 5 || productId == 6 || productId == 7) && ((buy.remainTime == 0 && buy.someWillBuy == 0) || (buy.remainTime < goBuyTime && buy.output == true && buy.someWillBuy == 0))
                 ) {
-                    earnMoney = earnMoney * 1.1;
+                    // earnMoney = earnMoney * 1.1;
                 }
                 Path * path = new Path(buy.id, sell.id, id, earnMoney, sumTime);
                 paths.push_back(path);
