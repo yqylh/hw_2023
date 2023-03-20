@@ -136,20 +136,6 @@ void solveGraph() {
             worktables[near6[0].first].near7 = 1.2;
             TESTOUTPUT(fout << near6[0].first << " ";)
         }
-        if (near7.size() == 1) {
-            if (near4.size() >= 2) {
-                worktables[near4[1].first].near7 = 1.1;
-                TESTOUTPUT(fout << near4[1].first << " ";)
-            }
-            if (near5.size() >= 2) {
-                worktables[near5[1].first].near7 = 1.1;
-                TESTOUTPUT(fout << near5[1].first << " ";)
-            }
-            if (near6.size() >= 2) {
-                worktables[near6[1].first].near7 = 1.1;
-                TESTOUTPUT(fout << near6[1].first << " ";)
-            }
-        }
         TESTOUTPUT(fout << std::endl;)
     }
 }
