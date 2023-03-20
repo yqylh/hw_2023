@@ -45,8 +45,19 @@ void solveGraph() {
         std::sort(near7.begin(), near7.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
             return a.second < b.second;
         }); // 按照距离排序
+        int index = 0;
         for (auto & num7 : near7) {
             int id7 = num7.first;
+            index++;
+            if (index <= near7.size() * 0.15) {
+                worktables[id7].near7 = 2;
+            } else if (index <= near7.size() * 0.25) {
+                worktables[id7].near7 = 1.6;
+            } else if (index <= near7.size() * 0.5) {
+                worktables[id7].near7 = 1.4;
+            } else {
+                break;
+            }
             std::vector<std::pair<int, double> > near1, near2;
             for (auto & i : worktables) {
                 if (i.type == 1 && i.near7 == 1) {
@@ -72,14 +83,6 @@ void solveGraph() {
             if (near2.size() >= 1) {
                 worktables[near2[0].first].near7 = 1.2;
                 TESTOUTPUT(fout << near2[0].first << " ";)
-            }
-            if (near1.size() >= 2) {
-                worktables[near1[1].first].near7 = 1.2;
-                TESTOUTPUT(fout << near1[1].first << " ";)
-            }
-            if (near2.size() >= 2) {
-                worktables[near2[1].first].near7 = 1.2;
-                TESTOUTPUT(fout << near2[1].first << " ";)
             }
             TESTOUTPUT(fout << std::endl;)
         }
