@@ -277,7 +277,7 @@ struct Robot{
     }
     double getMinGoToTime(double x1, double y1, double x2, double y2) {
         double length = (Vector2D(x1, y1) - Vector2D(x2, y2)).length();
-        return length / 0.12;
+        return length / 0.12 + 25;
     }
     void FindAPath() {
         std::vector<Path *> paths;
@@ -302,7 +302,6 @@ struct Robot{
             if (goBuyTime < waitBuyTime) continue;
             // 购买的产品
             int productId = createMap[buy.type];
-            // TESTOUTPUT(fout << "go " << buy.id << " buy" << productId << std::endl;)
             for (auto & sell : worktables) {
                 if (sell.id == -1) break;
                 // 确保这个工作台支持买,而且输入口是空的
@@ -311,37 +310,9 @@ struct Robot{
                  * 确保没人预约卖
                  * 或者类型是8 || 9
                 */
-                // TESTOUTPUT(fout << "空的" << sell.id << " sell" << productId << std::endl;)
                 if (sell.someWillSell[productId] == 0 || sell.type == 8 || sell.type == 9) {} else continue;
-                // TESTOUTPUT(fout << "没人预约" << sell.id << " sell" << productId << std::endl;)
                 // 时间消耗
                 double goSellTime = getMinGoToTime(buy.x, buy.y, sell.x, sell.y);
-                // double to789Time = 0;
-                // {
-                //     if (sell.type == 4 || sell.type == 5 || sell.type == 6) {
-                //         to789Time = INT_MAX;
-                //         for (auto & final : worktables) {
-                //             if (final.type == 7) {
-                //                 to789Time = std::min(getMinGoToTime(sell.x, sell.y, final.x, final.y), to789Time);
-                //             }
-                //         }
-                //         if (to789Time == INT_MAX) {
-                //             for (auto & final : worktables) {
-                //                 if (final.type == 9) {
-                //                     to789Time = std::min(getMinGoToTime(sell.x, sell.y, final.x, final.y), to789Time);
-                //                 }
-                //             }
-                //         }
-                //     }
-                //     if (sell.type == 7) {
-                //         to789Time = INT_MAX;
-                //         for (auto & final : worktables) {
-                //             if (final.type == 8 || final.type == 9) {
-                //                 to789Time = std::min(getMinGoToTime(sell.x, sell.y, final.x, final.y), to789Time);
-                //             }
-                //         }
-                //     }
-                // }
                 double sumTime = std::max(goBuyTime, waitBuyTime) + goSellTime;
                 if (sumTime + nowTime > MAX_TIME) continue;
                 // 时间损失
@@ -354,11 +325,9 @@ struct Robot{
                 // 卖出产品赚取的钱
                 double earnMoney = sellMoneyMap[productId] * timeLoss - buyMoneyMap[productId];
                 // 尽量不卖给 9
-                if (sell.type == 9) earnMoney = earnMoney * 0.01;
+                if (sell.type == 9) earnMoney = earnMoney * 0.6;
                 Path * path = new Path(buy.id, sell.id, id, earnMoney, sumTime);
-                if (productId == 7) {
-                    paths4567.push_back(path);
-                } else if ((productId == 4 || productId == 5 || productId == 6 ) && ((buy.remainTime == 0 && buy.someWillBuy == 0) || (buy.remainTime < goBuyTime && buy.output == true && buy.someWillBuy == 0))) {
+                if ((productId == 4 || productId == 5 || productId == 6 || productId == 7) && ((buy.remainTime == 0 && buy.someWillBuy == 0) || (buy.remainTime < goBuyTime && buy.output == true && buy.someWillBuy == 0))) {
                     paths4567.push_back(path);
                 }else {
                     paths.push_back(path);
