@@ -1,6 +1,6 @@
 rm ../judge-1/replay/*
 if g++ main.cpp -o main -std=c++17 -O3 -pthread; then
-    for mapNum in {1..7} 
+    for mapNum in {1..6} 
     do
         ../judge-1/Robot -m ../judge-1/maps/$mapNum.txt -r ../judge-1/replay/map$mapNum%Y-%m-%d.%H.%M.%S.rep -f "./main"
     done

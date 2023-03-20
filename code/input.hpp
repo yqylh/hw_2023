@@ -49,6 +49,11 @@ void solveGraph() {
         for (auto & num7 : near7) {
             int id7 = num7.first;
             index++;
+            // if (index <= near7.size() * 0.5) {
+            //     worktables[id7].near7 = 1.1;
+            // } else {
+            //     break;
+            // }
             if (index <= near7.size() * 0.15) {
                 worktables[id7].near7 = 2;
             } else if (index <= near7.size() * 0.25) {
@@ -130,6 +135,20 @@ void solveGraph() {
         if (near6.size() >= 1) {
             worktables[near6[0].first].near7 = 1.2;
             TESTOUTPUT(fout << near6[0].first << " ";)
+        }
+        if (near7.size() == 1) {
+            if (near4.size() >= 2) {
+                worktables[near4[1].first].near7 = 1.1;
+                TESTOUTPUT(fout << near4[1].first << " ";)
+            }
+            if (near5.size() >= 2) {
+                worktables[near5[1].first].near7 = 1.1;
+                TESTOUTPUT(fout << near5[1].first << " ";)
+            }
+            if (near6.size() >= 2) {
+                worktables[near6[1].first].near7 = 1.1;
+                TESTOUTPUT(fout << near6[1].first << " ";)
+            }
         }
         TESTOUTPUT(fout << std::endl;)
     }

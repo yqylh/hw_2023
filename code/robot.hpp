@@ -155,8 +155,7 @@ struct Robot{
 
     void Move() {
         if (worktableTogo == -1) {
-            worktableTogo = 1;
-            return;
+            worktableTogo = worktableNum / 2;
         }
         std::vector<double> vec1 = {1, 0};
         std::vector<double> vec2 = {worktables[worktableTogo].x - x, worktables[worktableTogo].y - y};
