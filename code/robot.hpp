@@ -195,19 +195,6 @@ struct Robot{
         // 由于判定范围是 0.4m,所以如果度数满足这个条件, 就直接冲过去
         if (absRotate < asin(0.4 / length)) {
             speed = 6;
-        // 一个快快快的方案
-        // } else if (absRotate < M_PI / 2) {
-        //     // 如果度数大于x小于90° 
-        //     // 如果转向时间的路程不会更长,就可以走
-        //     if (absRotate > 0.0001)
-        //         speed = length * 50 / (absRotate / 3.6 + 1);
-        //     if (speed > 6) {
-        //         speed = 6;
-        //     }
-        // } else {
-        //     // 如果度数大于90°, 就先倒退转过去
-        //     speed = 2;
-        // }
         } else if (absRotate < M_PI / 4) {
             // 如果度数大于x小于45° 
             // 如果转向时间的路程不会更长,就可以走
@@ -346,7 +333,7 @@ struct Robot{
         std::sort(paths4567.begin(), paths4567.end(), [](Path * a, Path * b) {
             return a->parameters > b->parameters;
         });
-        if (paths4567.size() > 0 && (paths.size() == 0 || paths4567[0]->parameters > paths[0]->parameters * 0.8)) {
+        if (paths4567.size() > 0 && (paths.size() == 0 || paths4567[0]->parameters > paths[0]->parameters * 0.95)) {
             path = paths4567[0];
         } else {
             path = paths[0];
