@@ -301,7 +301,7 @@ struct Robot{
                 // 时间消耗
                 double goSellTime = getMinGoToTime(buy.x, buy.y, sell.x, sell.y);
                 double sumTime = std::max(goBuyTime, waitBuyTime) + goSellTime;
-                if (sumTime + nowTime > MAX_TIME) continue;
+                if (sumTime + 30 + nowTime > MAX_TIME) continue;
                 // 时间损失
                 double timeLoss;
                 if (sumTime >= 9000) {
@@ -313,6 +313,8 @@ struct Robot{
                 double earnMoney = sellMoneyMap[productId] * timeLoss - buyMoneyMap[productId];
                 // 尽量不卖给 9
                 if (sell.type == 9) earnMoney = earnMoney * 0.6;
+                earnMoney *= buy.near7;
+                earnMoney *= sell.near7;
                 Path * path = new Path(buy.id, sell.id, id, earnMoney, sumTime);
                 if ((productId == 4 || productId == 5 || productId == 6 || productId == 7) && ((buy.remainTime == 0 && buy.someWillBuy == 0) || (buy.remainTime < goBuyTime && buy.output == true && buy.someWillBuy == 0))) {
                     paths4567.push_back(path);

@@ -13,6 +13,7 @@ struct Worktable{
     int someWillBuy; // 是否有人选择了这个工作台
     int someWillSell[MAX_Item_Type_Num + 1]; // 是否有人选择了这个工作台卖出
     int waitPriority; // 是否在等待
+    double near7;
     Worktable() {
         this->id = -1;
         this->x = -1;
@@ -25,6 +26,7 @@ struct Worktable{
             this->someWillSell[i] = 0;
         }
         this->someWillBuy = 0;
+        near7 = 1;
     }
     Worktable(int id, double x, double y, int type) {
         this->id = id;
@@ -38,6 +40,7 @@ struct Worktable{
             this->someWillSell[i] = 0;
         }
         this->someWillBuy = 0;
+        near7 = 1;
     }
     void outputTest() {
         TESTOUTPUT(fout << "Worktable id: " << id << std::endl;)

@@ -15,6 +15,123 @@
 #include <cstdio>
 #include <cstdlib>
 
+void solveGraph() {
+    TESTOUTPUT(fout << "special worktable" << std::endl;)   
+    std::vector<std::pair<int, double> > near7;
+    for (auto & i : worktables) {
+        if (i.type == 7) {
+            double dis = 1e8;
+            for (auto & j : worktables) {
+                if (j.type == 8 || j.type == 9) {
+                    dis = std::min(dis, Vector2D(i.x - j.x, i.y - j.y).length());
+                }
+            }
+            near7.push_back(std::make_pair(i.id, dis));
+        }
+    }
+    if (near7.size() == 0) {
+        // 没有7号工作台
+        for (auto & i : worktables) {
+            if (i.type == 4 || i.type == 5 || i.type == 6) {
+                double dis = 1e8;
+                for (auto & j : worktables) {
+                    if (j.type == 9) {
+                        dis = std::min(dis, Vector2D(i.x - j.x, i.y - j.y).length());
+                    }
+                }
+                near7.push_back(std::make_pair(i.id, dis));
+            }
+        }
+        std::sort(near7.begin(), near7.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
+            return a.second < b.second;
+        }); // 按照距离排序
+        for (auto & num7 : near7) {
+            int id7 = num7.first;
+            std::vector<std::pair<int, double> > near1, near2;
+            for (auto & i : worktables) {
+                if (i.type == 1 && i.near7 == 1) {
+                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
+                    near1.push_back(std::make_pair(i.id, dis));
+                }
+                if (i.type == 2 && i.near7 == 1) {
+                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
+                    near2.push_back(std::make_pair(i.id, dis));
+                }
+            }
+            std::sort(near1.begin(), near1.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
+                return a.second < b.second;
+            }); // 按照距离排序
+            std::sort(near2.begin(), near2.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
+                return a.second < b.second;
+            }); // 按照距离排序
+                TESTOUTPUT(fout << "near with id=" << id7 << " is ";)
+            if (near1.size() >= 1) {
+                worktables[near1[0].first].near7 = 1.2;
+                TESTOUTPUT(fout << near1[0].first << " ";)
+            }
+            if (near2.size() >= 1) {
+                worktables[near2[0].first].near7 = 1.2;
+                TESTOUTPUT(fout << near2[0].first << " ";)
+            }
+            if (near1.size() >= 2) {
+                worktables[near1[1].first].near7 = 1.2;
+                TESTOUTPUT(fout << near1[1].first << " ";)
+            }
+            if (near2.size() >= 2) {
+                worktables[near2[1].first].near7 = 1.2;
+                TESTOUTPUT(fout << near2[1].first << " ";)
+            }
+            TESTOUTPUT(fout << std::endl;)
+        }
+        return;
+    }
+    // 有7号工作台  
+    std::sort(near7.begin(), near7.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
+        return a.second < b.second;
+    }); // 按照距离排序
+    for (auto & num7 : near7) {
+        int id7 = num7.first;
+        std::vector<std::pair<int, double> > near4, near5, near6;
+        for (auto & i : worktables) {
+            if (i.type == 4 && i.near7 == 1) {
+                double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
+                near4.push_back(std::make_pair(i.id, dis));
+            }
+            if (i.type == 5 && i.near7 == 1) {
+                double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
+                near5.push_back(std::make_pair(i.id, dis));
+            }
+            if (i.type == 6 && i.near7 == 1) {
+                double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
+                near6.push_back(std::make_pair(i.id, dis));
+            }
+        }
+        std::sort(near4.begin(), near4.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
+            return a.second < b.second;
+        }); // 按照距离排序
+        std::sort(near5.begin(), near5.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
+            return a.second < b.second;
+        }); // 按照距离排序
+        std::sort(near6.begin(), near6.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
+            return a.second < b.second;
+        }); // 按照距离排序
+        TESTOUTPUT(fout << "near with id=" << id7 << " is ";)
+        if (near4.size() >= 1) {
+            worktables[near4[0].first].near7 = 1.2;
+            TESTOUTPUT(fout << near4[0].first << " ";)
+        }
+        if (near5.size() >= 1) {
+            worktables[near5[0].first].near7 = 1.2;
+            TESTOUTPUT(fout << near5[0].first << " ";)
+        }
+        if (near6.size() >= 1) {
+            worktables[near6[0].first].near7 = 1.2;
+            TESTOUTPUT(fout << near6[0].first << " ";)
+        }
+        TESTOUTPUT(fout << std::endl;)
+    }
+}
+
 void inputMap(){
     for (int i = 0; i < MAP_Line_Length; i++) {
         for (int j = 0; j < MAP_Col_Length; j++) {
@@ -35,6 +152,7 @@ void inputMap(){
     while(getline(std::cin, line) && line != "OK");
     puts("OK");
     fflush(stdout);
+    solveGraph();
 }
 
 bool inputFrame() {
