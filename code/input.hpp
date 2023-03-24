@@ -180,6 +180,51 @@ void solveGraph() {
         }
         return;
     }
+    if (near7.size() == 1) {
+        for (auto & num7 : near7) {
+            int id7 = num7.first;
+            worktables[id7].near7 = 5;
+            std::vector<std::pair<int, double> > near4, near5, near6;
+            for (auto & i : worktables) {
+                if (i.type == 4 && i.near7 == 1) {
+                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
+                    near4.push_back(std::make_pair(i.id, dis));
+                }
+                if (i.type == 5 && i.near7 == 1) {
+                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
+                    near5.push_back(std::make_pair(i.id, dis));
+                }
+                if (i.type == 6 && i.near7 == 1) {
+                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
+                    near6.push_back(std::make_pair(i.id, dis));
+                }
+            }
+            std::sort(near4.begin(), near4.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
+                return a.second < b.second;
+            }); // 按照距离排序
+            std::sort(near5.begin(), near5.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
+                return a.second < b.second;
+            }); // 按照距离排序
+            std::sort(near6.begin(), near6.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
+                return a.second < b.second;
+            }); // 按照距离排序
+            TESTOUTPUT(fout << "near with id=" << id7 << " is ";)
+            if (near4.size() >= 1) {
+                worktables[near4[0].first].near7 = 3;
+                TESTOUTPUT(fout << near4[0].first << " ";)
+            }
+            if (near5.size() >= 1) {
+                worktables[near5[0].first].near7 = 2;
+                TESTOUTPUT(fout << near5[0].first << " ";)
+            }
+            if (near6.size() >= 1) {
+                worktables[near6[0].first].near7 = 2;
+                TESTOUTPUT(fout << near6[0].first << " ";)
+            }
+            TESTOUTPUT(fout << std::endl;)
+        }
+        return;
+    }
     for (auto & num7 : near7) {
         int id7 = num7.first;
         std::vector<std::pair<int, double> > near4, near5, near6;
