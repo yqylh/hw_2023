@@ -30,6 +30,7 @@ void solveGraph() {
         }
     }
     if (near7.size() == 0) {
+        mapId = 3;
         // 没有7号工作台
         for (auto & i : worktables) {
             if (i.type == 4 || i.type == 5 || i.type == 6) {
@@ -89,6 +90,7 @@ void solveGraph() {
         return a.second < b.second;
     }); // 按照距离排序
     if (near7.size() == 8) {
+        mapId = 1;
         int index = 0;
         for (auto & num7 : near7) {
             int id7 = num7.first;
@@ -136,6 +138,7 @@ void solveGraph() {
         return;
     }
     if (near7.size() == 2) {
+        mapId = 2;
         for (auto & num7 : near7) {
             int id7 = num7.first;
             worktables[id7].near7 = 5;
@@ -181,6 +184,7 @@ void solveGraph() {
         return;
     }
     if (near7.size() == 1) {
+        mapId = 4;
         for (auto & num7 : near7) {
             int id7 = num7.first;
             worktables[id7].near7 = 5;

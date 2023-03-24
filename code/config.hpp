@@ -61,6 +61,7 @@ int money = 0; // 当前金钱
 int nowTime = 0; // 当前帧数
 int lossCollMoney = 0; // 当前损失的金钱
 int lossTimeMoney = 0; // 当前每帧的金钱
+int mapId = 0; // 当前地图标号
 #ifdef EBUG
     std::ofstream fout("output.txt"); // 测试用输出
     void quit() {
