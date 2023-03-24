@@ -263,6 +263,7 @@ struct Robot{
     }
     double getMinGoToTime(double x1, double y1, double x2, double y2) {
         double length = (Vector2D(x1, y1) - Vector2D(x2, y2)).length();
+        if (mapId == 3) return length / 0.12 + 20;
         return length / 0.12 + 25;
     }
     void FindAPath() {
@@ -311,6 +312,9 @@ struct Robot{
                 // 卖出产品赚取的钱
                 double earnMoney = sellMoneyMap[productId] * timeLoss - buyMoneyMap[productId];
                 // 尽量不卖给 9
+                if (mapId == 3) {
+                    if (sell.type == 9) earnMoney = earnMoney * 0.8;
+                } else
                 if (sell.type == 9) earnMoney = earnMoney * 0.6;
                 earnMoney *= buy.near7;
                 earnMoney *= sell.near7;
