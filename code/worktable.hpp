@@ -75,7 +75,7 @@ struct Worktable{
         // 7 存在两个输入
         if (all == 3 && have == 2) {
             this->waitPriority = 5;
-        }
+        } else
         // 7 存在一个输入
         if (all == 3 && have >= 1) {
             this->waitPriority = 4;
@@ -86,6 +86,7 @@ struct Worktable{
         }
         // 8 || 9 结果最差, 将其设置为 0
         if (all == 7 || all == 1) this->waitPriority = 2;
+        TESTOUTPUT(fout << "all: " << all << " have: " << have << " waitPriority: " << waitPriority << std::endl;)
         // // 不分级
         // this->waitPriority = 2;
         // // 分两级

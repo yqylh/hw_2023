@@ -318,6 +318,7 @@ struct Robot{
                 if (sell.type == 9) earnMoney = earnMoney * 0.6;
                 earnMoney *= buy.near7;
                 earnMoney *= sell.near7;
+                if (sell.waitPriority == 5) earnMoney *= 1.2;
                 Path * path = new Path(buy.id, sell.id, id, earnMoney, sumTime);
                 if ((productId == 4 || productId == 5 || productId == 6 || productId == 7) && ((buy.remainTime == 0 && buy.someWillBuy == 0) || (buy.remainTime < goBuyTime && buy.output == true && buy.someWillBuy == 0))) {
                     paths4567.push_back(path);
