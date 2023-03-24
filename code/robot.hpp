@@ -318,7 +318,13 @@ struct Robot{
                 if (sell.type == 9) earnMoney = earnMoney * 0.6;
                 earnMoney *= buy.near7;
                 earnMoney *= sell.near7;
-                if (sell.waitPriority == 5) earnMoney *= 1.2;
+                if (sell.waitPriority == 5) {
+                    if (mapId == 1) {
+                        earnMoney *= 1.2;
+                    } else {
+                        earnMoney *= 1.2;
+                    }
+                }
                 Path * path = new Path(buy.id, sell.id, id, earnMoney, sumTime);
                 if ((productId == 4 || productId == 5 || productId == 6 || productId == 7) && ((buy.remainTime == 0 && buy.someWillBuy == 0) || (buy.remainTime < goBuyTime && buy.output == true && buy.someWillBuy == 0))) {
                     paths4567.push_back(path);
@@ -456,7 +462,7 @@ void DetecteCollision(int robot1, int robot2) {
     }
     TESTOUTPUT(fout << "碰撞角度" << angle << std::endl;)
 
-    if (angle > M_PI * 150 / 180) { // 135~180  ! 或许都是一个方向会比较好用
+    if (angle > M_PI * (mapId == 1 ? 130 : 150) / 180) { // 135~180  ! 或许都是一个方向会比较好用
         if (robots[robot1].collisionRotateTime > 0) {
             return;
         }
