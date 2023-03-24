@@ -50,11 +50,15 @@ void solveGraph() {
         for (auto & num7 : near7) {
             int id7 = num7.first;
             index++;
-            if (index <= near7.size() * 0.5) {
-                worktables[id7].near7 = 2;
-            } else {
-                break;
-            }
+            // if (index <= near7.size() * 0.5) {
+                worktables[id7].near7 = (cos(num7.second / near7.rbegin()->second * M_PI / 2) + 1.5) * 2;
+                // worktables[id7].near7 = (cos(num7.second / near7.rbegin()->second * M_PI) + 2) * 2;
+                // TESTOUTPUT(fout << "id " << id7 << " " << worktables[id7].near7 << std::endl;)
+                if (worktables[id7].near7 < 1) worktables[id7].near7 = 1;
+                // worktables[id7].near7 = 2;
+            // } else {
+            //    break;
+            // }
             std::vector<std::pair<int, double> > near1, near2;
             for (auto & i : worktables) {
                 if (i.type == 1 && i.near7 == 1) {
@@ -83,6 +87,8 @@ void solveGraph() {
             }
             TESTOUTPUT(fout << std::endl;)
         }
+        // for (int id = 0; id < 8; id++) worktables[id].near7 = 0.01;
+        // for (int id = worktableNum - 15 + 1; id <= worktableNum; id++) worktables[id].near7 = 0.01;
         return;
     }
     // 有7号工作台  
