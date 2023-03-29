@@ -18,8 +18,9 @@ const int MAX_Worktable_Num = 50; // 最大工作台数
 const int MAX_Robot_Num = 4; // 最大机器人数
 const int MAP_Line_Length = 100; // 地图有多少行
 const int MAP_Col_Length = 100; // 地图有多少列
-const int MAX_TIME = 3 * 60 * 50; // 最大帧数
+const int MAX_TIME = 5 * 60 * 50; // 最大帧数
 const int futureTime = 27;     // 预测的时间, 从 6->-2需要 27 帧
+int canBuy[MAX_Item_Type_Num + 1] = {0}; // 当前物品需求
 
 
 std::set<std::pair<int, int> > sellSet = {
@@ -61,7 +62,6 @@ int money = 0; // 当前金钱
 int nowTime = 0; // 当前帧数
 int lossCollMoney = 0; // 当前损失的金钱
 int lossTimeMoney = 0; // 当前每帧的金钱
-int mapId = 0; // 当前地图标号
 #ifdef EBUG
     std::ofstream fout("output.txt"); // 测试用输出
     void quit() {

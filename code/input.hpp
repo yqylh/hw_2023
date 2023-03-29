@@ -16,7 +16,6 @@
 #include <cstdlib>
 
 void solveGraph() {
-    TESTOUTPUT(fout << "special worktable" << std::endl;)   
     std::vector<std::pair<int, double> > near7;
     for (auto & i : worktables) {
         if (i.type == 7) {
@@ -30,7 +29,6 @@ void solveGraph() {
         }
     }
     if (near7.size() == 0) {
-        mapId = 3;
         // 没有7号工作台
         for (auto & i : worktables) {
             if (i.type == 4 || i.type == 5 || i.type == 6) {
@@ -95,148 +93,9 @@ void solveGraph() {
     std::sort(near7.begin(), near7.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
         return a.second < b.second;
     }); // 按照距离排序
-    if (near7.size() == 8) {
-        mapId = 1;
-        int index = 0;
-        for (auto & num7 : near7) {
-            int id7 = num7.first;
-            worktables[id7].near7 = 5;
-            if (++index == 2) break;
-            std::vector<std::pair<int, double> > near4, near5, near6;
-            for (auto & i : worktables) {
-                if (i.type == 4 && i.near7 == 1) {
-                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
-                    near4.push_back(std::make_pair(i.id, dis));
-                }
-                if (i.type == 5 && i.near7 == 1) {
-                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
-                    near5.push_back(std::make_pair(i.id, dis));
-                }
-                if (i.type == 6 && i.near7 == 1) {
-                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
-                    near6.push_back(std::make_pair(i.id, dis));
-                }
-            }
-            std::sort(near4.begin(), near4.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
-                return a.second < b.second;
-            }); // 按照距离排序
-            std::sort(near5.begin(), near5.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
-                return a.second < b.second;
-            }); // 按照距离排序
-            std::sort(near6.begin(), near6.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
-                return a.second < b.second;
-            }); // 按照距离排序
-            TESTOUTPUT(fout << "near with id=" << id7 << " is ";)
-            if (near4.size() >= 1) {
-                worktables[near4[0].first].near7 = 3;
-                TESTOUTPUT(fout << near4[0].first << " ";)
-            }
-            if (near5.size() >= 1) {
-                worktables[near5[0].first].near7 = 3;
-                TESTOUTPUT(fout << near5[0].first << " ";)
-            }
-            if (near6.size() >= 1) {
-                worktables[near6[0].first].near7 = 3;
-                TESTOUTPUT(fout << near6[0].first << " ";)
-            }
-            TESTOUTPUT(fout << std::endl;)
-        }
-        return;
-    }
-    if (near7.size() == 2) {
-        mapId = 2;
-        for (auto & num7 : near7) {
-            int id7 = num7.first;
-            worktables[id7].near7 = 5;
-            std::vector<std::pair<int, double> > near4, near5, near6;
-            for (auto & i : worktables) {
-                if (i.type == 4 && i.near7 == 1) {
-                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
-                    near4.push_back(std::make_pair(i.id, dis));
-                }
-                if (i.type == 5 && i.near7 == 1) {
-                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
-                    near5.push_back(std::make_pair(i.id, dis));
-                }
-                if (i.type == 6 && i.near7 == 1) {
-                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
-                    near6.push_back(std::make_pair(i.id, dis));
-                }
-            }
-            std::sort(near4.begin(), near4.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
-                return a.second < b.second;
-            }); // 按照距离排序
-            std::sort(near5.begin(), near5.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
-                return a.second < b.second;
-            }); // 按照距离排序
-            std::sort(near6.begin(), near6.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
-                return a.second < b.second;
-            }); // 按照距离排序
-            TESTOUTPUT(fout << "near with id=" << id7 << " is ";)
-            if (near4.size() >= 1) {
-                worktables[near4[0].first].near7 = 1.2;
-                TESTOUTPUT(fout << near4[0].first << " ";)
-            }
-            if (near5.size() >= 1) {
-                worktables[near5[0].first].near7 = 1.2;
-                TESTOUTPUT(fout << near5[0].first << " ";)
-            }
-            if (near6.size() >= 1) {
-                worktables[near6[0].first].near7 = 1.4;
-                TESTOUTPUT(fout << near6[0].first << " ";)
-            }
-            TESTOUTPUT(fout << std::endl;)
-        }
-        return;
-    }
-    if (near7.size() == 1) {
-        mapId = 4;
-        for (auto & num7 : near7) {
-            int id7 = num7.first;
-            worktables[id7].near7 = 5;
-            std::vector<std::pair<int, double> > near4, near5, near6;
-            for (auto & i : worktables) {
-                if (i.type == 4 && i.near7 == 1) {
-                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
-                    near4.push_back(std::make_pair(i.id, dis));
-                }
-                if (i.type == 5 && i.near7 == 1) {
-                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
-                    near5.push_back(std::make_pair(i.id, dis));
-                }
-                if (i.type == 6 && i.near7 == 1) {
-                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
-                    near6.push_back(std::make_pair(i.id, dis));
-                }
-            }
-            std::sort(near4.begin(), near4.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
-                return a.second < b.second;
-            }); // 按照距离排序
-            std::sort(near5.begin(), near5.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
-                return a.second < b.second;
-            }); // 按照距离排序
-            std::sort(near6.begin(), near6.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
-                return a.second < b.second;
-            }); // 按照距离排序
-            TESTOUTPUT(fout << "near with id=" << id7 << " is ";)
-            if (near4.size() >= 1) {
-                worktables[near4[0].first].near7 = 3;
-                TESTOUTPUT(fout << near4[0].first << " ";)
-            }
-            if (near5.size() >= 1) {
-                worktables[near5[0].first].near7 = 2;
-                TESTOUTPUT(fout << near5[0].first << " ";)
-            }
-            if (near6.size() >= 1) {
-                worktables[near6[0].first].near7 = 2;
-                TESTOUTPUT(fout << near6[0].first << " ";)
-            }
-            TESTOUTPUT(fout << std::endl;)
-        }
-        return;
-    }
     for (auto & num7 : near7) {
         int id7 = num7.first;
+        worktables[id7].near7 = 4;
         std::vector<std::pair<int, double> > near4, near5, near6;
         for (auto & i : worktables) {
             if (i.type == 4 && i.near7 == 1) {
@@ -262,7 +121,7 @@ void solveGraph() {
             return a.second < b.second;
         }); // 按照距离排序
         TESTOUTPUT(fout << "near with id=" << id7 << " is ";)
-        if (near4.size() >= 1) {
+        if (near4.size() >= 1 ) {
             worktables[near4[0].first].near7 = 1.2;
             TESTOUTPUT(fout << near4[0].first << " ";)
         }
@@ -283,7 +142,7 @@ void inputMap(){
         for (int j = 0; j < MAP_Col_Length; j++) {
             char c;
             scanf("%c", &c);
-            while(c != '.' && c != 'A' && (c < '0' || c > '9')) scanf("%c", &c);
+            while(c != '.' && c != 'A' && c != '#' && (c < '0' || c > '9')) scanf("%c", &c);
             if (c == '.') continue;
             if (c == 'A') {
                 robotNum++;
@@ -337,10 +196,15 @@ bool inputFrame() {
 void solveFrame() {
     printf("%d\n", nowTime);
     TESTOUTPUT(fout << nowTime << std::endl;)
-
+    
+    std::fill(canBuy, canBuy + MAX_Item_Type_Num + 1, 0);
     for (int i = 0; i <= worktableNum; i++) {
         worktables[i].checkWait();
+        worktables[i].checkCanBuy();
         // TESTOUTPUT(worktables[i].outputTest();)
+    }
+    for (int i = 0; i <= robotNum; i++) {
+        robots[i].checkCanBuy();
     }
     for (int i = 0; i <= robotNum; i++) {
         robots[i].action();

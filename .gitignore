@@ -1,6 +1,7 @@
 # 文件夹
 .vscode/
 judge-1/
+judge-初赛/
 upload/*
 
 *.txt

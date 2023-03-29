@@ -68,6 +68,11 @@ struct Robot{
         collisionRotateTime = 0;
         path = nullptr;
     }
+    void checkCanBuy() {
+        if (bringId != 0) {
+            canBuy[bringId]--;
+        }
+    }
     void outputTest() {
         TESTOUTPUT(fout << "Robot id: " << id << std::endl;)
         // TESTOUTPUT(fout << "x: " << x << std::endl;)
@@ -263,7 +268,6 @@ struct Robot{
     }
     double getMinGoToTime(double x1, double y1, double x2, double y2) {
         double length = (Vector2D(x1, y1) - Vector2D(x2, y2)).length();
-        if (mapId == 3) return length / 0.12 + 20;
         return length / 0.12 + 25;
     }
     void FindAPath() {
@@ -312,18 +316,16 @@ struct Robot{
                 // 卖出产品赚取的钱
                 double earnMoney = sellMoneyMap[productId] * timeLoss - buyMoneyMap[productId];
                 // 尽量不卖给 9
-                if (mapId == 3) {
-                    if (sell.type == 9) earnMoney = earnMoney * 0.8;
-                } else
                 if (sell.type == 9) earnMoney = earnMoney * 0.6;
                 earnMoney *= buy.near7;
                 earnMoney *= sell.near7;
                 if (sell.waitPriority == 5) {
-                    if (mapId == 1) {
-                        earnMoney *= 1.2;
-                    } else {
-                        earnMoney *= 1.2;
-                    }
+                    earnMoney *= 1.2;
+                }
+                // 有资源缺口 即卖工作台的类型对应的产品(type 相同)有缺口 就促进生产
+                if (canBuy[sell.type] > 0 && (sell.type == 4 || sell.type == 5 || sell.type == 6) && sell.near7 != 1) {
+                    TESTOUTPUT(fout << "canBuy " << sell.type << std::endl;)
+                    earnMoney *= 1.2;
                 }
                 Path * path = new Path(buy.id, sell.id, id, earnMoney, sumTime);
                 if ((productId == 4 || productId == 5 || productId == 6 || productId == 7) && ((buy.remainTime == 0 && buy.someWillBuy == 0) || (buy.remainTime < goBuyTime && buy.output == true && buy.someWillBuy == 0))) {
@@ -462,7 +464,7 @@ void DetecteCollision(int robot1, int robot2) {
     }
     TESTOUTPUT(fout << "碰撞角度" << angle << std::endl;)
 
-    if (angle > M_PI * (mapId == 1 ? 130 : 150) / 180) { // 135~180  ! 或许都是一个方向会比较好用
+    if (angle > M_PI * 150 / 180) { // 135~180  ! 或许都是一个方向会比较好用
         if (robots[robot1].collisionRotateTime > 0) {
             return;
         }
