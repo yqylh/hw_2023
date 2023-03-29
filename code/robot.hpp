@@ -166,6 +166,7 @@ struct Robot{
         while ((Vector2D(x, y) - pathPoints[0]).length() < 0.25) {
             pathPoints.erase(pathPoints.begin());
         }
+        TESTOUTPUT(fout << "from" << "(" << x << ", " << y << ")" << "to" << "(" << pathPoints[0].x << ", " << pathPoints[0].y << ")" << std::endl;)
         if (worktableTogo == -1) {
             worktableTogo = worktableNum / 2;
         }
@@ -203,7 +204,11 @@ struct Robot{
             决定一下速度
         */
         double speed = 0;
+        // TESTOUTPUT(fout << "absRotate: " << absRotate << " length =" << length << " asin=" << asin(0.4 / length) << std::endl;)
         // 由于判定范围是 0.4m,所以如果度数满足这个条件, 就直接冲过去
+        // if (0.4 / length > 1) {
+        //     speed = 6;
+        // } else
         if (absRotate < asin(0.4 / length)) {
             speed = 6;
         } else if (absRotate < M_PI / 4) {
@@ -405,6 +410,20 @@ struct Robot{
                     // 如果带着物品,目标节点的上下 或者 左右 有墙壁,则过不去
                     if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-0.5, 0)]->type == 1) continue;
                     if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(0, -0.5)]->type == 1) continue;
+                    // 间隔 1m
+                    if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(0, -1)]->type == 1) continue;
+                    if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(0.5, -1)]->type == 1) continue;
+                    if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(-0.5, -1)]->type == 1) continue;
+                    if (grids[index + Vector2D(0, -0.5)]->type == 1 && grids[index + Vector2D(0, 1)]->type == 1) continue;
+                    if (grids[index + Vector2D(0, -0.5)]->type == 1 && grids[index + Vector2D(0.5, 1)]->type == 1) continue;
+                    if (grids[index + Vector2D(0, -0.5)]->type == 1 && grids[index + Vector2D(-0.5, 1)]->type == 1) continue;
+
+                    if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-1, 0)]->type == 1) continue;
+                    if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-1, 0.5)]->type == 1) continue;
+                    if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-1, -0.5)]->type == 1) continue;
+                    if (grids[index + Vector2D(-0.5, 0)]->type == 1 && grids[index + Vector2D(1, 0)]->type == 1) continue;
+                    if (grids[index + Vector2D(-0.5, 0)]->type == 1 && grids[index + Vector2D(1, 0.5)]->type == 1) continue;
+                    if (grids[index + Vector2D(-0.5, 0)]->type == 1 && grids[index + Vector2D(1, -0.5)]->type == 1) continue;
                 }
                 fromWhere.insert(std::make_pair(index, now));
                 q.push(index);

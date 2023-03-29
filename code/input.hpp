@@ -145,9 +145,7 @@ void deleteWorktable() {
         q.push(Vector2D(worktables[i].x, worktables[i].y));
         reach.insert(Vector2D(worktables[i].x, worktables[i].y));
         bool flag = 0;
-        // int item = 0;
         while (!q.empty() && flag == 0) {
-            // item++;
             Vector2D now = q.front();
             q.pop();
             std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}};
@@ -156,6 +154,24 @@ void deleteWorktable() {
                 if (index.x <= 0.25 || index.x >= 49.75 || index.y <= 0.25 || index.y >= 49.75) continue;
                 if (reach.find(index) != reach.end()) continue;
                 if (grids[index]->type == 1) continue;
+                // 间隔 0.5m
+                if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-0.5, 0)]->type == 1) continue;
+                if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(0, -0.5)]->type == 1) continue;
+                // 间隔 1m
+                if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(0, -1)]->type == 1) continue;
+                if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(0.5, -1)]->type == 1) continue;
+                if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(-0.5, -1)]->type == 1) continue;
+                if (grids[index + Vector2D(0, -0.5)]->type == 1 && grids[index + Vector2D(0, 1)]->type == 1) continue;
+                if (grids[index + Vector2D(0, -0.5)]->type == 1 && grids[index + Vector2D(0.5, 1)]->type == 1) continue;
+                if (grids[index + Vector2D(0, -0.5)]->type == 1 && grids[index + Vector2D(-0.5, 1)]->type == 1) continue;
+                
+                if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-1, 0)]->type == 1) continue;
+                if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-1, 0.5)]->type == 1) continue;
+                if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-1, -0.5)]->type == 1) continue;
+                if (grids[index + Vector2D(-0.5, 0)]->type == 1 && grids[index + Vector2D(1, 0)]->type == 1) continue;
+                if (grids[index + Vector2D(-0.5, 0)]->type == 1 && grids[index + Vector2D(1, 0.5)]->type == 1) continue;
+                if (grids[index + Vector2D(-0.5, 0)]->type == 1 && grids[index + Vector2D(1, -0.5)]->type == 1) continue;
+
                 reach.insert(index);
                 q.push(index);
                 for (int j = 0; j <= robotNum; j++) {
@@ -168,8 +184,7 @@ void deleteWorktable() {
         }
         if (flag == 0) {
             worktables[i].near7 = 0;
-            // TESTOUTPUT(fout << "delete id=" << i << std::endl;)
-            // TESTOUTPUT(fout << "item=" << item << std::endl;)
+            TESTOUTPUT(fout << "delete id=" << i << std::endl;)
             // worktables[i].outputTest();
         }
     }
