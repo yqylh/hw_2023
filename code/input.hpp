@@ -139,17 +139,20 @@ void solveGraph() {
 
 void inputMap(){
     for (int i = 0; i < MAP_Line_Length; i++) {
+        std::string line;
+        getline(std::cin, line);
         for (int j = 0; j < MAP_Col_Length; j++) {
-            char c;
-            scanf("%c", &c);
-            while(c != '.' && c != 'A' && c != '#' && (c < '0' || c > '9')) scanf("%c", &c);
-            if (c == '.') continue;
-            if (c == 'A') {
+            if (line[j] == '.') continue;
+            if (line[j] == '#') {
+                // 墙壁
+                continue;
+            }
+            if (line[j] == 'A') {
                 robotNum++;
                 robots[robotNum] = Robot(robotNum, 0.5*j+0.25, 50 - 0.25 - 0.5*i);
             } else {
                 worktableNum++;
-                worktables[worktableNum] = Worktable(worktableNum, 0.5*j+0.25, 50 - 0.25 - 0.5*i, c - '0');
+                worktables[worktableNum] = Worktable(worktableNum, 0.5*j+0.25, 50 - 0.25 - 0.5*i, char(line[j]) - '0');
             }
         }
     }

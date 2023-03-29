@@ -324,7 +324,7 @@ struct Robot{
                 }
                 // 有资源缺口 即卖工作台的类型对应的产品(type 相同)有缺口 就促进生产
                 if (canBuy[sell.type] > 0 && (sell.type == 4 || sell.type == 5 || sell.type == 6) && sell.near7 != 1) {
-                    TESTOUTPUT(fout << "canBuy " << sell.type << std::endl;)
+                    // TESTOUTPUT(fout << "canBuy " << sell.type << std::endl;)
                     earnMoney *= 1.2;
                 }
                 Path * path = new Path(buy.id, sell.id, id, earnMoney, sumTime);
