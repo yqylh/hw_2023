@@ -38,6 +38,7 @@ struct Robot{
     int collisionSpeedTime; // 机器人为防止碰撞的调整速度的时间
     int collisionRotateTime; // 机器人为防止碰撞的时间
     Path *path; // 机器人的路径
+    std::vector<Vector2D> pathPoints; // 机器人的路径点
     Robot() {
         this->id = -1;
         this->x = -1;
@@ -156,16 +157,20 @@ struct Robot{
                 worktables[worktableId].output = true;
             }
             worktableTogo = path->sellWorktableId;
+            pathPoints = movePath();
         }
     }
 
 
     void Move() {
+        while ((Vector2D(x, y) - pathPoints[0]).length() < 0.25) {
+            pathPoints.erase(pathPoints.begin());
+        }
         if (worktableTogo == -1) {
             worktableTogo = worktableNum / 2;
         }
         std::vector<double> vec1 = {1, 0};
-        std::vector<double> vec2 = {worktables[worktableTogo].x - x, worktables[worktableTogo].y - y};
+        std::vector<double> vec2 = {pathPoints[0].x - x, pathPoints[0].y - y};
         double cosAns = (vec1[0] * vec2[0] + vec1[1] * vec2[1]) / (sqrt(vec1[0] * vec1[0] + vec1[1] * vec1[1]) * sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1]));
         double angle = acos(cosAns);
         // 通过叉乘判断方向
@@ -285,6 +290,7 @@ struct Robot{
             if ((buy.output == true && buy.someWillBuy == 0)
                 || (buy.output == true && buy.someWillBuy == 1 && buy.remainTime != -1)
                 || (buy.output == false && buy.someWillBuy == 0 && buy.remainTime != -1)
+                || (buy.type < 4)
             ) {} else continue;
             // 等待生产的时间
             double waitBuyTime = 0; 
@@ -356,6 +362,7 @@ struct Robot{
         }
         TESTOUTPUT(fout << "robot" << id << " find path " << path->buyWorktableId << " " << path->sellWorktableId << std::endl;)
         worktableTogo = path->buyWorktableId;
+        pathPoints = movePath();
         worktables[path->buyWorktableId].someWillBuy++;
         worktables[path->sellWorktableId].someWillSell[createMap[worktables[path->buyWorktableId].type]]++;
     }
@@ -365,7 +372,8 @@ struct Robot{
      * 通过 BFS 实现
      * 返回值应该是一个n个点的坐标的数组
     */
-    std::vector<Vector2D> movePath(Vector2D to){
+    std::vector<Vector2D> movePath(){
+        Vector2D to(worktables[worktableTogo].x, worktables[worktableTogo].y);
         std::vector<Vector2D> path;
         std::map<Vector2D, Vector2D> fromWhere;
         std::queue<Vector2D> q;
@@ -422,7 +430,6 @@ struct Robot{
     void action(){
         Sell();
         if (path == nullptr) FindAPath();
-        movePath(Vector2D(worktables[worktableTogo].x, worktables[worktableTogo].y));
         Buy();
         TESTOUTPUT(fout << "robot" << id << " want-go " << worktableTogo << " type=" << worktables[worktableTogo].type << std::endl;)
     }
