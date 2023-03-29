@@ -138,6 +138,44 @@ void solveGraph() {
     }
 }
 
+void deleteWorktable() {
+    for (int i = 0; i <= worktableNum; i++) {
+        std::set<Vector2D> reach;
+        std::queue<Vector2D> q;
+        q.push(Vector2D(worktables[i].x, worktables[i].y));
+        reach.insert(Vector2D(worktables[i].x, worktables[i].y));
+        bool flag = 0;
+        // int item = 0;
+        while (!q.empty() && flag == 0) {
+            // item++;
+            Vector2D now = q.front();
+            q.pop();
+            std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}};
+            for (auto &add : adds) {
+                Vector2D index = now + Vector2D(add.first, add.second);
+                if (index.x <= 0.25 || index.x >= 49.75 || index.y <= 0.25 || index.y >= 49.75) continue;
+                if (reach.find(index) != reach.end()) continue;
+                if (grids[index]->type == 1) continue;
+                reach.insert(index);
+                q.push(index);
+                for (int j = 0; j <= robotNum; j++) {
+                    if (index == Vector2D(robots[j].x, robots[j].y)) {
+                        flag = 1;
+                        break;
+                    }
+                }
+            }
+        }
+        if (flag == 0) {
+            worktables[i].near7 = 0;
+            // TESTOUTPUT(fout << "delete id=" << i << std::endl;)
+            // TESTOUTPUT(fout << "item=" << item << std::endl;)
+            // worktables[i].outputTest();
+        }
+    }
+} 
+
+
 void inputMap(){
     for (int i = 0; i < MAP_Line_Length; i++) {
         std::string line;
@@ -171,6 +209,7 @@ void inputMap(){
     puts("OK");
     fflush(stdout);
     solveGraph();
+    deleteWorktable();
 }
 
 bool inputFrame() {

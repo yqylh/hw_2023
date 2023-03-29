@@ -18,6 +18,11 @@ struct Grid {
 };
 std::map<Vector2D, Grid *> grids;
 
+/**
+ * 预处理
+ * 1. 增加边界
+ * 2. 计算每个网格附近 3*3 的障碍物
+*/
 void detectionObstacle() {
     // 增加两行两列的边界
     for (double x = 0.25; x < 49.75; x += 0.5) {

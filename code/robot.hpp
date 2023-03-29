@@ -5,6 +5,7 @@
 #include "worktable.hpp"
 #include "vector.hpp"
 #include "path.hpp"
+#include "grid.hpp"
 #include <fstream>
 #include <set>
 #include <map>
@@ -17,6 +18,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <climits>
+#include <queue>
 
 struct Robot{
     int id; // 机器人的 id
@@ -357,10 +359,70 @@ struct Robot{
         worktables[path->buyWorktableId].someWillBuy++;
         worktables[path->sellWorktableId].someWillSell[createMap[worktables[path->buyWorktableId].type]]++;
     }
+    /**
+     * 计算路径
+     * 计算从一个坐标移动到另一个坐标的路径
+     * 通过 BFS 实现
+     * 返回值应该是一个n个点的坐标的数组
+    */
+    std::vector<Vector2D> movePath(Vector2D to){
+        std::vector<Vector2D> path;
+        std::map<Vector2D, Vector2D> fromWhere;
+        std::queue<Vector2D> q;
+        double x = this->x;
+        double y = this->y;
+        x = int(x / 0.5) * 0.5 + 0.25;
+        y = int(y / 0.5) * 0.5 + 0.25;
+        q.push(Vector2D(x, y));
+        fromWhere.insert(std::make_pair(Vector2D(x, y), Vector2D(x, y)));
+        int findItme = 0;
+        bool find = false;
+        while (!q.empty() && find == false) {
+            findItme++;
+            Vector2D now = q.front();
+            q.pop();
+            /**
+             * 这里只用两个方向, 因为斜着走不一定走的过去
+             * #_#
+             * R_#
+             * 需要先去右边, 再去上边
+            */ 
+            std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}};
+            for (auto &add : adds) {
+                Vector2D index = now + Vector2D(add.first, add.second);
+                if (index.x <= 0.25 || index.x >= 49.75 || index.y <= 0.25 || index.y >= 49.75) continue;
+                if (fromWhere.find(index) != fromWhere.end()) continue;
+                if (grids[index]->type == 1) continue;
+                if (bringId != 0) {
+                    // 如果带着物品,目标节点的上下 或者 左右 有墙壁,则过不去
+                    if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-0.5, 0)]->type == 1) continue;
+                    if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(0, -0.5)]->type == 1) continue;
+                }
+                fromWhere.insert(std::make_pair(index, now));
+                q.push(index);
+                if (now == to){
+                    find = true;
+                }
+            }
+        }
+        // TESTOUTPUT(fout << "find " << findItme << std::endl;)
+        while ( 1 ) {
+            path.push_back(to);
+            if (to == fromWhere[to]) break;
+            to = fromWhere[to];
+        }
+        std::reverse(path.begin(), path.end());
+        // for (auto & item : path) {
+        //     TESTOUTPUT(fout << "(" << item.x << "," << item.y << ")" << "->";)
+        // }
+        // TESTOUTPUT(fout << std::endl;)
+        return path;
+    }
     // 机器人具体的行为
     void action(){
         Sell();
         if (path == nullptr) FindAPath();
+        movePath(Vector2D(worktables[worktableTogo].x, worktables[worktableTogo].y));
         Buy();
         TESTOUTPUT(fout << "robot" << id << " want-go " << worktableTogo << " type=" << worktables[worktableTogo].type << std::endl;)
     }
