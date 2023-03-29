@@ -4,6 +4,7 @@
 #include "config.hpp"
 #include "worktable.hpp"
 #include "vector.hpp"
+#include "path.hpp"
 #include <fstream>
 #include <set>
 #include <map>
@@ -34,6 +35,7 @@ struct Robot{
     double collisionSpeed; // 机器人为防止碰撞的线速度
     int collisionSpeedTime; // 机器人为防止碰撞的调整速度的时间
     int collisionRotateTime; // 机器人为防止碰撞的时间
+    Path *path; // 机器人的路径
     Robot() {
         this->id = -1;
         this->x = -1;
@@ -48,6 +50,7 @@ struct Robot{
         direction = 0;
         collisionSpeedTime = 0;
         collisionRotateTime = 0;
+        path = nullptr;
     }
     Robot(int id, double x, double y) {
         this->id = id;
@@ -63,6 +66,12 @@ struct Robot{
         direction = 0;
         collisionSpeedTime = 0;
         collisionRotateTime = 0;
+        path = nullptr;
+    }
+    void checkCanBuy() {
+        if (bringId != 0) {
+            canBuy[bringId]--;
+        }
     }
     void outputTest() {
         TESTOUTPUT(fout << "Robot id: " << id << std::endl;)
@@ -84,168 +93,75 @@ struct Robot{
     // 卖材料的函数
     void Sell() {
         if (bringId == 0) return;// 机器人没有携带原材料
+        if (path == nullptr) return;
         // 机器人正在携带原材料
-        if (worktableId == -1) return; // 机器人不在工作台附近
+        if (worktableId != path->sellWorktableId) return; // 机器人不在预想工作台附近
         // 机器人正在工作台附近
         if (worktables[worktableId].inputId[bringId] == 0 
             && sellSet.find(std::make_pair(bringId, worktables[worktableId].type)) != sellSet.end()) {
             // 该工作台的此原料不满,且支持卖出
             TESTOUTPUT(fout << "sell " << id << std::endl;)
             printf("sell %d\n", id);
+            // 统计损失
             lossCollMoney += sellMoneyMap[worktables[worktableId].type] * (1 - crashCoef);
             if (crashCoef < 1) {
                 TESTOUTPUT(fout << "有碰撞损失: " << crashCoef << std::endl;)
             }
             lossTimeMoney += sellMoneyMap[worktables[worktableId].type] * (1 - timeCoef);
-            bringId = 0;
-        }
-    }
-    // 检查卖出去最少需要多少时间
-    int minSellTime(int worktableId) {
-        // 找到所有可以卖的工作台
-        double minDistance = INT_MAX;
-        int minId = -1;
-        int sellID = createMap[worktables[worktableId].type];
-        for (int i = 0; i <= worktableNum; i++) {
-            // 对于每一个记录一下距离
-            if (worktables[i].inputId[sellID] == 0 && sellSet.find(std::make_pair(sellID, worktables[i].type)) != sellSet.end()) {
-                double distance = sqrt((x - worktables[i].x) * (x - worktables[i].x) + (y - worktables[i].y) * (y - worktables[i].y));
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    minId = i;
+            // 工作台这一位设置成有东西了
+            worktables[worktableId].inputId[bringId] = 1;
+            {
+                /**
+                 * 如果没有生产的情况下, 该工作台的所有原料都满了, 则清空该工作台的原料
+                */
+                bool full = true;
+                for (int item = 1; item <= MAX_Item_Type_Num; item++) {
+                    if (sellSet.find(std::make_pair(item, worktables[worktableId].type)) != sellSet.end()) {
+                        if (worktables[worktableId].inputId[item] == 0) {
+                            full = false;
+                            break;
+                        }
+                    }
+                }
+                if (full && worktables[worktableId].remainTime == -1) {
+                    for (int item = 1; item <= MAX_Item_Type_Num; item++) {
+                        worktables[worktableId].inputId[item] = 0;
+                    }
                 }
             }
+            worktables[worktableId].someWillSell[bringId]--;
+            bringId = 0;
+            path = nullptr;
+            worktableTogo = -1;
         }
-        if (minId == -1) return MAX_TIME;
-        // 0.12 是机器人的一帧的速度
-        int minTime = minDistance / 0.12;
-        return minTime;
-    }
-    double getDistance(int worktableId) {
-        return sqrt((x - worktables[worktableId].x) * (x - worktables[worktableId].x) + (y - worktables[worktableId].y) * (y - worktables[worktableId].y));
-    }
-    int getMinGoToTime(int worktableId) {
-        return getDistance(worktableId) / 0.12 + 25;
     }
     // 买商品的函数
     void Buy() {
         if (bringId != 0) return;// 机器人已经携带原材料
+        if (path == nullptr) return;
         // 机器人没有携带原材料
-        if (worktableId == -1) return; // 机器人不在工作台附近
+        if (worktableId != path->buyWorktableId) return; // 机器人不在预想工作台附近
         // 机器人正在工作台附近
-        if (canBuy[createMap[worktables[worktableId].type]] <= 0) return; // 这种物品已经足够多了
         if (worktables[worktableId].output == true && money >= buyMoneyMap[createMap[worktables[worktableId].type]]) {
             // 如果买了卖不出去
-            if (nowTime + 25 + minSellTime(worktableId) > MAX_TIME) {
-                worktables[worktableId].dontBuy = true;
-                return;
-            }
-            // 未启用功能
-            // canBuy[createMap[worktables[worktableId].type]]--;
             TESTOUTPUT(fout << "buy " << id << std::endl;)
             printf("buy %d\n", id);
-            bringId = worktables[worktableId].type;
+            bringId = createMap[worktables[worktableId].type];
             money -= buyMoneyMap[createMap[worktables[worktableId].type]];
-        }
-    }
-    int FindBuy() {
-        std::vector<std::pair<int, double>> distance;
-        // 找到所有可以买的工作台
-        for (int i = 0; i <= worktableNum; i++) {
-            // 有生产的物品 && 买得起 && 还有可以买的
-            if (worktables[i].output == true && money >= buyMoneyMap[createMap[worktables[i].type]] 
-                && canBuy[createMap[worktables[i].type]] > 0 && worktables[i].dontBuy == false) {
-                distance.push_back(std::make_pair(i, (x - worktables[i].x) * (x - worktables[i].x) + (y - worktables[i].y) * (y - worktables[i].y)));
+            worktables[worktableId].someWillBuy--;
+            worktables[worktableId].output = false;
+            if (worktables[worktableId].remainTime == 0) {
+                worktables[worktableId].output = true;
             }
+            worktableTogo = path->sellWorktableId;
         }
-        std::sort(distance.begin(), distance.end(), [](std::pair<int, double> a, std::pair<int, double> b) {
-            return a.second < b.second;
-        });
-        // 如果没有可以买的工作台
-        // 那么就找一个生产剩余时间最少的工作台(>0)
-        if (distance.size() == 0) {
-            std::vector<std::pair<int, int>> timeLess;
-            for (int i = 0; i <= worktableNum; i++) /*if (worktables[i].remainTime != -1)*/ { // 真的在生产 !未启用功能
-                timeLess.push_back(std::make_pair(i, getDistance(i)));
-            }
-            std::sort(timeLess.begin(), timeLess.end(), [](std::pair<int, int> a, std::pair<int, int> b) {
-                return a.second < b.second;
-            });
-            // 如果这个工作台这回合没人去买
-            for (auto & i : timeLess) {
-                if (worktables[i.first].anyOneChooseBuy != nowTime) {
-                    worktables[i.first].anyOneChooseBuy = nowTime;
-                    return i.first;
-                }
-            }
-            // 如果一个都没找到可以去的,就去最中间
-            // if (timeLess.size() == 0) return worktableNum / 2;
-            // return timeLess[0].first;
-            return worktableNum / 2;
-        }
-        // // 如果这个工作台这回合没人去 且 按照优先级高到低进行
-        // for (int priority = 3; priority >= 1; priority--) {
-        //     int index;
-        //     for (auto & i : distance) {
-        //         if (i.second > distance[0].second * 1.5) break;
-        //         if (buyPrioriryMap[worktables[i.first].type] == priority) {
-        //             if (worktables[i.first].anyOneChooseBuy != nowTime) {
-        //                 worktables[i.first].anyOneChooseBuy = nowTime;
-        //                 return i.first;
-        //             }
-        //         }
-        //     }
-        // }
-        // 按照优先级前1/3没找到的话就随便找一个 如果这个工作台这回合没人去买
-        for (auto & i : distance) {
-            if (worktables[i.first].anyOneChooseBuy != nowTime) {
-                worktables[i.first].anyOneChooseBuy = nowTime;
-                return i.first;
-            }
-        }
-        return distance[0].first;
-    }
-    int FindSell() {
-        // 找到所有可以卖的工作台
-        std::vector<std::pair<int, double>> distance;
-        for (int i = 0; i <= worktableNum; i++) {
-            if (worktables[i].inputId[bringId] == 0 && sellSet.find(std::make_pair(bringId, worktables[i].type)) != sellSet.end()) {
-                distance.push_back(std::make_pair(i, (x - worktables[i].x) * (x - worktables[i].x) + (y - worktables[i].y) * (y - worktables[i].y)));
-            }
-        }
-        // 选一个距离最近的
-        std::sort(distance.begin(), distance.end(), [](std::pair<int, double> a, std::pair<int, double> b) {
-            return a.second < b.second;
-        });
-        // 如果没有可以卖的工作台
-        if (distance.size() == 0) {
-            return -1;
-        }
-        // 如果这个工作台这回合没人去 且 按照优先级高到低进行
-        for (int priority = 5; priority >= 2; priority--) {
-            int index;
-            for (auto & i : distance) {
-                index++;
-                if (index > distance.size() / 3) break;
-                if (worktables[i.first].waitPriority == priority) {
-                    if (worktables[i.first].anyOneChooseSell[bringId] != nowTime) {
-                        worktables[i.first].anyOneChooseSell[bringId] = nowTime;
-                        return i.first;
-                    }
-                }
-            }
-        }
-        // 按照优先级前1/3没找到的话就随便找一个
-        for (auto & i : distance) {
-            if (worktables[i.first].anyOneChooseSell[bringId] != nowTime) {
-                worktables[i.first].anyOneChooseSell[bringId] = nowTime;
-                return i.first;
-            }
-        }
-        return distance[0].first;
     }
 
+
     void Move() {
+        if (worktableTogo == -1) {
+            worktableTogo = worktableNum / 2;
+        }
         std::vector<double> vec1 = {1, 0};
         std::vector<double> vec2 = {worktables[worktableTogo].x - x, worktables[worktableTogo].y - y};
         double cosAns = (vec1[0] * vec2[0] + vec1[1] * vec2[1]) / (sqrt(vec1[0] * vec1[0] + vec1[1] * vec1[1]) * sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1]));
@@ -283,19 +199,6 @@ struct Robot{
         // 由于判定范围是 0.4m,所以如果度数满足这个条件, 就直接冲过去
         if (absRotate < asin(0.4 / length)) {
             speed = 6;
-        // 一个快快快的方案
-        // } else if (absRotate < M_PI / 2) {
-        //     // 如果度数大于x小于90° 
-        //     // 如果转向时间的路程不会更长,就可以走
-        //     if (absRotate > 0.0001)
-        //         speed = length * 50 / (absRotate / 3.6 + 1);
-        //     if (speed > 6) {
-        //         speed = 6;
-        //     }
-        // } else {
-        //     // 如果度数大于90°, 就先倒退转过去
-        //     speed = 2;
-        // }
         } else if (absRotate < M_PI / 4) {
             // 如果度数大于x小于45° 
             // 如果转向时间的路程不会更长,就可以走
@@ -363,37 +266,106 @@ struct Robot{
         printf("destroy %d\n", id);
         return -1;
     }
-    // 查找下一个目的地
-    int FindMove() {
-        int worktableTogo = -1;
-        if (bringId == 0) { // 找地方去买
-            worktableTogo = FindBuy();
-        } else { // 找地方去卖
-            worktableTogo = FindSell();
-            if (worktableTogo == -1) { // 如果没有可以卖的地方
-                int haveDestory = Destroy();
-                if (haveDestory == -1) {
-                    worktableTogo = FindBuy(); // 找地方去买
+    double getMinGoToTime(double x1, double y1, double x2, double y2) {
+        double length = (Vector2D(x1, y1) - Vector2D(x2, y2)).length();
+        return length / 0.12 + 25;
+    }
+    void FindAPath() {
+        std::vector<Path *> paths;
+        std::vector<Path *> paths4567;
+        for (auto & buy : worktables) {
+            /**
+             * 有产物, 没人预约
+             * 有产物, 有人预约买,但是第二个在做或者做完阻塞了
+             * 没产物, 没人预约买,在做了
+            */
+            if (buy.id == -1) break;
+            if ((buy.output == true && buy.someWillBuy == 0)
+                || (buy.output == true && buy.someWillBuy == 1 && buy.remainTime != -1)
+                || (buy.output == false && buy.someWillBuy == 0 && buy.remainTime != -1)
+            ) {} else continue;
+            // 等待生产的时间
+            double waitBuyTime = 0; 
+            if ( (buy.someWillBuy == 1) || (buy.output == false && buy.someWillBuy == 0) ) waitBuyTime = buy.remainTime;
+            // 路程时间消耗
+            double goBuyTime = getMinGoToTime(x, y, buy.x, buy.y);
+            // 如果等待时间比路程时间长,就不用买了
+            if (goBuyTime < waitBuyTime) continue;
+            // 购买的产品
+            int productId = createMap[buy.type];
+            for (auto & sell : worktables) {
+                if (sell.id == -1) break;
+                // 确保这个工作台支持买,而且输入口是空的
+                if (sellSet.find(std::make_pair(productId, sell.type)) == sellSet.end() || sell.inputId[productId] == 1) continue;
+                /**
+                 * 确保没人预约卖
+                 * 或者类型是8 || 9
+                */
+                if (sell.someWillSell[productId] == 0 || sell.type == 8 || sell.type == 9) {} else continue;
+                // 时间消耗
+                double goSellTime = getMinGoToTime(buy.x, buy.y, sell.x, sell.y);
+                double sumTime = std::max(goBuyTime, waitBuyTime) + goSellTime;
+                if (sumTime + 30 + nowTime > MAX_TIME) continue;
+                // 时间损失
+                double timeLoss;
+                if (sumTime >= 9000) {
+                    timeLoss = 0.8;
                 } else {
-                    worktableTogo = haveDestory;
+                    timeLoss = 0.8 + (1-0.8) * (1 - sqrt(1 - (1 - sumTime / 9000) * (1 - sumTime / 9000)));
+                }
+                // 卖出产品赚取的钱
+                double earnMoney = sellMoneyMap[productId] * timeLoss - buyMoneyMap[productId];
+                // 尽量不卖给 9
+                if (sell.type == 9) earnMoney = earnMoney * 0.6;
+                earnMoney *= buy.near7;
+                earnMoney *= sell.near7;
+                if (sell.waitPriority == 5) {
+                    earnMoney *= 1.2;
+                }
+                // 有资源缺口 即卖工作台的类型对应的产品(type 相同)有缺口 就促进生产
+                if (canBuy[sell.type] > 0 && (sell.type == 4 || sell.type == 5 || sell.type == 6) && sell.near7 != 1) {
+                    TESTOUTPUT(fout << "canBuy " << sell.type << std::endl;)
+                    earnMoney *= 1.2;
+                }
+                Path * path = new Path(buy.id, sell.id, id, earnMoney, sumTime);
+                if ((productId == 4 || productId == 5 || productId == 6 || productId == 7) && ((buy.remainTime == 0 && buy.someWillBuy == 0) || (buy.remainTime < goBuyTime && buy.output == true && buy.someWillBuy == 0))) {
+                    paths4567.push_back(path);
+                }else {
+                    paths.push_back(path);
                 }
             }
         }
-        TESTOUTPUT(fout << "robot" << id << " want-go " << worktableTogo << " type=" << worktables[worktableTogo].type << std::endl;)
-        return worktableTogo;
+        // 理论上只有快结束才出现
+        if (paths.size() == 0 && paths4567.size() == 0) {
+            TESTOUTPUT(fout << "error" << std::endl;)
+            worktableTogo = -1;
+            return;
+        }
+        std::sort(paths.begin(), paths.end(), [](Path * a, Path * b) {
+            return a->parameters > b->parameters;
+        });
+        std::sort(paths4567.begin(), paths4567.end(), [](Path * a, Path * b) {
+            return a->parameters > b->parameters;
+        });
+        if (paths4567.size() > 0 && (paths.size() == 0 || paths4567[0]->parameters > paths[0]->parameters * 0.95)) {
+            path = paths4567[0];
+        } else {
+            path = paths[0];
+        }
+        TESTOUTPUT(fout << "robot" << id << " find path " << path->buyWorktableId << " " << path->sellWorktableId << std::endl;)
+        worktableTogo = path->buyWorktableId;
+        worktables[path->buyWorktableId].someWillBuy++;
+        worktables[path->sellWorktableId].someWillSell[createMap[worktables[path->buyWorktableId].type]]++;
     }
     // 机器人具体的行为
     void action(){
         Sell();
+        if (path == nullptr) FindAPath();
         Buy();
-        worktableTogo = FindMove();
-    }
-    void checkCanBuy() {
-        if (bringId != 0) {
-            canBuy[bringId]--;
-        }
+        TESTOUTPUT(fout << "robot" << id << " want-go " << worktableTogo << " type=" << worktables[worktableTogo].type << std::endl;)
     }
     void checkWall() {
+        if (worktableTogo == -1) return;
         bool wallnear = false;
         double toWallX = std::min(worktables[worktableTogo].y - 0.53 - 0.12, 50 - 0.53 - 0.12 -worktables[worktableTogo].y);
         double toWallY = std::min(worktables[worktableTogo].x - 0.53 - 0.12, 50 - 0.53 - 0.12 -worktables[worktableTogo].x);
@@ -458,6 +430,7 @@ double solveChangeSpeed(double speed, double diff) {
 }
 
 void DetecteCollision(int robot1, int robot2) {
+    if (robots[robot1].worktableTogo == -1 || robots[robot2].worktableTogo == -1) return;
     // robot1 robot2 的坐标
     Vector2D robot1Pos = Vector2D(robots[robot1].x, robots[robot1].y);
     Vector2D robot2Pos = Vector2D(robots[robot2].x, robots[robot2].y);

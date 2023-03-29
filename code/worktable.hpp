@@ -10,10 +10,10 @@ struct Worktable{
     int type; // 工作台的类型
     bool output; // 工作台的输出状态
     int inputId[MAX_Item_Type_Num + 1]; // 工作台的输入物品的 id, 0 表示没有
-    int anyOneChooseBuy; // 是否有人选择了这个工作台
-    int anyOneChooseSell[MAX_Item_Type_Num + 1]; // 是否有人选择了这个工作台卖出
+    int someWillBuy; // 是否有人选择了这个工作台
+    int someWillSell[MAX_Item_Type_Num + 1]; // 是否有人选择了这个工作台卖出
     int waitPriority; // 是否在等待
-    bool dontBuy; // 如果最后时间有限,不买了
+    double near7;
     Worktable() {
         this->id = -1;
         this->x = -1;
@@ -23,10 +23,10 @@ struct Worktable{
         this->output = false;
         for (int i = 0; i <= MAX_Item_Type_Num; i++) {
             this->inputId[i] = 0;
-            this->anyOneChooseSell[i] = 0;
+            this->someWillSell[i] = 0;
         }
-        this->anyOneChooseBuy = -1;
-        dontBuy = 0;
+        this->someWillBuy = 0;
+        near7 = 1;
     }
     Worktable(int id, double x, double y, int type) {
         this->id = id;
@@ -37,10 +37,20 @@ struct Worktable{
         this->output = false;
         for (int i = 0; i <= MAX_Item_Type_Num; i++) {
             this->inputId[i] = 0;
-            this->anyOneChooseSell[i] = 0;
+            this->someWillSell[i] = 0;
         }
-        this->anyOneChooseBuy = -1;
-        dontBuy = 0;
+        this->someWillBuy = 0;
+        near7 = 1;
+    }
+    void checkCanBuy() {
+        // 检查对哪些物品有需求
+        for (int i = 1; i <= MAX_Item_Type_Num; i++) {
+            if (sellSet.find(std::make_pair(i, this->type)) != sellSet.end()) {
+                if (this->inputId[i] == 0) {
+                    canBuy[i]++;
+                }
+            }
+        }
     }
     void outputTest() {
         TESTOUTPUT(fout << "Worktable id: " << id << std::endl;)
@@ -54,16 +64,6 @@ struct Worktable{
             TESTOUTPUT(fout << "item" << i << inputId[i] << " ";)
         }
         TESTOUTPUT(fout << std::endl;)
-    }
-    void checkCanBuy() {
-        // 检查对哪些物品有需求
-        for (int i = 1; i <= MAX_Item_Type_Num; i++) {
-            if (sellSet.find(std::make_pair(i, this->type)) != sellSet.end()) {
-                if (this->inputId[i] == 0) {
-                    canBuy[i]++;
-                }
-            }
-        }
     }
     void checkWait() {
         int all = 0;
@@ -85,7 +85,7 @@ struct Worktable{
         // 7 存在两个输入
         if (all == 3 && have == 2) {
             this->waitPriority = 5;
-        }
+        } else
         // 7 存在一个输入
         if (all == 3 && have >= 1) {
             this->waitPriority = 4;
