@@ -163,7 +163,7 @@ struct Robot{
 
 
     void Move() {
-        while ((Vector2D(x, y) - pathPoints[0]).length() < 0.25) {
+        while ((Vector2D(x, y) - pathPoints[0]).length() < 0.4) {
             pathPoints.erase(pathPoints.begin());
         }
         TESTOUTPUT(fout << "from" << "(" << x << ", " << y << ")" << "to" << "(" << pathPoints[0].x << ", " << pathPoints[0].y << ")" << std::endl;)
@@ -371,6 +371,58 @@ struct Robot{
         worktables[path->buyWorktableId].someWillBuy++;
         worktables[path->sellWorktableId].someWillSell[createMap[worktables[path->buyWorktableId].type]]++;
     }
+    double point_to_segment_distance(Vector2D begin, Vector2D end, Vector2D obstacle) {
+        Vector2D begin_to_end = end-begin;
+        Vector2D begin_to_obstacle = obstacle - begin;
+        Vector2D end_to_obstacle = obstacle - end;
+        if (begin_to_end * begin_to_obstacle <= 0) return (begin-obstacle).length();
+        if (begin_to_end * end_to_obstacle >= 0) return (end-obstacle).length();
+        return fabs(begin_to_end ^ begin_to_obstacle) / (begin-end).length();
+    }
+    std::vector<Vector2D> fixpath(std::vector<Vector2D> path) {
+        // TESTOUTPUT(fout << path.size() << std::endl;)
+        std::vector<Vector2D> ret;
+        auto begin = path.begin();
+        // 不断延迟线段的终点
+        // 如果碰撞了,就不加这个点, 以最后一个点开始继续这个过程
+        // 如果没有碰撞,就加上这个点的碰撞点
+        while (begin != path.end()) {
+            // TESTOUTPUT(fout << "线段从 " << begin->x << "," << begin->y << "开始" << std::endl;)
+            auto end = begin;
+            auto obstacles = grids[*begin]->obstacles;
+            while (end != path.end()) {
+                end++;
+                if (end == path.end()) break;
+                bool flag = false;
+                // TESTOUTPUT(fout << "测试到 " << end->x << "," << end->y << "是否碰撞" << std::endl;)
+                for (auto & obstacle : obstacles) {
+                    // 计算obstacle到 begin->end这条线段的距离
+                    double distance = point_to_segment_distance(*begin, *end, obstacle);
+                    if (distance < 0.53) {// 碰撞了
+                        // TESTOUTPUT(fout << "碰撞点" << obstacle.x << "," << obstacle.y << std::endl;)
+                        flag = true;
+                        break;
+                    }
+                }
+                if (flag) {
+                    // TESTOUTPUT(fout << "碰撞了" << std::endl;)
+                    break;
+                }
+                for (auto & obstacle : grids[*end]->obstacles) {
+                    obstacles.push_back(obstacle);
+                }
+            }
+            // end--;
+            ret.push_back(*begin);
+            begin = end;
+        }
+        ret.push_back(path.back());
+        for (auto & item : ret) {
+            TESTOUTPUT(fout << "(" << item.x << "," << item.y << ")" << "->";)
+        }
+        TESTOUTPUT(fout << std::endl;)
+        return ret;
+    }
     /**
      * 计算路径
      * 计算从一个坐标移动到另一个坐标的路径
@@ -406,6 +458,14 @@ struct Robot{
                 if (index.x <= 0.25 || index.x >= 49.75 || index.y <= 0.25 || index.y >= 49.75) continue;
                 if (fromWhere.find(index) != fromWhere.end()) continue;
                 if (grids[index]->type == 1) continue;
+                // bool flag = false;
+                // for (auto & item : grids[index]->obstacles) {
+                //     if ((index - item).length() < 0.54) {
+                //         flag = true;
+                //         break;
+                //     }
+                // }
+                // if (flag) continue;
                 if (bringId != 0) {
                     // 如果带着物品,目标节点的上下 或者 左右 有墙壁,则过不去
                     if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-0.5, 0)]->type == 1) continue;
@@ -443,6 +503,7 @@ struct Robot{
         //     TESTOUTPUT(fout << "(" << item.x << "," << item.y << ")" << "->";)
         // }
         // TESTOUTPUT(fout << std::endl;)
+        path = fixpath(path);
         return path;
     }
     // 机器人具体的行为
