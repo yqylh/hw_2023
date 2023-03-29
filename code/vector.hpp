@@ -19,6 +19,7 @@ struct Vector2D {
     double length() { return sqrt(x * x + y * y); } // 向量长度
     void normalize() { *this = *this / length(); } // 向量单位化
     double angle(Vector2D v) { return acos((*this * v) / (length() * v.length())); } // 向量夹角
+    bool operator<(const Vector2D v)const { return x < v.x || (x == v.x && y < v.y); } // 重载小于号
 };
 
 

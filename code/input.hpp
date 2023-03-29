@@ -3,6 +3,7 @@
 #include "config.hpp"
 #include "robot.hpp"
 #include "worktable.hpp"
+#include "grid.hpp"
 #include <fstream>
 #include <set>
 #include <map>
@@ -142,20 +143,29 @@ void inputMap(){
         std::string line;
         getline(std::cin, line);
         for (int j = 0; j < MAP_Col_Length; j++) {
-            if (line[j] == '.') continue;
+            double x = 0.5*j+0.25;
+            double y = 50 - 0.25 - 0.5*i;
+            if (line[j] == '.') {
+                grids[Vector2D(x,y)] = new Grid(Vector2D(x,y), 0);
+                continue;
+            }
             if (line[j] == '#') {
+                grids[Vector2D(x,y)] = new Grid(Vector2D(x,y), 1);
                 // 墙壁
                 continue;
             }
             if (line[j] == 'A') {
+                grids[Vector2D(x,y)] = new Grid(Vector2D(x,y), 2);
                 robotNum++;
-                robots[robotNum] = Robot(robotNum, 0.5*j+0.25, 50 - 0.25 - 0.5*i);
+                robots[robotNum] = Robot(robotNum, x,y);
             } else {
+                grids[Vector2D(x,y)] = new Grid(Vector2D(x,y), 0);
                 worktableNum++;
-                worktables[worktableNum] = Worktable(worktableNum, 0.5*j+0.25, 50 - 0.25 - 0.5*i, char(line[j]) - '0');
+                worktables[worktableNum] = Worktable(worktableNum, x,y, char(line[j]) - '0');
             }
         }
     }
+    detectionObstacle();
     std::string line;
     while(getline(std::cin, line) && line != "OK");
     puts("OK");
