@@ -208,7 +208,7 @@ void inputMap(){
                 continue;
             }
             if (line[j] == 'A') {
-                grids[Vector2D(x,y)] = new Grid(Vector2D(x,y), 2);
+                grids[Vector2D(x,y)] = new Grid(Vector2D(x,y), 0);
                 robotNum++;
                 robots[robotNum] = Robot(robotNum, x,y);
             } else {

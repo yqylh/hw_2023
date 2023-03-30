@@ -163,13 +163,14 @@ struct Robot{
 
 
     void Move() {
+        Vector2D go;
+        if (worktableTogo == -1) {
+            pathPoints.push_back(Vector2D(worktables[1].x, worktables[1].y));
+        }
         while ((Vector2D(x, y) - pathPoints[0]).length() < 0.4) {
             pathPoints.erase(pathPoints.begin());
         }
         TESTOUTPUT(fout << "from" << "(" << x << ", " << y << ")" << "to" << "(" << pathPoints[0].x << ", " << pathPoints[0].y << ")" << std::endl;)
-        if (worktableTogo == -1) {
-            worktableTogo = worktableNum / 2;
-        }
         std::vector<double> vec1 = {1, 0};
         std::vector<double> vec2 = {pathPoints[0].x - x, pathPoints[0].y - y};
         double cosAns = (vec1[0] * vec2[0] + vec1[1] * vec2[1]) / (sqrt(vec1[0] * vec1[0] + vec1[1] * vec1[1]) * sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1]));
@@ -446,45 +447,20 @@ struct Robot{
             findItme++;
             Vector2D now = q.front();
             q.pop();
-            /**
-             * 这里只用两个方向, 因为斜着走不一定走的过去
-             * #_#
-             * R_#
-             * 需要先去右边, 再去上边
-            */ 
-            std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}};
+            std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
             for (auto &add : adds) {
                 Vector2D index = now + Vector2D(add.first, add.second);
                 if (index.x <= 0.25 || index.x >= 49.75 || index.y <= 0.25 || index.y >= 49.75) continue;
                 if (fromWhere.find(index) != fromWhere.end()) continue;
                 if (grids[index]->type == 1) continue;
-                // bool flag = false;
-                // for (auto & item : grids[index]->obstacles) {
-                //     if ((index - item).length() < 0.54) {
-                //         flag = true;
-                //         break;
-                //     }
-                // }
-                // if (flag) continue;
-                if (bringId != 0) {
-                    // 如果带着物品,目标节点的上下 或者 左右 有墙壁,则过不去
-                    if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-0.5, 0)]->type == 1) continue;
-                    if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(0, -0.5)]->type == 1) continue;
-                    // 间隔 1m
-                    if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(0, -1)]->type == 1) continue;
-                    if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(0.5, -1)]->type == 1) continue;
-                    if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(-0.5, -1)]->type == 1) continue;
-                    if (grids[index + Vector2D(0, -0.5)]->type == 1 && grids[index + Vector2D(0, 1)]->type == 1) continue;
-                    if (grids[index + Vector2D(0, -0.5)]->type == 1 && grids[index + Vector2D(0.5, 1)]->type == 1) continue;
-                    if (grids[index + Vector2D(0, -0.5)]->type == 1 && grids[index + Vector2D(-0.5, 1)]->type == 1) continue;
-
-                    if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-1, 0)]->type == 1) continue;
-                    if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-1, 0.5)]->type == 1) continue;
-                    if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-1, -0.5)]->type == 1) continue;
-                    if (grids[index + Vector2D(-0.5, 0)]->type == 1 && grids[index + Vector2D(1, 0)]->type == 1) continue;
-                    if (grids[index + Vector2D(-0.5, 0)]->type == 1 && grids[index + Vector2D(1, 0.5)]->type == 1) continue;
-                    if (grids[index + Vector2D(-0.5, 0)]->type == 1 && grids[index + Vector2D(1, -0.5)]->type == 1) continue;
+                bool flag = false;
+                if (!(index == to))for (auto & item : grids[index]->obstacles) {
+                    if ((index - item).length() < (bringId == 0 ? 0.45 : 0.53)) {
+                        flag = true;
+                        break;
+                    }
                 }
+                if (flag) continue;
                 fromWhere.insert(std::make_pair(index, now));
                 q.push(index);
                 if (now == to){
@@ -503,7 +479,7 @@ struct Robot{
         //     TESTOUTPUT(fout << "(" << item.x << "," << item.y << ")" << "->";)
         // }
         // TESTOUTPUT(fout << std::endl;)
-        path = fixpath(path);
+        // path = fixpath(path);
         return path;
     }
     // 机器人具体的行为

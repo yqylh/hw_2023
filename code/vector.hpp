@@ -20,7 +20,7 @@ struct Vector2D {
     void normalize() { *this = *this / length(); } // 向量单位化
     double angle(Vector2D v) { return acos((*this * v) / (length() * v.length())); } // 向量夹角
     bool operator<(const Vector2D v)const { return x < v.x || (x == v.x && y < v.y); } // 重载小于号
-    bool operator==(const Vector2D v) {// 重载等于号
+    bool operator==(const Vector2D v)const {// 重载等于号
         return std::abs(x - v.x) < 0.000001 && std::abs(y - v.y) < 0.000001;
     } 
 };

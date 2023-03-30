@@ -7,7 +7,7 @@
 
 struct Grid {
     Vector2D index;
-    int type; // 0->空地 1->障碍物 2->工作台
+    int type; // 0->空地 1->障碍物
     std::pair<int, int> *visited; // robotId, time
     std::vector<Vector2D> obstacles; // 障碍物的四个坐标
     Grid(){}
