@@ -338,6 +338,9 @@ struct Robot{
                 if (sell.waitPriority == 5) {
                     earnMoney *= 1.2;
                 }
+                if (buy.isNearCorner) {
+                    earnMoney *= 0.1;
+                }
                 // 有资源缺口 即卖工作台的类型对应的产品(type 相同)有缺口 就促进生产
                 if (canBuy[sell.type] > 0 && (sell.type == 4 || sell.type == 5 || sell.type == 6) && sell.near7 != 1) {
                     // TESTOUTPUT(fout << "canBuy " << sell.type << std::endl;)
