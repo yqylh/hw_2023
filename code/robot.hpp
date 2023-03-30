@@ -442,23 +442,31 @@ struct Robot{
         std::queue<Vector2D> q;
         double x = this->x;
         double y = this->y;
+        // 计算当前位置的格子
         x = int(x / 0.5) * 0.5 + 0.25;
         y = int(y / 0.5) * 0.5 + 0.25;
         q.push(Vector2D(x, y));
         fromWhere.insert(std::make_pair(Vector2D(x, y), Vector2D(x, y)));
-        int findItme = 0;
+        // int findItme = 0;
         bool find = false;
         while (!q.empty() && find == false) {
-            findItme++;
+            // findItme++;
+            // 当前的位置
             Vector2D now = q.front();
             q.pop();
+            // 八个方向的移动
             std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
             for (auto &add : adds) {
+                // 移动后的位置
                 Vector2D next = now + Vector2D(add.first, add.second);
                 if (next.x <= 0.25 || next.x >= 49.75 || next.y <= 0.25 || next.y >= 49.75) continue;
+                // 没访问过
                 if (fromWhere.find(next) != fromWhere.end()) continue;
+                // 是墙
                 if (grids[next]->type == 1) continue;
                 if (bringId == 0) {
+                    // 不携带物品
+                    // 可以碰两个角
                     int num = 0;
                     if (!(next == to))for (auto & item : grids[next]->obstacles) {
                         if ((next - item).length() < 0.45) {
@@ -467,26 +475,22 @@ struct Robot{
                     }
                     if (num > 2) continue;
                 } else {
-                    // bool flag = false;
-                    // if (!(next == to))for (auto & item : grids[next]->obstacles) {
-                    //     if ((next - item).length() < 0.53) {
-                    //         flag = true;
-                    //         break;
-                    //     }
-                    // }
-                    // if (flag) continue;
+                    // 携带物品
                     int num = 0;
                     Vector2D obstacles;
                     if (!(next == to))for (auto & item : grids[next]->obstacles) {
-                        if ((next - item).length() < 0.45) {
+                        if ((next - item).length() < 0.53) {
                             num++;
                             obstacles = item;
                         }
                     }
+                    // 碰到了至少两个角,一定不能去
                     if (num > 1) continue;
+                    // 只碰到了一个角,可能可以去
                     if (num == 1) {
                         Vector2D deltaNextToObstacles = obstacles - next;
                         Vector2D deltaNowToNext = next - now;
+                        // 左上或者右下
                         if (deltaNextToObstacles.x == deltaNextToObstacles.y) {
                             if ((deltaNowToNext ^ deltaNextToObstacles) < 0) {
                                 // 顺时针转
@@ -501,6 +505,7 @@ struct Robot{
                                 continue;
                             }
                         } else {
+                            // 右下或者左上
                             if ((deltaNowToNext ^ deltaNextToObstacles) > 0) {
                                 // 顺时针转
                                 if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
