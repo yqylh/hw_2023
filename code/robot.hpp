@@ -494,7 +494,7 @@ struct Robot{
             TESTOUTPUT(fout << "(" << item.x << "," << item.y << ")" << "->";)
         }
         TESTOUTPUT(fout << std::endl;)
-        // path = fixpath(path);
+        if (path.size() > 2) path = fixpath(path);
         return path;
     }
     // 机器人具体的行为
