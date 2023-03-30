@@ -6,3 +6,4 @@ upload/*
 
 *.txt
 *.zip
+.DS_Store

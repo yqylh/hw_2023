@@ -454,30 +454,70 @@ struct Robot{
             q.pop();
             std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
             for (auto &add : adds) {
-                Vector2D index = now + Vector2D(add.first, add.second);
-                if (index.x <= 0.25 || index.x >= 49.75 || index.y <= 0.25 || index.y >= 49.75) continue;
-                if (fromWhere.find(index) != fromWhere.end()) continue;
-                if (grids[index]->type == 1) continue;
+                Vector2D next = now + Vector2D(add.first, add.second);
+                if (next.x <= 0.25 || next.x >= 49.75 || next.y <= 0.25 || next.y >= 49.75) continue;
+                if (fromWhere.find(next) != fromWhere.end()) continue;
+                if (grids[next]->type == 1) continue;
                 if (bringId == 0) {
                     int num = 0;
-                    if (!(index == to))for (auto & item : grids[index]->obstacles) {
-                        if ((index - item).length() < 0.45) {
+                    if (!(next == to))for (auto & item : grids[next]->obstacles) {
+                        if ((next - item).length() < 0.45) {
                             num++;
                         }
                     }
-                    if (num > 1) continue;
+                    if (num > 2) continue;
                 } else {
-                    bool flag = false;
-                    if (!(index == to))for (auto & item : grids[index]->obstacles) {
-                        if ((index - item).length() < 0.53) {
-                            flag = true;
-                            break;
+                    // bool flag = false;
+                    // if (!(next == to))for (auto & item : grids[next]->obstacles) {
+                    //     if ((next - item).length() < 0.53) {
+                    //         flag = true;
+                    //         break;
+                    //     }
+                    // }
+                    // if (flag) continue;
+                    int num = 0;
+                    Vector2D obstacles;
+                    if (!(next == to))for (auto & item : grids[next]->obstacles) {
+                        if ((next - item).length() < 0.45) {
+                            num++;
+                            obstacles = item;
                         }
                     }
-                    if (flag) continue;
+                    if (num > 1) continue;
+                    if (num == 1) {
+                        Vector2D deltaNextToObstacles = obstacles - next;
+                        Vector2D deltaNowToNext = next - now;
+                        if (deltaNextToObstacles.x == deltaNextToObstacles.y) {
+                            if ((deltaNowToNext ^ deltaNextToObstacles) < 0) {
+                                // 顺时针转
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 2 * deltaNextToObstacles.y)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 4 * deltaNextToObstacles.y)]->type == 1) continue;
+                            } else if ((deltaNowToNext ^ deltaNextToObstacles) > 0)  {
+                                if (grids[next + Vector2D(0, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(2 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(4 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                            } else {
+                                continue;
+                            }
+                        } else {
+                            if ((deltaNowToNext ^ deltaNextToObstacles) > 0) {
+                                // 顺时针转
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 2 * deltaNextToObstacles.y)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 4 * deltaNextToObstacles.y)]->type == 1) continue;
+                            } else if ((deltaNowToNext ^ deltaNextToObstacles) < 0)  {
+                                if (grids[next + Vector2D(0, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(2 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(4 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                            } else {
+                                continue;
+                            }
+                        }
+                    }   
                 }
-                fromWhere.insert(std::make_pair(index, now));
-                q.push(index);
+                fromWhere.insert(std::make_pair(next, now));
+                q.push(next);
                 if (now == to){
                     find = true;
                 }
@@ -494,7 +534,7 @@ struct Robot{
             TESTOUTPUT(fout << "(" << item.x << "," << item.y << ")" << "->";)
         }
         TESTOUTPUT(fout << std::endl;)
-        if (path.size() > 2) path = fixpath(path);
+        // if (path.size() > 2) path = fixpath(path);
         return path;
     }
     // 机器人具体的行为
@@ -604,7 +644,7 @@ void DetecteCollision(int robot1, int robot2) {
     }
     TESTOUTPUT(fout << "碰撞角度" << angle << std::endl;)
 
-    if (angle > M_PI * 150 / 180) { // 135~180  ! 或许都是一个方向会比较好用
+    if (angle > M_PI * 170 / 180) { // 135~180  ! 或许都是一个方向会比较好用
         if (robots[robot1].collisionRotateTime > 0) {
             return;
         }
