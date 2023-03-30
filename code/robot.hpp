@@ -311,6 +311,8 @@ struct Robot{
                 if (sell.id == -1) break;
                 // 确保这个工作台支持买,而且输入口是空的
                 if (sellSet.find(std::make_pair(productId, sell.type)) == sellSet.end() || sell.inputId[productId] == 1) continue;
+                // 确保不是墙角
+                if (sell.isNearCorner) continue;
                 /**
                  * 确保没人预约卖
                  * 或者类型是8 || 9

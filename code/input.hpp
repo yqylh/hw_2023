@@ -140,6 +140,21 @@ void solveGraph() {
 
 void deleteWorktable() {
     for (int i = 0; i <= worktableNum; i++) {
+        int corner = 0;
+        std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}};
+        for (auto &add : adds) {
+            Vector2D index = Vector2D(worktables[i].x, worktables[i].y) + Vector2D(add.first, add.second);
+            if (grids[index]->type == 1) {
+                corner++;
+            }
+        }
+        if (corner > 1) {
+            worktables[i].isNearCorner = 1;
+        } else {
+            worktables[i].isNearCorner = 0;
+        }
+    }
+    for (int i = 0; i <= worktableNum; i++) {
         std::set<Vector2D> reach;
         std::queue<Vector2D> q;
         q.push(Vector2D(worktables[i].x, worktables[i].y));

@@ -13,7 +13,8 @@ struct Worktable{
     int someWillBuy; // 是否有人选择了这个工作台
     int someWillSell[MAX_Item_Type_Num + 1]; // 是否有人选择了这个工作台卖出
     int waitPriority; // 是否在等待
-    double near7;
+    double near7; // 卖时的参数
+    bool isNearCorner; // 是否在角落
     Worktable() {
         this->id = -1;
         this->x = -1;
