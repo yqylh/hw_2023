@@ -150,6 +150,7 @@ void deleteWorktable() {
         }
         if (corner > 1) {
             worktables[i].isNearCorner = 1;
+            TESTOUTPUT(fout << "worktable " << i << " is near corner" << std::endl;)
         } else {
             worktables[i].isNearCorner = 0;
         }

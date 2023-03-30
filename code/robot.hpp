@@ -455,14 +455,24 @@ struct Robot{
                 if (index.x <= 0.25 || index.x >= 49.75 || index.y <= 0.25 || index.y >= 49.75) continue;
                 if (fromWhere.find(index) != fromWhere.end()) continue;
                 if (grids[index]->type == 1) continue;
-                bool flag = false;
-                if (!(index == to))for (auto & item : grids[index]->obstacles) {
-                    if ((index - item).length() < (bringId == 0 ? 0.45 : 0.53)) {
-                        flag = true;
-                        break;
+                if (bringId == 0) {
+                    int num = 0;
+                    if (!(index == to))for (auto & item : grids[index]->obstacles) {
+                        if ((index - item).length() < 0.45) {
+                            num++;
+                        }
                     }
+                    if (num > 1) continue;
+                } else {
+                    bool flag = false;
+                    if (!(index == to))for (auto & item : grids[index]->obstacles) {
+                        if ((index - item).length() < 0.53) {
+                            flag = true;
+                            break;
+                        }
+                    }
+                    if (flag) continue;
                 }
-                if (flag) continue;
                 fromWhere.insert(std::make_pair(index, now));
                 q.push(index);
                 if (now == to){
@@ -477,10 +487,10 @@ struct Robot{
             to = fromWhere[to];
         }
         std::reverse(path.begin(), path.end());
-        // for (auto & item : path) {
-        //     TESTOUTPUT(fout << "(" << item.x << "," << item.y << ")" << "->";)
-        // }
-        // TESTOUTPUT(fout << std::endl;)
+        for (auto & item : path) {
+            TESTOUTPUT(fout << "(" << item.x << "," << item.y << ")" << "->";)
+        }
+        TESTOUTPUT(fout << std::endl;)
         // path = fixpath(path);
         return path;
     }
