@@ -231,6 +231,11 @@ struct Robot{
             collisionSpeedTime--;
             speed = collisionSpeed;
         }
+        if (Vector2D(vec2[0], vec2[1]).length() < 1.2 && speed > 0) {
+            // TESTOUTPUT(fout << "changed from" << speed << " route=" << absRotate << std::endl;)
+            speed = Vector2D(vec2[0], vec2[1]).length() / 1.2 * 6;
+            if (speed < 2) speed = 2;
+        }
         TESTOUTPUT(fout << "forward " << id << " " << speed << std::endl;)
         printf("forward %d %lf\n", id, speed);
         /*
@@ -504,10 +509,12 @@ struct Robot{
                             if ((deltaNowToNext ^ deltaNextToObstacles) < 0) {
                                 // 顺时针转
                                 if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
+                                if (grids[next + Vector2D(0, -deltaNextToObstacles.y * 4)]->type == 1) continue;
                                 if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 2 * deltaNextToObstacles.y)]->type == 1) continue;
                                 if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 4 * deltaNextToObstacles.y)]->type == 1) continue;
                             } else if ((deltaNowToNext ^ deltaNextToObstacles) > 0)  {
                                 if (grids[next + Vector2D(0, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
                                 if (grids[next + Vector2D(2 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
                                 if (grids[next + Vector2D(4 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
                             } else {
@@ -518,10 +525,12 @@ struct Robot{
                             if ((deltaNowToNext ^ deltaNextToObstacles) > 0) {
                                 // 顺时针转
                                 if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
+                                if (grids[next + Vector2D(0, -deltaNextToObstacles.y * 4)]->type == 1) continue;
                                 if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 2 * deltaNextToObstacles.y)]->type == 1) continue;
                                 if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 4 * deltaNextToObstacles.y)]->type == 1) continue;
                             } else if ((deltaNowToNext ^ deltaNextToObstacles) < 0)  {
                                 if (grids[next + Vector2D(0, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
                                 if (grids[next + Vector2D(2 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
                                 if (grids[next + Vector2D(4 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
                             } else {
