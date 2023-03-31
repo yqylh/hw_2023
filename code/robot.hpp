@@ -167,7 +167,7 @@ struct Robot{
         if (worktableTogo == -1) {
             pathPoints.push_back(Vector2D(worktables[1].x, worktables[1].y));
         }
-        while ((Vector2D(x, y) - pathPoints[0]).length() < 0.4) {
+        while (pathPoints.size() > 0 && (Vector2D(x, y) - pathPoints[0]).length() < 0.4) {
             pathPoints.erase(pathPoints.begin());
         }
         TESTOUTPUT(fout << "from" << "(" << x << ", " << y << ")" << "to" << "(" << pathPoints[0].x << ", " << pathPoints[0].y << ")" << std::endl;)
@@ -207,9 +207,9 @@ struct Robot{
         double speed = 0;
         // TESTOUTPUT(fout << "absRotate: " << absRotate << " length =" << length << " asin=" << asin(0.4 / length) << std::endl;)
         // 由于判定范围是 0.4m,所以如果度数满足这个条件, 就直接冲过去
-        // if (0.4 / length > 1) {
-        //     speed = 6;
-        // } else
+        if (0.4 / length > 1) {
+            speed = 6;
+        } else
         if (absRotate < asin(0.4 / length)) {
             speed = 6;
         } else if (absRotate < M_PI / 4) {
@@ -395,31 +395,40 @@ struct Robot{
         while (begin != path.end()) {
             // TESTOUTPUT(fout << "线段从 " << begin->x << "," << begin->y << "开始" << std::endl;)
             auto end = begin;
-            auto obstacles = grids[*begin]->obstacles;
+            end++;
             while (end != path.end()) {
                 end++;
                 if (end == path.end()) break;
                 bool flag = false;
                 // TESTOUTPUT(fout << "测试到 " << end->x << "," << end->y << "是否碰撞" << std::endl;)
-                for (auto & obstacle : obstacles) {
-                    // 计算obstacle到 begin->end这条线段的距离
-                    double distance = point_to_segment_distance(*begin, *end, obstacle);
-                    if (distance < 0.53) {// 碰撞了
-                        // TESTOUTPUT(fout << "碰撞点" << obstacle.x << "," << obstacle.y << std::endl;)
-                        flag = true;
-                        break;
+                for (double x = begin->x; flag == false ; x += (end->x - begin->x) / std::abs(end->x - begin->x) * 0.5) {
+                    // TESTOUTPUT(fout << "x = " << x << std::endl;)
+                    for (double y = begin->y; flag == false ; y += (end->y - begin->y) / std::abs(end->y - begin->y) * 0.5) {
+                        int num = 0;
+                        for (auto & obstacle : grids[Vector2D(x, y)]->obstacles) {
+                            // 计算obstacle到 begin->end这条线段的距离
+                            double distance = point_to_segment_distance(*begin, *end, obstacle);
+                            if (distance < 0.53) {// 碰撞了
+                                // TESTOUTPUT(fout << "碰撞点" << obstacle.x << "," << obstacle.y << std::endl;)
+                                num++;
+                            }
+                        }
+                        if (num > 1) {
+                            flag = true;
+                            break;
+                        }
+                        if (y == end->y) break;
                     }
+                    if (x == end->x) break;
                 }
                 if (flag) {
                     // TESTOUTPUT(fout << "碰撞了" << std::endl;)
                     break;
                 }
-                for (auto & obstacle : grids[*end]->obstacles) {
-                    obstacles.push_back(obstacle);
-                }
             }
-            // end--;
             ret.push_back(*begin);
+            end--; 
+            if (end == begin) end++;
             begin = end;
         }
         ret.push_back(path.back());
@@ -539,7 +548,7 @@ struct Robot{
             TESTOUTPUT(fout << "(" << item.x << "," << item.y << ")" << "->";)
         }
         TESTOUTPUT(fout << std::endl;)
-        // if (path.size() > 2) path = fixpath(path);
+        if (path.size() > 2) path = fixpath(path);
         return path;
     }
     // 机器人具体的行为
@@ -649,7 +658,7 @@ void DetecteCollision(int robot1, int robot2) {
     }
     TESTOUTPUT(fout << "碰撞角度" << angle << std::endl;)
 
-    if (angle > M_PI * 170 / 180) { // 135~180  ! 或许都是一个方向会比较好用
+    if (angle > M_PI * 0 / 180) { // 135~180  ! 或许都是一个方向会比较好用
         if (robots[robot1].collisionRotateTime > 0) {
             return;
         }
