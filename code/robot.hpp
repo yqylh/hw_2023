@@ -440,10 +440,15 @@ struct Robot{
             begin = end;
         }
         ret.push_back(path.back());
+        // for (auto & item : ret) {
+        //     TESTOUTPUT(fout << "(" << item.x << "," << item.y << ")" << "->";)
+        // }
+        // TESTOUTPUT(fout << std::endl;)
+        CREATEMAP(mapOut << "time=" << nowTime << " robotId=" << id << " optimized carry=" << (bringId == 0 ? false : true) << std::endl;)
         for (auto & item : ret) {
-            TESTOUTPUT(fout << "(" << item.x << "," << item.y << ")" << "->";)
+            CREATEMAP(mapOut << "(" << item.x << "," << item.y << ")" << "->";)
         }
-        TESTOUTPUT(fout << std::endl;)
+        CREATEMAP(mapOut << std::endl;)
         return ret;
     }
     /**
@@ -565,10 +570,11 @@ struct Robot{
             to = fromWhere[to];
         }
         std::reverse(path.begin(), path.end());
+        CREATEMAP(mapOut << "time=" << nowTime << " robotId=" << id << " origin carry=" << (bringId == 0 ? false : true) << std::endl;)
         for (auto & item : path) {
-            TESTOUTPUT(fout << "(" << item.x << "," << item.y << ")" << "->";)
+            CREATEMAP(mapOut << "(" << item.x << "," << item.y << ")" << "->";)
         }
-        TESTOUTPUT(fout << std::endl;)
+        CREATEMAP(mapOut << std::endl;)
         if (path.size() > 2) path = fixpath(path);
         return path;
     }
