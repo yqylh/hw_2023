@@ -209,4 +209,4 @@ def main(mapId=1):
     # 
     
 if __name__ == "__main__":
-    main(4)
+    main(1)

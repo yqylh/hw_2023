@@ -10,6 +10,7 @@ if g++ main.cpp -o main -std=c++17 -O3 -pthread -DEBUG -DCREATE; then
     if [ -d "replay" ]; then
         rm -r ./replay
     fi
+    mv ../genMap/path.txt ../genMap/path$1.txt
 else 
     echo "some error occured"
 fi

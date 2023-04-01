@@ -440,16 +440,34 @@ struct Robot{
             begin = end;
         }
         ret.push_back(path.back());
-        // for (auto & item : ret) {
-        //     TESTOUTPUT(fout << "(" << item.x << "," << item.y << ")" << "->";)
-        // }
-        // TESTOUTPUT(fout << std::endl;)
+        return ret;
+    }
+    std::vector<Vector2D> DodgingCorners(std::vector<Vector2D> path) {
+        std::map<Vector2D, Vector2D> solved;
+        for (auto & point : path) {
+            Vector2D p1 = point;
+            Vector2D p2 = point;
+            for (auto & item : grids[p1]->obstacles) {
+                if ((item - p1).length() < (bringId == 0 ? 0.45 : 0.53)) {
+                    auto delta = p1 - item;
+                    // double ratio = (bringId == 0 ? 0.5 : 0.65) / 0.25;
+                    double ratio = (bringId == 0 ? 0.5 : 0.6) / delta.length();
+                    p2 = item + delta * ratio;
+                    break;
+                }
+            }
+            solved.insert(std::make_pair(p1, p2));
+        }
+        path = fixpath(path);
+        for (auto & point : path) {
+            point = solved[point];
+        }
         CREATEMAP(mapOut << "time=" << nowTime << " robotId=" << id << " optimized carry=" << (bringId == 0 ? false : true) << std::endl;)
-        for (auto & item : ret) {
+        for (auto & item : path) {
             CREATEMAP(mapOut << "(" << item.x << "," << item.y << ")" << "->";)
         }
         CREATEMAP(mapOut << std::endl;)
-        return ret;
+        return path;
     }
     /**
      * 计算路径
@@ -575,7 +593,7 @@ struct Robot{
             CREATEMAP(mapOut << "(" << item.x << "," << item.y << ")" << "->";)
         }
         CREATEMAP(mapOut << std::endl;)
-        if (path.size() > 2) path = fixpath(path);
+        if (path.size() > 2) path = DodgingCorners(path);
         return path;
     }
     void checkDead();
