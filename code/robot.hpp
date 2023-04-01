@@ -450,13 +450,31 @@ struct Robot{
             }
             Vector2D p1 = point;
             Vector2D p2 = point;
-            for (auto & item : grids[p1]->obstacles) {
-                if ((item - p1).length() < (bringId == 0 ? 0.45 : 0.53)) {
-                    auto delta = p1 - item;
-                    double ratio = (bringId == 0 ? 0.45 : 0.57) / 0.25;
-                    // double ratio = (bringId == 0 ? 0.5 : 0.6) / delta.length();
-                    p2 = item + delta * ratio;
-                    break;
+            if (bringId == 0) {
+                int num = 0;
+                for (auto & item : grids[p1]->obstacles) {
+                    if ((item - p1).length() < 0.45) {
+                        auto delta = p1 - item;
+                        double ratio = 0.49 / 0.25;
+                        // double ratio = 0.5 / delta.length();
+                        // if (num == 0) {
+                            p2 = item + delta * ratio;
+                        //     num++;
+                        // } else {
+                            // p2 = p2 + delta * ratio;
+                            break;
+                        // }
+                    }
+                }
+            } else {
+                for (auto & item : grids[p1]->obstacles) {
+                    if ((item - p1).length() < 0.53) {
+                        auto delta = p1 - item;
+                        double ratio = 0.57 / 0.25;
+                        // double ratio = (bringId == 0 ? 0.5 : 0.6) / delta.length();
+                        p2 = item + delta * ratio;
+                        break;
+                    }
                 }
             }
             solved.push_back(std::make_pair(p1, p2));
