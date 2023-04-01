@@ -23,7 +23,7 @@ void solveGraph() {
             double dis = 1e8;
             for (auto & j : worktables) {
                 if (j.type == 8 || j.type == 9) {
-                    dis = std::min(dis, Vector2D(i.x - j.x, i.y - j.y).length());
+                    dis = std::min(dis, WTtoWT[i.id][j.id]);
                 }
             }
             near7.push_back(std::make_pair(i.id, dis));
@@ -36,7 +36,7 @@ void solveGraph() {
                 double dis = 1e8;
                 for (auto & j : worktables) {
                     if (j.type == 9) {
-                        dis = std::min(dis, Vector2D(i.x - j.x, i.y - j.y).length());
+                        dis = std::min(dis, WTtoWT[i.id][j.id]);
                     }
                 }
                 near7.push_back(std::make_pair(i.id, dis));
@@ -61,11 +61,11 @@ void solveGraph() {
             std::vector<std::pair<int, double> > near1, near2;
             for (auto & i : worktables) {
                 if (i.type == 1 && i.near7 == 1) {
-                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
+                    double dis = WTtoWT[i.id][id7];
                     near1.push_back(std::make_pair(i.id, dis));
                 }
                 if (i.type == 2 && i.near7 == 1) {
-                    double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
+                    double dis = WTtoWT[i.id][id7];
                     near2.push_back(std::make_pair(i.id, dis));
                 }
             }
@@ -100,15 +100,15 @@ void solveGraph() {
         std::vector<std::pair<int, double> > near4, near5, near6;
         for (auto & i : worktables) {
             if (i.type == 4 && i.near7 == 1) {
-                double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
+                double dis = WTtoWT[i.id][id7];
                 near4.push_back(std::make_pair(i.id, dis));
             }
             if (i.type == 5 && i.near7 == 1) {
-                double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
+                double dis = WTtoWT[i.id][id7];
                 near5.push_back(std::make_pair(i.id, dis));
             }
             if (i.type == 6 && i.near7 == 1) {
-                double dis = Vector2D(i.x - worktables[id7].x, i.y - worktables[id7].y).length();
+                double dis = WTtoWT[i.id][id7];
                 near6.push_back(std::make_pair(i.id, dis));
             }
         }
@@ -344,6 +344,7 @@ void solveWorktableToWorktable() {
     for (int i = 0; i <= worktableNum; i++) {
         TESTOUTPUT(fout << i << "-->");
         for (int j = 0; j <= worktableNum; j++) {
+            if (WTtoWT[i][j] == -1) WTtoWT[i][j] = 1e8;
             TESTOUTPUT(fout << WTtoWT[i][j] << " ");
         }
         TESTOUTPUT(fout << std::endl);
@@ -352,6 +353,7 @@ void solveWorktableToWorktable() {
     for (int i = 0; i <= worktableNum; i++) {
         TESTOUTPUT(fout << i << "-->");
         for (int j = 0; j <= worktableNum; j++) {
+            if (WTtoWTwithItem[i][j] == -1) WTtoWTwithItem[i][j] = 1e8;
             TESTOUTPUT(fout << WTtoWTwithItem[i][j] << " ");
         }
         TESTOUTPUT(fout << std::endl);
@@ -409,9 +411,9 @@ void inputMap(){
     detectionObstacle();
     std::string line;
     while(getline(std::cin, line) && line != "OK");
-    // solveGraph();
     deleteWorktable();
     solveWorktableToWorktable();
+    // solveGraph();
     solveRobotToWorktable();
     puts("OK");
     fflush(stdout);
@@ -467,9 +469,9 @@ void solveFrame() {
         robots[i].action();
         // TESTOUTPUT(robots[i].outputTest();) 
     }
-    // for (int i = 0; i <= robotNum; i++) {
-    //     robots[i].checkWall();
-    // }
+    for (int i = 0; i <= robotNum; i++) {
+        robots[i].checkWall();
+    }
     for (int i = 0; i <= robotNum; i++) {
         for (int j = i + 1; j <= robotNum; j++) {
             DetecteCollision(i, j);
