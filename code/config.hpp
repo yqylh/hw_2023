@@ -81,7 +81,7 @@ int lossTimeMoney = 0; // 当前每帧的金钱
     #define CREATEMAP(x)
 #endif
 #ifdef CREATE
-    std::ofstream mapOut("map.txt"); // 测试用输出
+    std::ofstream mapOut("../genMap/path.txt"); // 测试用输出
 #endif
 
 #endif
