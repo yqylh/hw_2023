@@ -206,7 +206,179 @@ void deleteWorktable() {
     }
 } 
 
+double bfs(Vector2D from, Vector2D to, int bring) {
+        std::vector<Vector2D> path;
+        std::map<Vector2D, Vector2D> fromWhere;
+        std::queue<Vector2D> q;
+        q.push(from);
+        fromWhere.insert(std::make_pair(from, from));
+        bool find = false;
+        while (!q.empty() && find == false) {
+            // 当前的位置
+            Vector2D now = q.front();
+            q.pop();
+            // 八个方向的移动
+            std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
+            for (auto &add : adds) {
+                // 移动后的位置
+                Vector2D next = now + Vector2D(add.first, add.second);
+                if (next.x <= 0.25 || next.x >= 49.75 || next.y <= 0.25 || next.y >= 49.75) continue;
+                // 没访问过
+                if (fromWhere.find(next) != fromWhere.end()) continue;
+                // 是墙
+                if (grids[next]->type == 1) continue;
+                if (bring == 0) {
+                    // 不携带物品 可以碰两个角
+                    int num = 0;
+                    if (!(next == to))for (auto & item : grids[next]->obstacles) {
+                        if ((next - item).length() < 0.45) {
+                            num++;
+                        }
+                    }
+                    int nowNum = 0;
+                    for (auto & item : grids[now]->obstacles) {
+                        if ((now - item).length() < 0.45) {
+                            nowNum++;
+                        }
+                    }
+                    if (nowNum >= 3) {
+                        if (num > 1) continue; 
+                    } else 
+                    if (num > 2) continue;
+                } else {
+                    // 携带物品
+                    int num = 0;
+                    Vector2D obstacles;
+                    if (!(next == to))for (auto & item : grids[next]->obstacles) {
+                        if ((next - item).length() < 0.53) {
+                            num++;
+                            obstacles = item;
+                        }
+                    }
+                    // 碰到了至少两个角,一定不能去
+                    if (num > 1) continue;
+                    // 只碰到了一个角,可能可以去
+                    if (num == 1) {
+                        Vector2D deltaNextToObstacles = obstacles - next;
+                        Vector2D deltaNowToNext = next - now;
+                        // 左上或者右下
+                        if (deltaNextToObstacles.x == deltaNextToObstacles.y) {
+                            if ((deltaNowToNext ^ deltaNextToObstacles) < 0) {
+                                // 顺时针转
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
+                                if (grids[next + Vector2D(0, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 2 * deltaNextToObstacles.y)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 4 * deltaNextToObstacles.y)]->type == 1) continue;
+                            } else if ((deltaNowToNext ^ deltaNextToObstacles) > 0)  {
+                                if (grids[next + Vector2D(0, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
+                                if (grids[next + Vector2D(2 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(4 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                            } else {
+                                continue;
+                            }
+                        } else {
+                            // 右下或者左上
+                            if ((deltaNowToNext ^ deltaNextToObstacles) > 0) {
+                                // 顺时针转
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
+                                if (grids[next + Vector2D(0, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 2 * deltaNextToObstacles.y)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 4 * deltaNextToObstacles.y)]->type == 1) continue;
+                            } else if ((deltaNowToNext ^ deltaNextToObstacles) < 0)  {
+                                if (grids[next + Vector2D(0, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
+                                if (grids[next + Vector2D(2 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(4 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                            } else {
+                                continue;
+                            }
+                        }
+                    }   
+                }
+                fromWhere.insert(std::make_pair(next, now));
+                q.push(next);
+                if (next == to){
+                    find = true;
+                }
+            }
+        }
+        while ( 1 ) {
+            path.push_back(to);
+            if (to == fromWhere[to]) break;
+            to = fromWhere[to];
+        }
+        if (find == false) return 1e8;
+        else 
+        return path.size();
+}
 
+void solveWorktableToWorktable() {
+    for (int i = 0; i <= worktableNum; i++) {
+        for (int j = 0; j <= worktableNum; j++) {
+            WTtoWT[i][j] = -1;
+            WTtoWTwithItem[i][j] = -1;
+        }
+    }
+    for (int i = 0; i <= worktableNum; i++) {
+        if (worktables[i].near7 == 0) continue;
+        for (int j = 0; j <= worktableNum; j++) {
+            if (worktables[j].near7 == 0) continue;
+            if (i == j) {
+                WTtoWT[i][j] = 0;
+                WTtoWTwithItem[i][j] = 0;
+                WTtoWT[j][i] = 0;
+                WTtoWTwithItem[j][i] = 0;
+                continue;
+            }
+            if (WTtoWT[i][j] != -1) continue;
+            double distance = bfs(Vector2D(worktables[i].x, worktables[i].y), Vector2D(worktables[j].x, worktables[j].y), 0);
+            WTtoWT[i][j] = distance;
+            WTtoWT[j][i] = distance;
+            distance = bfs(Vector2D(worktables[i].x, worktables[i].y), Vector2D(worktables[j].x, worktables[j].y), 1);
+            WTtoWTwithItem[i][j] = distance;
+            WTtoWTwithItem[j][i] = distance;
+        }
+    }
+    TESTOUTPUT(fout << "worktable to worktable 不带物品" << std::endl);
+    for (int i = 0; i <= worktableNum; i++) {
+        TESTOUTPUT(fout << i << "-->");
+        for (int j = 0; j <= worktableNum; j++) {
+            TESTOUTPUT(fout << WTtoWT[i][j] << " ");
+        }
+        TESTOUTPUT(fout << std::endl);
+    }
+    TESTOUTPUT(fout << "worktable to worktable 带物品" << std::endl);
+    for (int i = 0; i <= worktableNum; i++) {
+        TESTOUTPUT(fout << i << "-->");
+        for (int j = 0; j <= worktableNum; j++) {
+            TESTOUTPUT(fout << WTtoWTwithItem[i][j] << " ");
+        }
+        TESTOUTPUT(fout << std::endl);
+    }
+}
+void solveRobotToWorktable(){
+    for (int i = 0; i <= robotNum; i++) {
+        for (int j = 0; j <= worktableNum; j++) {
+            RobotToWT[i][j] = -1;
+        }
+    }
+    for (int i = 0; i <= robotNum; i++) {
+        for (int j = 0; j <= worktableNum; j++) {
+            if (worktables[j].near7 == 0) continue;
+            double distance = bfs(Vector2D(robots[i].x, robots[i].y), Vector2D(worktables[j].x, worktables[j].y), 0);
+            RobotToWT[i][j] = distance;
+        }
+    }
+    TESTOUTPUT(fout << "robot to worktable" << std::endl);
+    for (int i = 0; i <= robotNum; i++) {
+        TESTOUTPUT(fout << i << "-->");
+        for (int j = 0; j <= worktableNum; j++) {
+            TESTOUTPUT(fout << RobotToWT[i][j] << " ");
+        }
+        TESTOUTPUT(fout << std::endl);
+    }
+}
 void inputMap(){
     for (int i = 0; i < MAP_Line_Length; i++) {
         std::string line;
@@ -237,10 +409,12 @@ void inputMap(){
     detectionObstacle();
     std::string line;
     while(getline(std::cin, line) && line != "OK");
+    // solveGraph();
+    deleteWorktable();
+    solveWorktableToWorktable();
+    solveRobotToWorktable();
     puts("OK");
     fflush(stdout);
-    solveGraph();
-    deleteWorktable();
 }
 
 bool inputFrame() {

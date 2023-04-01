@@ -10,10 +10,16 @@ struct Grid {
     int type; // 0->空地 1->障碍物
     std::pair<int, int> *visited; // robotId, time
     std::vector<Vector2D> obstacles; // 障碍物的四个坐标
-    Grid(){}
+    std::vector<int> minToTime; // 四个机器人最近到达这个坐标的时间
+    Grid(){
+        visited = nullptr;
+        obstacles = std::vector<Vector2D>();
+        minToTime = std::vector<int>(4, -100);
+    }
     Grid(Vector2D index, int type) : index(index), type(type){
         visited = nullptr;
         obstacles = std::vector<Vector2D>();
+        minToTime = std::vector<int>(4, -100);
     }
 };
 std::map<Vector2D, Grid *> grids;

@@ -310,7 +310,14 @@ struct Robot{
             double waitBuyTime = 0; 
             if ( (buy.someWillBuy == 1) || (buy.output == false && buy.someWillBuy == 0) ) waitBuyTime = buy.remainTime;
             // 路程时间消耗
-            double goBuyTime = getMinGoToTime(x, y, buy.x, buy.y);
+            double goBuyTime;
+            if (worktableId == -1) {
+                goBuyTime = RobotToWT[id][buy.id];
+            } else {
+                goBuyTime = WTtoWT[worktableId][buy.id];
+            }
+            goBuyTime = goBuyTime * 0.7 / 0.11;
+            // double goBuyTime = getMinGoToTime(x, y, buy.x, buy.y);
             // 如果等待时间比路程时间长,就不用买了
             if (goBuyTime < waitBuyTime) continue;
             // 购买的产品
@@ -327,7 +334,9 @@ struct Robot{
                 */
                 if (sell.someWillSell[productId] == 0 || sell.type == 8 || sell.type == 9) {} else continue;
                 // 时间消耗
-                double goSellTime = getMinGoToTime(buy.x, buy.y, sell.x, sell.y);
+                double goSellTime = WTtoWTwithItem[buy.id][sell.id];
+                goSellTime = goSellTime * 0.7 / 0.11;
+                // double goSellTime = getMinGoToTime(buy.x, buy.y, sell.x, sell.y);
                 double sumTime = std::max(goBuyTime, waitBuyTime) + goSellTime;
                 if (sumTime + 30 + nowTime > MAX_TIME) continue;
                 // 时间损失
@@ -492,6 +501,38 @@ struct Robot{
         return path;
     }
     /**
+     * label
+     * 对这条路径上的点,打一个标签,表示最近到达时间
+    */
+    void label(std::vector<Vector2D> path) {
+        TESTOUTPUT(fout << "label " << id << std::endl;)
+        double timestamp = nowTime + 25;
+        std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
+        for (auto from = path.begin(); from != path.end(); from++) {
+            nowTime += 10;
+            auto next = from + 1;
+            if (next == path.end()) break;
+            TESTOUTPUT(fout << "\t要打标签的路径是(" << from->x << "," << from->y << ") -> (" << next->x << "," << next->y << ")" << std::endl;)
+            auto vec = *next - *from; // 方向向量
+            auto aStep = vec / vec.length() * 0.11; // 一步的时间
+            for (auto nextVec = *from; (nextVec - *next).length() > 0.1; nextVec = nextVec + aStep) {
+                TESTOUTPUT(fout << "\ttime=" << timestamp << std::endl;)
+                double nowx = int(nextVec.x / 0.5) * 0.5 + 0.25;
+                double nowy = int(nextVec.y / 0.5) * 0.5 + 0.25;
+                for (auto & add : adds) {
+                    grids[Vector2D(nowx + add.first, nowy + add.second)]->minToTime[id] = timestamp;
+                    TESTOUTPUT(fout << "\t\t(" << nowx + add.first << "," << nowy + add.second << ")" << std::endl;)
+                }
+                timestamp++;
+            }
+        }
+        double nowx = int(path.rbegin()->x / 0.5) * 0.5 + 0.25;
+        double nowy = int(path.rbegin()->y / 0.5) * 0.5 + 0.25;
+        for (auto & add : adds) {
+            grids[Vector2D(nowx + add.first, nowy + add.second)]->minToTime[id] = timestamp;
+        }
+    }
+    /**
      * 计算路径
      * 计算从一个坐标移动到另一个坐标的路径
      * 通过 BFS 实现
@@ -526,6 +567,16 @@ struct Robot{
                 if (fromWhere.find(next) != fromWhere.end()) continue;
                 // 是墙
                 if (grids[next]->type == 1) continue;
+                bool someRobotHere = false;
+                for (int robotId = 0; robotId < 4; robotId++) {
+                    if (robotId == id) continue;
+                    if (std::abs(grids[next]->minToTime[robotId] - nowTime) < 5) {
+                        TESTOUTPUT(fout << "sbrobot " << robotId << " will go (" << next.x << "," << next.y << ") at " << grids[next]->minToTime[robotId] << std::endl;)
+                        someRobotHere = true;
+                        break;
+                    }
+                }
+                if (someRobotHere) continue;
                 if (bringId == 0) {
                     // 不携带物品
                     // 可以碰两个角
@@ -598,7 +649,7 @@ struct Robot{
                 }
                 fromWhere.insert(std::make_pair(next, now));
                 q.push(next);
-                if (now == to){
+                if (next == to){
                     find = true;
                 }
             }
@@ -616,6 +667,7 @@ struct Robot{
         }
         CREATEMAP(mapOut << std::endl;)
         if (path.size() > 2) path = DodgingCorners(path);
+        // if (path.size() > 2) label(path);
         return path;
     }
     void checkDead();
@@ -867,6 +919,7 @@ void DetecteCollision(int robot1, int robot2) {
 
 
 void Robot::checkDead(){
+    if (pathPoints.size() == 0) return;
     if (pathPoints[0] == Vector2D(0,0)) return;
     if (std::abs(Vector2D(linearSpeedX,linearSpeedY).length()) < 0.0001) {
         zeroTime++;
