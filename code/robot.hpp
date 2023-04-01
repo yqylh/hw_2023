@@ -39,6 +39,7 @@ struct Robot{
     int collisionRotateTime; // 机器人为防止碰撞的时间
     Path *path; // 机器人的路径
     std::vector<Vector2D> pathPoints; // 机器人的路径点
+    int zeroTime = 0; // 机器人的零速度时间
     Robot() {
         this->id = -1;
         this->x = -1;
@@ -54,6 +55,7 @@ struct Robot{
         collisionSpeedTime = 0;
         collisionRotateTime = 0;
         path = nullptr;
+        zeroTime = 0;
     }
     Robot(int id, double x, double y) {
         this->id = id;
@@ -70,6 +72,7 @@ struct Robot{
         collisionSpeedTime = 0;
         collisionRotateTime = 0;
         path = nullptr;
+        zeroTime = 0;
     }
     void checkCanBuy() {
         if (bringId != 0) {
@@ -487,6 +490,15 @@ struct Robot{
                             num++;
                         }
                     }
+                    int nowNum = 0;
+                    for (auto & item : grids[now]->obstacles) {
+                        if ((now - item).length() < 0.45) {
+                            nowNum++;
+                        }
+                    }
+                    if (nowNum >= 3) {
+                        if (num > 1) continue; 
+                    } else 
                     if (num > 2) continue;
                 } else {
                     // 携带物品
@@ -560,11 +572,13 @@ struct Robot{
         if (path.size() > 2) path = fixpath(path);
         return path;
     }
+    void checkDead();
     // 机器人具体的行为
     void action(){
         Sell();
         if (path == nullptr) FindAPath();
         Buy();
+        checkDead();
         TESTOUTPUT(fout << "robot" << id << " want-go " << worktableTogo << " type=" << worktables[worktableTogo].type << std::endl;)
     }
     void checkWall() {
@@ -804,4 +818,26 @@ void DetecteCollision(int robot1, int robot2) {
     robots[robot2].collisionRotateTime = 1;
     return;
 }
+
+
+void Robot::checkDead(){
+    if (pathPoints[0] == Vector2D(0,0)) return;
+    if (std::abs(Vector2D(linearSpeedX,linearSpeedY).length()) < 0.0001) {
+        zeroTime++;
+    } else {
+        zeroTime = 0;
+    }
+    for (int i = 0; i <= robotNum; i++) {
+        if (i == id) continue;
+        // 碰撞
+        if (Vector2D(x - robots[i].x, y - robots[i].y).length() < 0.53 * 2 + 0.3) {
+            return;
+        }
+    }
+    if (zeroTime > 100) {
+        TESTOUTPUT(fout << "robotDead " << id << " " << nowTime << std::endl;)
+        pathPoints = movePath();
+    }
+}
+
 #endif
