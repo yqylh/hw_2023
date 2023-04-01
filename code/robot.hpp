@@ -237,7 +237,7 @@ struct Robot{
         if (Vector2D(vec2[0], vec2[1]).length() < 1.2 && speed > 0) {
             // TESTOUTPUT(fout << "changed from" << speed << " route=" << absRotate << std::endl;)
             speed = Vector2D(vec2[0], vec2[1]).length() / 1.2 * 6;
-            if (speed < 2) speed = 2;
+            if (speed < 1) speed = 1;
         }
         TESTOUTPUT(fout << "forward " << id << " " << speed << std::endl;)
         printf("forward %d %lf\n", id, speed);
@@ -393,9 +393,9 @@ struct Robot{
         if (begin_to_end * end_to_obstacle >= 0) return (end-obstacle).length();
         return fabs(begin_to_end ^ begin_to_obstacle) / (begin-end).length();
     }
-    std::vector<Vector2D> fixpath(std::vector<Vector2D> path) {
+    std::vector<std::pair<Vector2D, Vector2D>> fixpath(std::vector<std::pair<Vector2D, Vector2D>> path) {
         // TESTOUTPUT(fout << path.size() << std::endl;)
-        std::vector<Vector2D> ret;
+        std::vector<std::pair<Vector2D, Vector2D>> ret;
         auto begin = path.begin();
         // 不断延迟线段的终点
         // 如果碰撞了,就不加这个点, 以最后一个点开始继续这个过程
@@ -409,25 +409,21 @@ struct Robot{
                 if (end == path.end()) break;
                 bool flag = false;
                 // TESTOUTPUT(fout << "测试到 " << end->x << "," << end->y << "是否碰撞" << std::endl;)
-                for (double x = begin->x; flag == false ; x += (end->x - begin->x) / std::abs(end->x - begin->x) * 0.5) {
+                for (double x = begin->first.x; flag == false ; x += (end->first.x - begin->first.x) / std::abs(end->first.x - begin->first.x) * 0.5) {
                     // TESTOUTPUT(fout << "x = " << x << std::endl;)
-                    for (double y = begin->y; flag == false ; y += (end->y - begin->y) / std::abs(end->y - begin->y) * 0.5) {
-                        int num = 0;
+                    for (double y = begin->first.y; flag == false ; y += (end->first.y - begin->first.y) / std::abs(end->first.y - begin->first.y) * 0.5) {
                         for (auto & obstacle : grids[Vector2D(x, y)]->obstacles) {
                             // 计算obstacle到 begin->end这条线段的距离
-                            double distance = point_to_segment_distance(*begin, *end, obstacle);
+                            double distance = point_to_segment_distance(begin->second, end->second, obstacle);
                             if (distance < 0.53) {// 碰撞了
                                 // TESTOUTPUT(fout << "碰撞点" << obstacle.x << "," << obstacle.y << std::endl;)
-                                num++;
+                                flag = true;
+                                break;
                             }
                         }
-                        if (num > 1) {
-                            flag = true;
-                            break;
-                        }
-                        if (y == end->y) break;
+                        if (y == end->first.y) break;
                     }
-                    if (x == end->x) break;
+                    if (x == end->first.x) break;
                 }
                 if (flag) {
                     // TESTOUTPUT(fout << "碰撞了" << std::endl;)
@@ -443,24 +439,32 @@ struct Robot{
         return ret;
     }
     std::vector<Vector2D> DodgingCorners(std::vector<Vector2D> path) {
-        std::map<Vector2D, Vector2D> solved;
+        std::vector<std::pair<Vector2D, Vector2D>> solved;
         for (auto & point : path) {
+            // 如果是起点,就不用处理, 精度更准
+            if (point == path.front()) {
+                Vector2D p1 = point;
+                Vector2D p2 = Vector2D(x,y);
+                solved.push_back(std::make_pair(p1, p2));
+                continue;
+            }
             Vector2D p1 = point;
             Vector2D p2 = point;
             for (auto & item : grids[p1]->obstacles) {
                 if ((item - p1).length() < (bringId == 0 ? 0.45 : 0.53)) {
                     auto delta = p1 - item;
-                    // double ratio = (bringId == 0 ? 0.5 : 0.65) / 0.25;
-                    double ratio = (bringId == 0 ? 0.5 : 0.6) / delta.length();
+                    double ratio = (bringId == 0 ? 0.45 : 0.57) / 0.25;
+                    // double ratio = (bringId == 0 ? 0.5 : 0.6) / delta.length();
                     p2 = item + delta * ratio;
                     break;
                 }
             }
-            solved.insert(std::make_pair(p1, p2));
+            solved.push_back(std::make_pair(p1, p2));
         }
-        path = fixpath(path);
-        for (auto & point : path) {
-            point = solved[point];
+        solved = fixpath(solved);
+        path.clear();
+        for (auto & item : solved) {
+            path.push_back(item.second);
         }
         CREATEMAP(mapOut << "time=" << nowTime << " robotId=" << id << " optimized carry=" << (bringId == 0 ? false : true) << std::endl;)
         for (auto & item : path) {

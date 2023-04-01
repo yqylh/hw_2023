@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import sys
 
 
 gridInterval = 0.5
@@ -209,4 +210,4 @@ def main(mapId=1):
     # 
     
 if __name__ == "__main__":
-    main(1)
+    main(sys.argv[1])
