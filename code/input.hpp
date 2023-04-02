@@ -413,7 +413,7 @@ void inputMap(){
     while(getline(std::cin, line) && line != "OK");
     deleteWorktable();
     solveWorktableToWorktable();
-    // solveGraph();
+    solveGraph();
     solveRobotToWorktable();
     puts("OK");
     fflush(stdout);

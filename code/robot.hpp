@@ -40,6 +40,7 @@ struct Robot{
     Path *path; // 机器人的路径
     std::vector<Vector2D> pathPoints; // 机器人的路径点
     int zeroTime = 0; // 机器人的零速度时间
+    bool isWait = false; // 机器人是否在等待
     Robot() {
         this->id = -1;
         this->x = -1;
@@ -173,6 +174,13 @@ struct Robot{
         while (pathPoints.size() > 0 && (Vector2D(x, y) - pathPoints[0]).length() < 0.4) {
             pathPoints.erase(pathPoints.begin());
         }
+        if (isWait == true && pathPoints.size() == 0) {
+            TESTOUTPUT(fout << "forward " << id << " " << 0 << std::endl;)
+            printf("forward %d %d\n", id, 0);
+            TESTOUTPUT(fout << "rotate " << id << " " << 0 << std::endl;)
+            printf("rotate %d %d\n", id, 0);
+            return;
+        }
         TESTOUTPUT(fout << "from" << "(" << x << ", " << y << ")" << "to" << "(" << pathPoints[0].x << ", " << pathPoints[0].y << ")" << std::endl;)
         std::vector<double> vec1 = {1, 0};
         std::vector<double> vec2 = {pathPoints[0].x - x, pathPoints[0].y - y};
@@ -228,7 +236,7 @@ struct Robot{
             speed = 0;
         } else {
             // 如果度数大于90°, 就先倒退转过去
-            speed = -2;
+            speed = -1;
         }
         if (collisionSpeedTime > 0) {
             collisionSpeedTime--;
@@ -316,7 +324,7 @@ struct Robot{
             } else {
                 goBuyTime = WTtoWT[worktableId][buy.id];
             }
-            goBuyTime = goBuyTime * 0.7 / 0.11;
+            goBuyTime = goBuyTime * 0.6 / 0.11;
             // double goBuyTime = getMinGoToTime(x, y, buy.x, buy.y);
             // 如果等待时间比路程时间长,就不用买了
             if (goBuyTime < waitBuyTime) continue;
@@ -335,7 +343,7 @@ struct Robot{
                 if (sell.someWillSell[productId] == 0 || sell.type == 8 || sell.type == 9) {} else continue;
                 // 时间消耗
                 double goSellTime = WTtoWTwithItem[buy.id][sell.id];
-                goSellTime = goSellTime * 0.7 / 0.11;
+                goSellTime = goSellTime * 0.6 / 0.11;
                 // double goSellTime = getMinGoToTime(buy.x, buy.y, sell.x, sell.y);
                 double sumTime = std::max(goBuyTime, waitBuyTime) + goSellTime;
                 if (sumTime + 30 + nowTime > MAX_TIME) continue;
@@ -402,7 +410,7 @@ struct Robot{
         if (begin_to_end * end_to_obstacle >= 0) return (end-obstacle).length();
         return fabs(begin_to_end ^ begin_to_obstacle) / (begin-end).length();
     }
-    std::vector<std::pair<Vector2D, Vector2D>> fixpath(std::vector<std::pair<Vector2D, Vector2D>> path) {
+    std::vector<std::pair<Vector2D, Vector2D>> fixpath(std::vector<std::pair<Vector2D, Vector2D>> path, std::set<Vector2D> *blocked = nullptr) {
         // TESTOUTPUT(fout << path.size() << std::endl;)
         std::vector<std::pair<Vector2D, Vector2D>> ret;
         auto begin = path.begin();
@@ -430,6 +438,14 @@ struct Robot{
                                 break;
                             }
                         }
+                        if (blocked != nullptr)for (auto & obstacle : *blocked) {
+                            // TESTOUTPUT(fout << "blocked" << obstacle.x << "," << obstacle.y << std::endl;)
+                            double distance = point_to_segment_distance(begin->second, end->second, obstacle);
+                            if (distance < 0.53 * 2 + 0.5) {// 碰撞了
+                                flag = true;
+                                break;
+                            }
+                        }
                         if (y == end->first.y) break;
                     }
                     if (x == end->first.x) break;
@@ -447,7 +463,7 @@ struct Robot{
         ret.push_back(path.back());
         return ret;
     }
-    std::vector<Vector2D> DodgingCorners(std::vector<Vector2D> path) {
+    std::vector<Vector2D> DodgingCorners(std::vector<Vector2D> path, std::set<Vector2D> *blocked = nullptr) {
         std::vector<std::pair<Vector2D, Vector2D>> solved;
         for (auto & point : path) {
             // 如果是起点,就不用处理, 精度更准
@@ -479,7 +495,7 @@ struct Robot{
                 for (auto & item : grids[p1]->obstacles) {
                     if ((item - p1).length() < 0.53) {
                         auto delta = p1 - item;
-                        double ratio = 0.57 / 0.25;
+                        double ratio = 0.55 / 0.25;
                         // double ratio = (bringId == 0 ? 0.5 : 0.6) / delta.length();
                         p2 = item + delta * ratio;
                         break;
@@ -488,7 +504,7 @@ struct Robot{
             }
             solved.push_back(std::make_pair(p1, p2));
         }
-        solved = fixpath(solved);
+        solved = fixpath(solved, blocked);
         path.clear();
         for (auto & item : solved) {
             path.push_back(item.second);
@@ -501,44 +517,12 @@ struct Robot{
         return path;
     }
     /**
-     * label
-     * 对这条路径上的点,打一个标签,表示最近到达时间
-    */
-    void label(std::vector<Vector2D> path) {
-        TESTOUTPUT(fout << "label " << id << std::endl;)
-        double timestamp = nowTime + 25;
-        std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
-        for (auto from = path.begin(); from != path.end(); from++) {
-            nowTime += 10;
-            auto next = from + 1;
-            if (next == path.end()) break;
-            TESTOUTPUT(fout << "\t要打标签的路径是(" << from->x << "," << from->y << ") -> (" << next->x << "," << next->y << ")" << std::endl;)
-            auto vec = *next - *from; // 方向向量
-            auto aStep = vec / vec.length() * 0.11; // 一步的时间
-            for (auto nextVec = *from; (nextVec - *next).length() > 0.1; nextVec = nextVec + aStep) {
-                TESTOUTPUT(fout << "\ttime=" << timestamp << std::endl;)
-                double nowx = int(nextVec.x / 0.5) * 0.5 + 0.25;
-                double nowy = int(nextVec.y / 0.5) * 0.5 + 0.25;
-                for (auto & add : adds) {
-                    grids[Vector2D(nowx + add.first, nowy + add.second)]->minToTime[id] = timestamp;
-                    TESTOUTPUT(fout << "\t\t(" << nowx + add.first << "," << nowy + add.second << ")" << std::endl;)
-                }
-                timestamp++;
-            }
-        }
-        double nowx = int(path.rbegin()->x / 0.5) * 0.5 + 0.25;
-        double nowy = int(path.rbegin()->y / 0.5) * 0.5 + 0.25;
-        for (auto & add : adds) {
-            grids[Vector2D(nowx + add.first, nowy + add.second)]->minToTime[id] = timestamp;
-        }
-    }
-    /**
      * 计算路径
      * 计算从一个坐标移动到另一个坐标的路径
      * 通过 BFS 实现
      * 返回值应该是一个n个点的坐标的数组
     */
-    std::vector<Vector2D> movePath(){
+    std::vector<Vector2D> movePath(std::set<Vector2D> *blocked = nullptr){
         Vector2D to(worktables[worktableTogo].x, worktables[worktableTogo].y);
         std::vector<Vector2D> path;
         std::map<Vector2D, Vector2D> fromWhere;
@@ -567,16 +551,8 @@ struct Robot{
                 if (fromWhere.find(next) != fromWhere.end()) continue;
                 // 是墙
                 if (grids[next]->type == 1) continue;
-                bool someRobotHere = false;
-                for (int robotId = 0; robotId < 4; robotId++) {
-                    if (robotId == id) continue;
-                    if (std::abs(grids[next]->minToTime[robotId] - nowTime) < 5) {
-                        TESTOUTPUT(fout << "sbrobot " << robotId << " will go (" << next.x << "," << next.y << ") at " << grids[next]->minToTime[robotId] << std::endl;)
-                        someRobotHere = true;
-                        break;
-                    }
-                }
-                if (someRobotHere) continue;
+                // 是其他机器人的位置
+                if (blocked != nullptr && blocked->find(next) != blocked->end()) continue;
                 if (bringId == 0) {
                     // 不携带物品
                     // 可以碰两个角
@@ -666,8 +642,7 @@ struct Robot{
             CREATEMAP(mapOut << "(" << item.x << "," << item.y << ")" << "->";)
         }
         CREATEMAP(mapOut << std::endl;)
-        if (path.size() > 2) path = DodgingCorners(path);
-        // if (path.size() > 2) label(path);
+        if (path.size() > 2) path = DodgingCorners(path, blocked);
         return path;
     }
     void checkDead();
@@ -729,6 +704,136 @@ struct Robot{
             // collisionRotate = M_PI;
         }
     }
+    void findNullPath(std::set<Vector2D> *cantGo, std::set<Vector2D> *blocked) {
+        isWait = true;
+        std::vector<Vector2D> path;
+        std::map<Vector2D, Vector2D> fromWhere;
+        std::queue<Vector2D> q;
+        // 计算当前位置的格子
+        double nowx = int(x / 0.5) * 0.5 + 0.25;
+        double nowy = int(y / 0.5) * 0.5 + 0.25;
+        q.push(Vector2D(nowx, nowy));
+        fromWhere.insert(std::make_pair(Vector2D(nowx, nowy), Vector2D(nowx, nowy)));
+        bool find = false;
+        Vector2D target;
+        while (!q.empty() && find == false) {
+            // 当前的位置
+            Vector2D now = q.front();
+            q.pop();
+            // 八个方向的移动
+            std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
+            for (auto &add : adds) {
+                // 移动后的位置
+                Vector2D next = now + Vector2D(add.first, add.second);
+                if (next.x <= 0.25 || next.x >= 49.75 || next.y <= 0.25 || next.y >= 49.75) continue;
+                // 没访问过
+                if (fromWhere.find(next) != fromWhere.end()) continue;
+                // 是墙
+                if (grids[next]->type == 1) continue;
+                // 是其他机器人的位置
+                if (cantGo->find(next) != cantGo->end()) continue;
+                if (bringId == 0) {
+                    // 不携带物品
+                    // 可以碰两个角
+                    int num = 0;
+                    for (auto & item : grids[next]->obstacles) {
+                        if ((next - item).length() < 0.45) {
+                            num++;
+                        }
+                    }
+                    int nowNum = 0;
+                    for (auto & item : grids[now]->obstacles) {
+                        if ((now - item).length() < 0.45) {
+                            nowNum++;
+                        }
+                    }
+                    if (nowNum >= 3) {
+                        if (num > 1) continue; 
+                    } else 
+                    if (num > 2) continue;
+                } else {
+                    // 携带物品
+                    int num = 0;
+                    Vector2D obstacles;
+                    for (auto & item : grids[next]->obstacles) {
+                        if ((next - item).length() < 0.53) {
+                            num++;
+                            obstacles = item;
+                        }
+                    }
+                    // 碰到了至少两个角,一定不能去
+                    if (num > 1) continue;
+                    // 只碰到了一个角,可能可以去
+                    if (num == 1) {
+                        Vector2D deltaNextToObstacles = obstacles - next;
+                        Vector2D deltaNowToNext = next - now;
+                        // 左上或者右下
+                        if (deltaNextToObstacles.x == deltaNextToObstacles.y) {
+                            if ((deltaNowToNext ^ deltaNextToObstacles) < 0) {
+                                // 顺时针转
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
+                                if (grids[next + Vector2D(0, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 2 * deltaNextToObstacles.y)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 4 * deltaNextToObstacles.y)]->type == 1) continue;
+                            } else if ((deltaNowToNext ^ deltaNextToObstacles) > 0)  {
+                                if (grids[next + Vector2D(0, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
+                                if (grids[next + Vector2D(2 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(4 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                            } else {
+                                continue;
+                            }
+                        } else {
+                            // 右下或者左上
+                            if ((deltaNowToNext ^ deltaNextToObstacles) > 0) {
+                                // 顺时针转
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
+                                if (grids[next + Vector2D(0, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 2 * deltaNextToObstacles.y)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 4 * deltaNextToObstacles.y)]->type == 1) continue;
+                            } else if ((deltaNowToNext ^ deltaNextToObstacles) < 0)  {
+                                if (grids[next + Vector2D(0, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(-deltaNextToObstacles.x * 4, 0)]->type == 1) continue;
+                                if (grids[next + Vector2D(2 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                                if (grids[next + Vector2D(4 * deltaNextToObstacles.x, -deltaNextToObstacles.y * 4)]->type == 1) continue;
+                            } else {
+                                continue;
+                            }
+                        }
+                    }   
+                }
+                fromWhere.insert(std::make_pair(next, now));
+                q.push(next);
+                bool isNull = true;
+                for (auto &add : adds) {
+                    if (grids[next + Vector2D(add.first, add.second)]->type == 0 
+                        && blocked->find(next + Vector2D(add.first, add.second)) == blocked->end()) {
+                        continue;
+                    } else {
+                        isNull = false;
+                        break;
+                    }
+                }
+                if (isNull) {
+                    find = true;
+                    target = next;
+                }
+            }
+        }
+        while ( 1 ) {
+            path.push_back(target);
+            if (target == fromWhere[target]) break;
+            target = fromWhere[target];
+        }
+        std::reverse(path.begin(), path.end());
+        CREATEMAP(mapOut << "time=" << nowTime << " robotId=" << id << " origin carry=" << (bringId == 0 ? false : true) << std::endl;)
+        for (auto & item : path) {
+            CREATEMAP(mapOut << "(" << item.x << "," << item.y << ")" << "->";)
+        }
+        CREATEMAP(mapOut << std::endl;)
+        if (path.size() > 2) path = DodgingCorners(path);
+        pathPoints = path;
+    }
 };
 
 Robot robots[MAX_Robot_Num];
@@ -744,182 +849,103 @@ double solveChangeSpeed(double speed, double diff) {
     return speed;
 }
 
-void DetecteCollision(int robot1, int robot2) {
-    if (robots[robot1].worktableTogo == -1 || robots[robot2].worktableTogo == -1) return;
-    // robot1 robot2 的坐标
-    Vector2D robot1Pos = Vector2D(robots[robot1].x, robots[robot1].y);
-    Vector2D robot2Pos = Vector2D(robots[robot2].x, robots[robot2].y);
-    // robot1 robot2 的半径
-    double robot1Radii = robots[robot1].bringId == 0 ? 0.451 : 0.531;
-    double robot2Radii = robots[robot2].bringId == 0 ? 0.451 : 0.531;
-    // 距离太远
-    if ((robot1Pos-robot2Pos).length() > futureTime * 0.12 * 2 + robot1Radii + robot2Radii) {
-        return;
+std::set<Vector2D> *getPathLabel(std::vector<Vector2D> path, int id) {
+    std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
+    path.insert(path.begin(), Vector2D(robots[id].x, robots[id].y));
+    std::set<Vector2D> *pathPoints = new std::set<Vector2D>();
+    for (auto from = path.begin(); from != path.end(); from++) {
+        auto next = from + 1;
+        if (next == path.end()) break;
+        auto vec = *next - *from; // 方向向量
+        auto aStep = vec / vec.length() * 0.25; // 一次移动0.25 的距离
+        for (auto nextVec = *from; (nextVec - *next).length() > 0.25; nextVec = nextVec + aStep) {
+            double nowx = int(nextVec.x / 0.5) * 0.5 + 0.25;
+            double nowy = int(nextVec.y / 0.5) * 0.5 + 0.25;
+            for (auto & add : adds) {
+                pathPoints->insert(Vector2D(nowx + add.first, nowy + add.second));
+            }
+        }
     }
+    double nowx = int(path.rbegin()->x / 0.5) * 0.5 + 0.25;
+    double nowy = int(path.rbegin()->y / 0.5) * 0.5 + 0.25;
+    for (auto & add : adds) {
+        pathPoints->insert(Vector2D(nowx + add.first, nowy + add.second));
+    }
+    return pathPoints;
+}
+
+void DetecteCollision(int robot1, int robot2){
+    if (robots[robot1].worktableTogo == -1 || robots[robot2].worktableTogo == -1) return;
+    if ((Vector2D(robots[robot1].x, robots[robot1].y) - Vector2D(robots[robot2].x, robots[robot2].y)).length() > 5) return;
+    // 给 robot1/robot2 的路径打标签
+    std::set<Vector2D> *robot1PathPoints = getPathLabel(robots[robot1].pathPoints, robot1);
+    std::set<Vector2D> *robot2PathPoints = getPathLabel(robots[robot2].pathPoints, robot2);
     bool isCollision = false;
-    int collisionTime = 0;
-    for (int i = 0; i <= futureTime; i++) {
-        auto robot1PosTemp = robot1Pos + Vector2D(robots[robot1].linearSpeedX * 0.02 * i, robots[robot1].linearSpeedY * 0.02 * i);
-        auto robot2PosTemp = robot2Pos + Vector2D(robots[robot2].linearSpeedX * 0.02 * i, robots[robot2].linearSpeedY * 0.02 * i);
-        if ((robot1PosTemp-robot2PosTemp).length() <= robot1Radii + robot2Radii + 0.24) {
+    // 检测 robot1 的路径上是否有 robot2 的位置
+    for (auto & item : *robot2PathPoints) {
+        if (robot1PathPoints->find(item) != robot1PathPoints->end()) {
+            // 发生碰撞
             isCollision = true;
-            collisionTime = i;
             break;
         }
     }
-    if (!isCollision) {
-        return;
-    }
+    if (isCollision == false) return;
     TESTOUTPUT(fout << "robot" << robot1 << " and robot" << robot2 << " 检测碰撞" << std::endl;)
-
-    double angle = robots[robot1].direction - robots[robot2].direction;
-    angle = std::abs(angle);
-    if (angle > M_PI) {
-        angle = 2 * M_PI - angle;
-    }
-    TESTOUTPUT(fout << "碰撞角度" << angle << std::endl;)
-
-    if (angle > M_PI * 0 / 180) { // 135~180  ! 或许都是一个方向会比较好用
-        if (robots[robot1].collisionRotateTime > 0) {
-            return;
-        }
-        TESTOUTPUT(fout << "collision need rotate" << std::endl;)
-        double status1 = Vector2D(cos(robots[robot1].direction), sin(robots[robot1].direction))^Vector2D(robots[robot2].x - robots[robot1].x, robots[robot2].y - robots[robot1].y);
-        status1 = status1 > 0 ? 1 : -1;
-        double status2 = Vector2D(cos(robots[robot2].direction), sin(robots[robot2].direction))^Vector2D(robots[robot1].x - robots[robot2].x, robots[robot1].y - robots[robot2].y);
-        status2 = status2 > 0 ? 1 : -1;
-        // 叉积 > 0 逆时针到达对方. < 0 顺时针到达对方
-        robots[robot1].collisionRotate = -status1 * M_PI;
-        robots[robot2].collisionRotate = -status2 * M_PI;
-        robots[robot1].collisionSpeed = 6;
-        robots[robot2].collisionSpeed = 6;
-        robots[robot1].collisionSpeedTime = 1;
-        robots[robot2].collisionSpeedTime = 1;
-        robots[robot1].collisionRotateTime = 1;
-        robots[robot2].collisionRotateTime = 1;
-        if (angle > M_PI * 175 / 180) {
-            TESTOUTPUT(fout << "碰撞大角度" << std::endl;)
-            robots[robot1].collisionRotateTime = 8;
-            robots[robot2].collisionRotateTime = 8;
-        }
-        if ((robot1Pos-robot2Pos).length() - robot1Radii - robot2Radii - 0.12 < 0) { // 12 最大角速度转向时间 16 角速度改变最大时间
-            TESTOUTPUT(fout << "collision need go back" << std::endl;)
-            // 距离比较近的情况, 考虑到预测范围没预测到,或者发生了被赢拽回来了的情况
-            robots[robot1].collisionRotate = M_PI;
-            robots[robot2].collisionRotate = M_PI;
-            robots[robot1].collisionSpeed = 6;
-            robots[robot2].collisionSpeed = 6;
-            robots[robot1].collisionSpeedTime = 1;
-            robots[robot2].collisionSpeedTime = 1;
-            robots[robot1].collisionRotateTime = 1;
-            robots[robot2].collisionRotateTime = 1;
-            return;
-        }
-        return;
-    }
-
-    double speed1 = Vector2D(robots[robot1].linearSpeedX, robots[robot1].linearSpeedY).length();
-    if (sin(robots[robot1].direction) * robots[robot1].linearSpeedY < 0 || cos(robots[robot1].direction) * robots[robot1].linearSpeedX < 0) {
-        speed1 = -speed1;
-        TESTOUTPUT(fout << "反方向 robot" << robot1 << " speed1 = " << speed1 << std::endl;)
-    }
-    double speed2 = Vector2D(robots[robot2].linearSpeedX, robots[robot2].linearSpeedY).length();
-    if (sin(robots[robot2].direction) * robots[robot2].linearSpeedY < 0 || cos(robots[robot2].direction) * robots[robot2].linearSpeedX < 0) {
-        speed2 = -speed2;
-        TESTOUTPUT(fout << "反方向 robot" << robot2 << " speed2 = " << speed2 << std::endl;)
-    }
-    // 按照0.3的速度改变为一个单位, 时间跨度是futureTime次, 改变单位的次数是 - future ~ future
-    // 根据牵引力 大小 密度 算出来的加速度
-    double acceleration1 = 250 / (20 * M_PI * robot1Radii * robot1Radii * 50);
-    double acceleration2 = 250 / (20 * M_PI * robot2Radii * robot2Radii * 50);
-    for (int accelerationTime1 = futureTime; accelerationTime1 >= -futureTime; accelerationTime1--) {
-        for (int accelerationTime2 = futureTime; accelerationTime2 >= -futureTime; accelerationTime2--) {
-            // 枚举每个机器人速度改变的帧率数量
-            Vector2D robot1PosTemp = robot1Pos;
-            Vector2D robot2PosTemp = robot2Pos;
-            // 下一帧位置 i = 1 第一帧不论速度怎么设, 仍然维持之前的速度
-            // 下一帧移动,然后才改变速度
-            robot1PosTemp = robot1PosTemp + Vector2D(robots[robot1].linearSpeedX * 0.02, robots[robot1].linearSpeedY * 0.02);
-            robot2PosTemp = robot2PosTemp + Vector2D(robots[robot2].linearSpeedX * 0.02, robots[robot2].linearSpeedY * 0.02);
-            // 从第二帧开始检测
-            bool isCollision = false;
-            // 根据加速度和次数计算出每次的该变量
-            double changeSpeed1 = 0;
-            double changeSpeed2 = 0;
-            if (accelerationTime1 != 0) changeSpeed1 = accelerationTime1 / std::abs(accelerationTime1) * acceleration1;
-            if (accelerationTime2 != 0) changeSpeed2 = accelerationTime2 / std::abs(accelerationTime2) * acceleration2;
-            // 计算出每个机器人需要改变多少次
-            int changeTime1 = std::abs(accelerationTime1);
-            int changeTime2 = std::abs(accelerationTime2);
-            // 目前使用的速度
-            double testSpeed1 = speed1;
-            double testSpeed2 = speed2;
-            if (changeTime1-- > 0) testSpeed1 = solveChangeSpeed(testSpeed1, changeSpeed1);
-            if (changeTime2-- > 0) testSpeed2 = solveChangeSpeed(testSpeed2, changeSpeed2);
-            for (int i = 2; i <= futureTime; i++) {
-                robot1PosTemp = robot1PosTemp + Vector2D(testSpeed1 * cos(robots[robot1].direction) * 0.02, testSpeed1 * sin (robots[robot1].direction) * 0.02);
-                robot2PosTemp = robot2PosTemp + Vector2D(testSpeed2 * cos(robots[robot2].direction) * 0.02 , testSpeed2 * sin (robots[robot2].direction) * 0.02);
-                if ((robot1PosTemp-robot2PosTemp).length() <= robot1Radii + robot2Radii + 0.24) {
-                    isCollision = true;
-                    break;
-                }
-                if (changeTime1-- > 0) testSpeed1 = solveChangeSpeed(testSpeed1, changeSpeed1);
-                if (changeTime2-- > 0) testSpeed2 = solveChangeSpeed(testSpeed2, changeSpeed2);
-            }
-            if (std::abs(testSpeed1) < 2 && std::abs(testSpeed2) < 2) {
-                continue;
-            }
-            if (!isCollision) {
-                TESTOUTPUT(
-                    fout << "robot" << robot1 << " 速度改变" << accelerationTime1 << " 帧" << std::endl;
-                    fout << "robot" << robot2 << " 速度改变" << accelerationTime2 << " 帧" << std::endl;
-                    fout << "robot" << robot1 << " 速度从" << speed1 << "->" << testSpeed1 << std::endl;
-                    fout << "robot" << robot2 << " 速度从" << speed2 << "->" << testSpeed2 << std::endl;
-                )
-                if (accelerationTime1 > 0) {
-                    robots[robot1].collisionSpeed = 6;
-                } else if (accelerationTime1 < 0) {
-                    robots[robot1].collisionSpeed = -2;
-                } else {
-                    robots[robot1].collisionSpeed = speed1;
-                }
-                if (accelerationTime2 > 0) {
-                    robots[robot2].collisionSpeed = 6;
-                } else if (accelerationTime2 < 0) {
-                    robots[robot2].collisionSpeed = -2;
-                } else {
-                    robots[robot2].collisionSpeed = speed2;
-                }
-                robots[robot1].collisionSpeedTime = collisionTime - 1;
-                robots[robot2].collisionSpeedTime = collisionTime - 1;
-                robots[robot1].collisionRotate = 0;
-                robots[robot2].collisionRotate = 0;
-                robots[robot1].collisionRotateTime = collisionTime - 6;
-                robots[robot2].collisionRotateTime = collisionTime - 6;
-                return;
+    // 在robot1的路径上删除 robot2 开始的位置
+    {
+        double nowx = int(robots[robot2].x / 0.5) * 0.5 + 0.25;
+        double nowy = int(robots[robot2].y / 0.5) * 0.5 + 0.25;
+        std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
+        for (auto & add : adds) {
+            if (robot1PathPoints->find(Vector2D(nowx + add.first, nowy + add.second)) != robot1PathPoints->end()) {
+                robot1PathPoints->erase(Vector2D(nowx + add.first, nowy + add.second));
             }
         }
     }
-    TESTOUTPUT(fout << "could not find a solution" << std::endl;)
-    double status1 = Vector2D(cos(robots[robot1].direction), sin(robots[robot1].direction))^Vector2D(robots[robot2].x - robots[robot1].x, robots[robot2].y - robots[robot1].y);
-    status1 = status1 > 0 ? 1 : -1;
-    double status2 = Vector2D(cos(robots[robot2].direction), sin(robots[robot2].direction))^Vector2D(robots[robot1].x - robots[robot2].x, robots[robot1].y - robots[robot2].y);
-    status2 = status2 > 0 ? 1 : -1;
-    // 叉积 > 0 逆时针到达对方. < 0 顺时针到达对方
-    robots[robot1].collisionRotate = -status1 * M_PI;
-    robots[robot2].collisionRotate = status2 * M_PI;
-    robots[robot1].collisionSpeed = 6;
-    robots[robot2].collisionSpeed = -2;
-    robots[robot1].collisionSpeedTime = 1;
-    robots[robot2].collisionSpeedTime = 1;
-    robots[robot1].collisionRotateTime = 1;
-    robots[robot2].collisionRotateTime = 1;
-    return;
+    // 在robot2的路径上删除 robot1 开始的位置
+    {
+        double nowx = int(robots[robot1].x / 0.5) * 0.5 + 0.25;
+        double nowy = int(robots[robot1].y / 0.5) * 0.5 + 0.25;
+        std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
+        for (auto & add : adds) {
+            if (robot2PathPoints->find(Vector2D(nowx + add.first, nowy + add.second)) != robot2PathPoints->end()) {
+                robot2PathPoints->erase(Vector2D(nowx + add.first, nowy + add.second));
+            }
+        }
+    }
+    std::set<Vector2D> *robot1Points = new std::set<Vector2D>();
+    std::set<Vector2D> *robot2Points = new std::set<Vector2D>();
+    // 记录 robot1 现在的位置
+    {
+        double nowx = int(robots[robot1].x / 0.5) * 0.5 + 0.25;
+        double nowy = int(robots[robot1].y / 0.5) * 0.5 + 0.25;
+        std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
+        for (auto & add : adds) {
+            robot1Points->insert(Vector2D(nowx + add.first, nowy + add.second));
+        }
+    }
+    // 记录 robot2 现在的位置
+    {
+        double nowx = int(robots[robot2].x / 0.5) * 0.5 + 0.25;
+        double nowy = int(robots[robot2].y / 0.5) * 0.5 + 0.25;
+        std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
+        for (auto & add : adds) {
+            robot2Points->insert(Vector2D(nowx + add.first, nowy + add.second));
+        }
+    }
+    // 重新规划路径
+    robots[robot2].pathPoints = robots[robot2].movePath(robot1PathPoints); 
+    if (robots[robot2].pathPoints[0] == Vector2D(0,0)) {
+        TESTOUTPUT(fout << "robot" << robot2 << " 无法规划路径" << std::endl;)
+        robots[robot2].findNullPath(robot1Points, robot1PathPoints);
+    } else {
+        TESTOUTPUT(fout << "robot" << robot2 << " 已重新规划路径" << std::endl;)
+    }
 }
 
 
 void Robot::checkDead(){
-    if (pathPoints.size() == 0) return;
+    if (isWait == false && pathPoints.size() == 0) return;
     if (pathPoints[0] == Vector2D(0,0)) return;
     if (std::abs(Vector2D(linearSpeedX,linearSpeedY).length()) < 0.0001) {
         zeroTime++;
@@ -933,9 +959,10 @@ void Robot::checkDead(){
             return;
         }
     }
-    if (zeroTime > 100) {
+    if (zeroTime > 30) {
         TESTOUTPUT(fout << "robotDead " << id << " " << nowTime << std::endl;)
         pathPoints = movePath();
+        isWait = false;
     }
 }
 

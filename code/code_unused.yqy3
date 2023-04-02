@@ -1,0 +1,172 @@
+void DetecteCollision(int robot1, int robot2) {
+    if (robots[robot1].worktableTogo == -1 || robots[robot2].worktableTogo == -1) return;
+    // robot1 robot2 的坐标
+    Vector2D robot1Pos = Vector2D(robots[robot1].x, robots[robot1].y);
+    Vector2D robot2Pos = Vector2D(robots[robot2].x, robots[robot2].y);
+    // robot1 robot2 的半径
+    double robot1Radii = robots[robot1].bringId == 0 ? 0.451 : 0.531;
+    double robot2Radii = robots[robot2].bringId == 0 ? 0.451 : 0.531;
+    // 距离太远
+    if ((robot1Pos-robot2Pos).length() > futureTime * 0.12 * 2 + robot1Radii + robot2Radii) {
+        return;
+    }
+    bool isCollision = false;
+    int collisionTime = 0;
+    for (int i = 0; i <= futureTime; i++) {
+        auto robot1PosTemp = robot1Pos + Vector2D(robots[robot1].linearSpeedX * 0.02 * i, robots[robot1].linearSpeedY * 0.02 * i);
+        auto robot2PosTemp = robot2Pos + Vector2D(robots[robot2].linearSpeedX * 0.02 * i, robots[robot2].linearSpeedY * 0.02 * i);
+        if ((robot1PosTemp-robot2PosTemp).length() <= robot1Radii + robot2Radii + 0.24) {
+            isCollision = true;
+            collisionTime = i;
+            break;
+        }
+    }
+    if (!isCollision) {
+        return;
+    }
+    TESTOUTPUT(fout << "robot" << robot1 << " and robot" << robot2 << " 检测碰撞" << std::endl;)
+
+    double angle = robots[robot1].direction - robots[robot2].direction;
+    angle = std::abs(angle);
+    if (angle > M_PI) {
+        angle = 2 * M_PI - angle;
+    }
+    TESTOUTPUT(fout << "碰撞角度" << angle << std::endl;)
+
+    if (angle > M_PI * 0 / 180) { // 135~180  ! 或许都是一个方向会比较好用
+        if (robots[robot1].collisionRotateTime > 0) {
+            return;
+        }
+        TESTOUTPUT(fout << "collision need rotate" << std::endl;)
+        double status1 = Vector2D(cos(robots[robot1].direction), sin(robots[robot1].direction))^Vector2D(robots[robot2].x - robots[robot1].x, robots[robot2].y - robots[robot1].y);
+        status1 = status1 > 0 ? 1 : -1;
+        double status2 = Vector2D(cos(robots[robot2].direction), sin(robots[robot2].direction))^Vector2D(robots[robot1].x - robots[robot2].x, robots[robot1].y - robots[robot2].y);
+        status2 = status2 > 0 ? 1 : -1;
+        // 叉积 > 0 逆时针到达对方. < 0 顺时针到达对方
+        robots[robot1].collisionRotate = -status1 * M_PI;
+        robots[robot2].collisionRotate = -status2 * M_PI;
+        robots[robot1].collisionSpeed = 6;
+        robots[robot2].collisionSpeed = 6;
+        robots[robot1].collisionSpeedTime = 1;
+        robots[robot2].collisionSpeedTime = 1;
+        robots[robot1].collisionRotateTime = 1;
+        robots[robot2].collisionRotateTime = 1;
+        if (angle > M_PI * 175 / 180) {
+            TESTOUTPUT(fout << "碰撞大角度" << std::endl;)
+            robots[robot1].collisionRotateTime = 8;
+            robots[robot2].collisionRotateTime = 8;
+        }
+        if ((robot1Pos-robot2Pos).length() - robot1Radii - robot2Radii - 0.12 < 0) { // 12 最大角速度转向时间 16 角速度改变最大时间
+            TESTOUTPUT(fout << "collision need go back" << std::endl;)
+            // 距离比较近的情况, 考虑到预测范围没预测到,或者发生了被赢拽回来了的情况
+            robots[robot1].collisionRotate = M_PI;
+            robots[robot2].collisionRotate = M_PI;
+            robots[robot1].collisionSpeed = 6;
+            robots[robot2].collisionSpeed = 6;
+            robots[robot1].collisionSpeedTime = 1;
+            robots[robot2].collisionSpeedTime = 1;
+            robots[robot1].collisionRotateTime = 1;
+            robots[robot2].collisionRotateTime = 1;
+            return;
+        }
+        return;
+    }
+
+    double speed1 = Vector2D(robots[robot1].linearSpeedX, robots[robot1].linearSpeedY).length();
+    if (sin(robots[robot1].direction) * robots[robot1].linearSpeedY < 0 || cos(robots[robot1].direction) * robots[robot1].linearSpeedX < 0) {
+        speed1 = -speed1;
+        TESTOUTPUT(fout << "反方向 robot" << robot1 << " speed1 = " << speed1 << std::endl;)
+    }
+    double speed2 = Vector2D(robots[robot2].linearSpeedX, robots[robot2].linearSpeedY).length();
+    if (sin(robots[robot2].direction) * robots[robot2].linearSpeedY < 0 || cos(robots[robot2].direction) * robots[robot2].linearSpeedX < 0) {
+        speed2 = -speed2;
+        TESTOUTPUT(fout << "反方向 robot" << robot2 << " speed2 = " << speed2 << std::endl;)
+    }
+    // 按照0.3的速度改变为一个单位, 时间跨度是futureTime次, 改变单位的次数是 - future ~ future
+    // 根据牵引力 大小 密度 算出来的加速度
+    double acceleration1 = 250 / (20 * M_PI * robot1Radii * robot1Radii * 50);
+    double acceleration2 = 250 / (20 * M_PI * robot2Radii * robot2Radii * 50);
+    for (int accelerationTime1 = futureTime; accelerationTime1 >= -futureTime; accelerationTime1--) {
+        for (int accelerationTime2 = futureTime; accelerationTime2 >= -futureTime; accelerationTime2--) {
+            // 枚举每个机器人速度改变的帧率数量
+            Vector2D robot1PosTemp = robot1Pos;
+            Vector2D robot2PosTemp = robot2Pos;
+            // 下一帧位置 i = 1 第一帧不论速度怎么设, 仍然维持之前的速度
+            // 下一帧移动,然后才改变速度
+            robot1PosTemp = robot1PosTemp + Vector2D(robots[robot1].linearSpeedX * 0.02, robots[robot1].linearSpeedY * 0.02);
+            robot2PosTemp = robot2PosTemp + Vector2D(robots[robot2].linearSpeedX * 0.02, robots[robot2].linearSpeedY * 0.02);
+            // 从第二帧开始检测
+            bool isCollision = false;
+            // 根据加速度和次数计算出每次的该变量
+            double changeSpeed1 = 0;
+            double changeSpeed2 = 0;
+            if (accelerationTime1 != 0) changeSpeed1 = accelerationTime1 / std::abs(accelerationTime1) * acceleration1;
+            if (accelerationTime2 != 0) changeSpeed2 = accelerationTime2 / std::abs(accelerationTime2) * acceleration2;
+            // 计算出每个机器人需要改变多少次
+            int changeTime1 = std::abs(accelerationTime1);
+            int changeTime2 = std::abs(accelerationTime2);
+            // 目前使用的速度
+            double testSpeed1 = speed1;
+            double testSpeed2 = speed2;
+            if (changeTime1-- > 0) testSpeed1 = solveChangeSpeed(testSpeed1, changeSpeed1);
+            if (changeTime2-- > 0) testSpeed2 = solveChangeSpeed(testSpeed2, changeSpeed2);
+            for (int i = 2; i <= futureTime; i++) {
+                robot1PosTemp = robot1PosTemp + Vector2D(testSpeed1 * cos(robots[robot1].direction) * 0.02, testSpeed1 * sin (robots[robot1].direction) * 0.02);
+                robot2PosTemp = robot2PosTemp + Vector2D(testSpeed2 * cos(robots[robot2].direction) * 0.02 , testSpeed2 * sin (robots[robot2].direction) * 0.02);
+                if ((robot1PosTemp-robot2PosTemp).length() <= robot1Radii + robot2Radii + 0.24) {
+                    isCollision = true;
+                    break;
+                }
+                if (changeTime1-- > 0) testSpeed1 = solveChangeSpeed(testSpeed1, changeSpeed1);
+                if (changeTime2-- > 0) testSpeed2 = solveChangeSpeed(testSpeed2, changeSpeed2);
+            }
+            if (std::abs(testSpeed1) < 2 && std::abs(testSpeed2) < 2) {
+                continue;
+            }
+            if (!isCollision) {
+                TESTOUTPUT(
+                    fout << "robot" << robot1 << " 速度改变" << accelerationTime1 << " 帧" << std::endl;
+                    fout << "robot" << robot2 << " 速度改变" << accelerationTime2 << " 帧" << std::endl;
+                    fout << "robot" << robot1 << " 速度从" << speed1 << "->" << testSpeed1 << std::endl;
+                    fout << "robot" << robot2 << " 速度从" << speed2 << "->" << testSpeed2 << std::endl;
+                )
+                if (accelerationTime1 > 0) {
+                    robots[robot1].collisionSpeed = 6;
+                } else if (accelerationTime1 < 0) {
+                    robots[robot1].collisionSpeed = -2;
+                } else {
+                    robots[robot1].collisionSpeed = speed1;
+                }
+                if (accelerationTime2 > 0) {
+                    robots[robot2].collisionSpeed = 6;
+                } else if (accelerationTime2 < 0) {
+                    robots[robot2].collisionSpeed = -2;
+                } else {
+                    robots[robot2].collisionSpeed = speed2;
+                }
+                robots[robot1].collisionSpeedTime = collisionTime - 1;
+                robots[robot2].collisionSpeedTime = collisionTime - 1;
+                robots[robot1].collisionRotate = 0;
+                robots[robot2].collisionRotate = 0;
+                robots[robot1].collisionRotateTime = collisionTime - 6;
+                robots[robot2].collisionRotateTime = collisionTime - 6;
+                return;
+            }
+        }
+    }
+    TESTOUTPUT(fout << "could not find a solution" << std::endl;)
+    double status1 = Vector2D(cos(robots[robot1].direction), sin(robots[robot1].direction))^Vector2D(robots[robot2].x - robots[robot1].x, robots[robot2].y - robots[robot1].y);
+    status1 = status1 > 0 ? 1 : -1;
+    double status2 = Vector2D(cos(robots[robot2].direction), sin(robots[robot2].direction))^Vector2D(robots[robot1].x - robots[robot2].x, robots[robot1].y - robots[robot2].y);
+    status2 = status2 > 0 ? 1 : -1;
+    // 叉积 > 0 逆时针到达对方. < 0 顺时针到达对方
+    robots[robot1].collisionRotate = -status1 * M_PI;
+    robots[robot2].collisionRotate = status2 * M_PI;
+    robots[robot1].collisionSpeed = 6;
+    robots[robot2].collisionSpeed = -2;
+    robots[robot1].collisionSpeedTime = 1;
+    robots[robot2].collisionSpeedTime = 1;
+    robots[robot1].collisionRotateTime = 1;
+    robots[robot2].collisionRotateTime = 1;
+    return;
+}
