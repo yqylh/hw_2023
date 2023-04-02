@@ -441,7 +441,7 @@ struct Robot{
                         if (blocked != nullptr)for (auto & obstacle : *blocked) {
                             // TESTOUTPUT(fout << "blocked" << obstacle.x << "," << obstacle.y << std::endl;)
                             double distance = point_to_segment_distance(begin->second, end->second, obstacle);
-                            if (distance < 0.53 * 2 + 0.5) {// 碰撞了
+                            if (distance < 0.53 + 0.4) {// 碰撞了 0.53是机器人半径, 0.4是方格斜边的一半
                                 flag = true;
                                 break;
                             }
@@ -496,7 +496,7 @@ struct Robot{
                     if ((item - p1).length() < 0.53) {
                         auto delta = p1 - item;
                         double ratio = 0.55 / 0.25;
-                        // double ratio = (bringId == 0 ? 0.5 : 0.6) / delta.length();
+                        // double ratio = 0.6 / delta.length();
                         p2 = item + delta * ratio;
                         break;
                     }
