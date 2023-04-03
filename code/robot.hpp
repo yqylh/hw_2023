@@ -236,7 +236,7 @@ struct Robot{
             speed = 0;
         } else {
             // 如果度数大于90°, 就先倒退转过去
-            speed = -1;
+            speed = -0.5;
         }
         if (collisionSpeedTime > 0) {
             collisionSpeedTime--;
@@ -245,7 +245,7 @@ struct Robot{
         if (Vector2D(vec2[0], vec2[1]).length() < 1.2 && speed > 0) {
             // TESTOUTPUT(fout << "changed from" << speed << " route=" << absRotate << std::endl;)
             speed = Vector2D(vec2[0], vec2[1]).length() / 1.2 * 6;
-            if (speed < 1) speed = 1;
+            if (speed < 0.5) speed = 0.5;
         }
         TESTOUTPUT(fout << "forward " << id << " " << speed << std::endl;)
         printf("forward %d %lf\n", id, speed);
