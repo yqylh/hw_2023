@@ -465,6 +465,7 @@ struct Robot{
     }
     std::vector<Vector2D> DodgingCorners(std::vector<Vector2D> path, std::set<Vector2D> *blocked = nullptr) {
         std::vector<std::pair<Vector2D, Vector2D>> solved;
+        auto lastPoint = path.front();
         for (auto & point : path) {
             // 如果是起点,就不用处理, 精度更准
             if (point == path.front()) {
@@ -494,15 +495,24 @@ struct Robot{
             } else {
                 for (auto & item : grids[p1]->obstacles) {
                     if ((item - p1).length() < 0.53) {
-                        auto delta = p1 - item;
-                        double ratio = 0.55 / 0.25;
-                        // double ratio = 0.6 / delta.length();
-                        p2 = item + delta * ratio;
+                        auto delta = item - p1;
+                        auto deltaLastToNow = p1 - lastPoint;
+                        double ratio;
+                        if ( !(lastPoint == p1) && deltaLastToNow.angle(delta) < M_PI / 2) {
+                            ratio = 0.7788;
+                        } else {
+                            ratio = 0.6;
+                        }
+                        p2 = item - delta / delta.length() * ratio;
+                        // auto delta = p1 - item;
+                        // double ratio = 0.55 / 0.25;
+                        // p2 = item + delta * ratio;
                         break;
                     }
                 }
             }
             solved.push_back(std::make_pair(p1, p2));
+            lastPoint = point;
         }
         solved = fixpath(solved, blocked);
         path.clear();
