@@ -94,8 +94,14 @@ void solveGraph() {
     std::sort(near7.begin(), near7.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
         return a.second < b.second;
     }); // 按照距离排序
+    // int index = 0;
     for (auto & num7 : near7) {
         int id7 = num7.first;
+        // if (index < near7.size() * 0.5) {
+        //     worktables[id7].near7 = 4;
+        // } else {
+        //     break;
+        // }
         worktables[id7].near7 = 4;
         std::vector<std::pair<int, double> > near4, near5, near6;
         for (auto & i : worktables) {
