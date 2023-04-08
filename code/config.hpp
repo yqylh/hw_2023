@@ -21,6 +21,7 @@ const int MAP_Col_Length = 100; // 地图有多少列
 const int MAX_TIME = 5 * 60 * 50; // 最大帧数
 const int futureTime = 27;     // 预测的时间, 从 6->-2需要 27 帧
 int canBuy[MAX_Item_Type_Num + 1] = {0}; // 当前物品需求
+const double TOL_Collision = 6; // 碰撞检测的距离
 
 
 std::set<std::pair<int, int> > sellSet = {

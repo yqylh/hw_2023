@@ -375,6 +375,9 @@ void solveRobotToWorktable(){
         for (int j = 0; j <= worktableNum; j++) {
             if (worktables[j].near7 == 0) continue;
             double distance = bfs(Vector2D(robots[i].x, robots[i].y), Vector2D(worktables[j].x, worktables[j].y), 0);
+            if (distance < 1e7) {
+                robots[i].couldReach.push_back(j);
+            }
             RobotToWT[i][j] = distance;
         }
     }

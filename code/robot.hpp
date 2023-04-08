@@ -41,6 +41,7 @@ struct Robot{
     std::vector<Vector2D> pathPoints; // 机器人的路径点
     int zeroTime = 0; // 机器人的零速度时间
     bool isWait = false; // 机器人是否在等待
+    std::vector<int> couldReach; // 机器人能够到达的工作台
     Robot() {
         this->id = -1;
         this->x = -1;
@@ -309,6 +310,14 @@ struct Robot{
              * 没产物, 没人预约买,在做了
             */
             if (buy.id == -1) break;
+            bool couldReachFlag = false;
+            for (auto & couldReachItem :couldReach) {
+                if (couldReachItem == buy.id) {
+                    couldReachFlag = true;
+                    break;
+                }
+            }
+            if (couldReachFlag == false) continue;
             if ((buy.output == true && buy.someWillBuy == 0)
                 || (buy.output == true && buy.someWillBuy == 1 && buy.remainTime != -1)
                 || (buy.output == false && buy.someWillBuy == 0 && buy.remainTime != -1)
@@ -333,6 +342,14 @@ struct Robot{
             int productId = createMap[buy.type];
             for (auto & sell : worktables) {
                 if (sell.id == -1) break;
+                bool couldReachFlag = false;
+                for (auto & couldReachItem :couldReach) {
+                    if (couldReachItem == sell.id) {
+                        couldReachFlag = true;
+                        break;
+                    }
+                }
+                if (couldReachFlag == false) continue;
                 // 确保这个工作台支持买,而且输入口是空的
                 if (sellSet.find(std::make_pair(productId, sell.type)) == sellSet.end() || sell.inputId[productId] == 1) continue;
                 // 确保不是墙角
@@ -384,7 +401,13 @@ struct Robot{
         // 理论上只有快结束才出现
         if (paths.size() == 0 && paths4567.size() == 0) {
             TESTOUTPUT(fout << "error" << std::endl;)
-            worktableTogo = -1;
+            if (couldReach.size() == 0) {
+                worktableTogo = -1;
+            } else 
+            if (pathPoints.size() == 0) {
+                worktableTogo = couldReach[rand() % couldReach.size()];
+                pathPoints = movePath();
+            }
             return;
         }
         std::sort(paths.begin(), paths.end(), [](Path * a, Path * b) {
@@ -865,6 +888,7 @@ std::set<Vector2D> *getPathLabel(std::vector<Vector2D> path, int id) {
     std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
     path.insert(path.begin(), Vector2D(robots[id].x, robots[id].y));
     std::set<Vector2D> *pathPoints = new std::set<Vector2D>();
+    double sum = 0;
     for (auto from = path.begin(); from != path.end(); from++) {
         auto next = from + 1;
         if (next == path.end()) break;
@@ -876,7 +900,10 @@ std::set<Vector2D> *getPathLabel(std::vector<Vector2D> path, int id) {
             for (auto & add : adds) {
                 pathPoints->insert(Vector2D(nowx + add.first, nowy + add.second));
             }
+            sum += 0.25;
+            if (sum > TOL_Collision) break;
         }
+        if (sum > TOL_Collision) break;
     }
     double nowx = int(path.rbegin()->x / 0.5) * 0.5 + 0.25;
     double nowy = int(path.rbegin()->y / 0.5) * 0.5 + 0.25;
@@ -888,7 +915,7 @@ std::set<Vector2D> *getPathLabel(std::vector<Vector2D> path, int id) {
 
 void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPointsAll, std::set<Vector2D> *robot1PointsAll){
     if (robots[robot1].worktableTogo == -1 || robots[robot2].worktableTogo == -1) return;
-    if ((Vector2D(robots[robot1].x, robots[robot1].y) - Vector2D(robots[robot2].x, robots[robot2].y)).length() > 5) return;
+    if ((Vector2D(robots[robot1].x, robots[robot1].y) - Vector2D(robots[robot2].x, robots[robot2].y)).length() > TOL_Collision) return;
     // 给 robot1/robot2 的路径打标签
     std::set<Vector2D> *robot1PathPoints = getPathLabel(robots[robot1].pathPoints, robot1);
     std::set<Vector2D> *robot2PathPoints = getPathLabel(robots[robot2].pathPoints, robot2);
@@ -903,6 +930,7 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
     }
     if (isCollision == false) return;
     TESTOUTPUT(fout << "robot" << robot1 << " and robot" << robot2 << " 检测碰撞" << std::endl;)
+    std::vector<Vector2D> erasedPoints;
     // 在robot1的路径上删除 robot2 开始的位置
     {
         double nowx = int(robots[robot2].x / 0.5) * 0.5 + 0.25;
@@ -911,17 +939,7 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
         for (auto & add : adds) {
             if (robot1PathPoints->find(Vector2D(nowx + add.first, nowy + add.second)) != robot1PathPoints->end()) {
                 robot1PathPoints->erase(Vector2D(nowx + add.first, nowy + add.second));
-            }
-        }
-    }
-    // 在robot2的路径上删除 robot1 开始的位置
-    {
-        double nowx = int(robots[robot1].x / 0.5) * 0.5 + 0.25;
-        double nowy = int(robots[robot1].y / 0.5) * 0.5 + 0.25;
-        std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
-        for (auto & add : adds) {
-            if (robot2PathPoints->find(Vector2D(nowx + add.first, nowy + add.second)) != robot2PathPoints->end()) {
-                robot2PathPoints->erase(Vector2D(nowx + add.first, nowy + add.second));
+                erasedPoints.push_back(Vector2D(nowx + add.first, nowy + add.second));
             }
         }
     }
@@ -947,6 +965,7 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
     }
     // 把robot1Points中的点加入到robot1PointsAll中
     {
+        if (robot1PointsAll->size() == 0)
         for (auto & item : *robot1Points) {
             robot1PointsAll->insert(item);
         }
@@ -958,10 +977,18 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
         }
     }
     // 重新规划路径
-    robots[robot2].pathPoints = robots[robot2].movePath(robot1PathPoints); 
+    robots[robot2].pathPoints = robots[robot2].movePath(robot1PathPointsAll); 
     if (robots[robot2].pathPoints[0] == Vector2D(0,0)) {
         TESTOUTPUT(fout << "robot" << robot2 << " 无法规划路径" << std::endl;)
+        for (auto & item : erasedPoints) {
+            robot1PathPointsAll->insert(item);
+        }
         robots[robot2].findNullPath(robot1PointsAll, robot1PathPointsAll);
+        if (robots[robot2].pathPoints[0] == Vector2D(0,0)) {
+            TESTOUTPUT(fout << "robot" << robot2 << " 无法找到空路径" << std::endl;)
+            robots[robot1].findNullPath(robot2Points, robot2PathPoints);
+            robots[robot2].movePath();
+        }
     } else {
         TESTOUTPUT(fout << "robot" << robot2 << " 已重新规划路径" << std::endl;)
     }

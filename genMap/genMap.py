@@ -200,6 +200,14 @@ def main(mapId=1):
             nowPathId -= 1
         elif key == ord('k'):
             nowPathId += 1
+        elif key == ord('n'):
+            nowPathId -= 10
+        elif key == ord('m'):
+            nowPathId += 10
+        elif key == ord('i'):
+            nowPathId -= 1000
+        elif key == ord('o'):
+            nowPathId += 1000
         elif key == 27:
             cv2.destroyAllWindows()
             break
