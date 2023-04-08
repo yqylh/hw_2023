@@ -886,7 +886,7 @@ std::set<Vector2D> *getPathLabel(std::vector<Vector2D> path, int id) {
     return pathPoints;
 }
 
-void DetecteCollision(int robot1, int robot2){
+void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPointsAll, std::set<Vector2D> *robot1PointsAll){
     if (robots[robot1].worktableTogo == -1 || robots[robot2].worktableTogo == -1) return;
     if ((Vector2D(robots[robot1].x, robots[robot1].y) - Vector2D(robots[robot2].x, robots[robot2].y)).length() > 5) return;
     // 给 robot1/robot2 的路径打标签
@@ -945,11 +945,23 @@ void DetecteCollision(int robot1, int robot2){
             robot2Points->insert(Vector2D(nowx + add.first, nowy + add.second));
         }
     }
+    // 把robot1Points中的点加入到robot1PointsAll中
+    {
+        for (auto & item : *robot1Points) {
+            robot1PointsAll->insert(item);
+        }
+    }
+    // 把robot1PathPoints中的点加入到robot1PathPointsAll中
+    {
+        for (auto & item : *robot1PathPoints) {
+            robot1PathPointsAll->insert(item);
+        }
+    }
     // 重新规划路径
     robots[robot2].pathPoints = robots[robot2].movePath(robot1PathPoints); 
     if (robots[robot2].pathPoints[0] == Vector2D(0,0)) {
         TESTOUTPUT(fout << "robot" << robot2 << " 无法规划路径" << std::endl;)
-        robots[robot2].findNullPath(robot1Points, robot1PathPoints);
+        robots[robot2].findNullPath(robot1PointsAll, robot1PathPointsAll);
     } else {
         TESTOUTPUT(fout << "robot" << robot2 << " 已重新规划路径" << std::endl;)
     }

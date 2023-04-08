@@ -478,9 +478,16 @@ void solveFrame() {
     for (int i = 0; i <= robotNum; i++) {
         robots[i].checkWall();
     }
-    for (int i = 0; i <= robotNum; i++) {
-        for (int j = i + 1; j <= robotNum; j++) {
-            DetecteCollision(i, j);
+    // for (int i = 0; i <= robotNum; i++) {
+    //     for (int j = i + 1; j <= robotNum; j++) {
+    //         DetecteCollision(i, j);
+    //     }
+    // }
+    for (int robot2 = 1; robot2 <= robotNum; robot2++) {
+        std::set<Vector2D> *robot1PathPoints = new std::set<Vector2D>();
+        std::set<Vector2D> *robot1Points = new std::set<Vector2D>();        
+        for (int robot1 = 0; robot1 < robot2; robot1++) {
+            DetecteCollision(robot1, robot2, robot1PathPoints, robot1Points);
         }
     }
     for (int i = 0; i <= robotNum; i++) {

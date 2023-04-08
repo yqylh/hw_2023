@@ -7,3 +7,4 @@ upload/*
 *.txt
 *.zip
 .DS_Store
+.VSCodeCounter
