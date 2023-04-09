@@ -237,16 +237,16 @@ struct Robot{
             speed = 0;
         } else {
             // 如果度数大于90°, 就先倒退转过去
-            speed = -0.875;
+            speed = -0.65;
         }
         if (collisionSpeedTime > 0) {
             collisionSpeedTime--;
             speed = collisionSpeed;
         }
-        if (Vector2D(vec2[0], vec2[1]).length() < 1.2 && speed > 0) {
+        if (Vector2D(vec2[0], vec2[1]).length() < 1.25 && speed > 0) {
             // TESTOUTPUT(fout << "changed from" << speed << " route=" << absRotate << std::endl;)
-            speed = Vector2D(vec2[0], vec2[1]).length() / 1.2 * 6;
-            if (speed < 0.875) speed = 0.875;
+            speed = Vector2D(vec2[0], vec2[1]).length() / 1.25 * 6;
+            if (speed < 1.5) speed = 1.5;
         }
         TESTOUTPUT(fout << "forward " << id << " " << speed << std::endl;)
         printf("forward %d %lf\n", id, speed);
@@ -365,7 +365,7 @@ struct Robot{
                 goSellTime = goSellTime * 0.6 / 0.11;
                 // double goSellTime = getMinGoToTime(buy.x, buy.y, sell.x, sell.y);
                 double sumTime = std::max(goBuyTime, waitBuyTime) + goSellTime;
-                if (sumTime + 30 + nowTime > MAX_TIME) continue;
+                if (sumTime + 50 + nowTime > MAX_TIME) continue;
                 // 时间损失
                 double timeLoss;
                 if (sumTime >= 9000) {
@@ -772,6 +772,14 @@ struct Robot{
                 // 是墙
                 if (grids[next]->type == 1) continue;
                 // 是其他机器人的位置
+                // int cantGoFlag = 0;
+                // for (auto & add2 : adds) {
+                //     if (cantGo->find(next + Vector2D(add2.first, add2.second)) != cantGo->end()
+                //         || grids[next + Vector2D(add2.first, add2.second)]->type == 1) {
+                //         cantGoFlag++;
+                //     }
+                // }
+                // if (cantGoFlag > 0) continue;
                 if (cantGo->find(next) != cantGo->end()) continue;
                 if (bringId == 0) {
                     // 不携带物品

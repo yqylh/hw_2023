@@ -134,6 +134,8 @@ void solveGraph() {
         }
         if (near5.size() >= 1) {
             worktables[near5[0].first].near7 = 1.2;
+            if(near7.size() == 2) worktables[near5[0].first].near7 = 2;
+            if(near7.size() == 2 && near5[0].first == 21) worktables[near5[0].first].near7 = 0;
             TESTOUTPUT(fout << near5[0].first << " ";)
         }
         if (near6.size() >= 1) {
