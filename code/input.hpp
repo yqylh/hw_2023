@@ -424,6 +424,15 @@ void inputMap(){
     solveWorktableToWorktable();
     solveGraph();
     solveRobotToWorktable();
+    int zeroNum = 0;
+    for (int i = 0; i <= robotNum; i++) {
+        if (robots[i].couldReach.size() == 0) {
+            zeroNum++;
+        }
+    }
+    if (zeroNum == 3) {
+        mapId = 1;
+    }
     puts("OK");
     fflush(stdout);
 }
