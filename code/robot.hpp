@@ -42,6 +42,7 @@ struct Robot{
     int zeroTime = 0; // 机器人的零速度时间
     bool isWait = false; // 机器人是否在等待
     std::vector<int> couldReach; // 机器人能够到达的工作台
+    double lasers[360]; // 机器人的激光雷达
     Robot() {
         this->id = -1;
         this->x = -1;
@@ -220,17 +221,17 @@ struct Robot{
         // TESTOUTPUT(fout << "absRotate: " << absRotate << " length =" << length << " asin=" << asin(0.4 / length) << std::endl;)
         // 由于判定范围是 0.4m,所以如果度数满足这个条件, 就直接冲过去
         if (0.4 / length > 1) {
-            speed = 6;
+            speed = MAX_SPEED;
         } else
         if (absRotate < asin(0.4 / length)) {
-            speed = 6;
+            speed = MAX_SPEED;
         } else if (absRotate < M_PI / 4) {
             // 如果度数大于x小于45° 
             // 如果转向时间的路程不会更长,就可以走
             if (absRotate > 0.0001)
                 speed = length * 50 / (absRotate / 3.6 + 1);
-            if (speed > 6) {
-                speed = 6;
+            if (speed > MAX_SPEED) {
+                speed = MAX_SPEED;
             }
         } else if (absRotate < M_PI / 2) {
             // 如果度数大于45°小于 90°
@@ -296,10 +297,6 @@ struct Robot{
         printf("destroy %d\n", id);
         return -1;
     }
-    double getMinGoToTime(double x1, double y1, double x2, double y2) {
-        double length = (Vector2D(x1, y1) - Vector2D(x2, y2)).length();
-        return length / 0.12 + 25;
-    }
     void FindAPath() {
         std::vector<Path *> paths;
         std::vector<Path *> paths4567;
@@ -333,9 +330,7 @@ struct Robot{
             } else {
                 goBuyTime = WTtoWT[worktableId][buy.id];
             }
-            // goBuyTime = goBuyTime * 0.6 / 0.1;
-            goBuyTime = goBuyTime * 0.6 / 0.11;
-            // double goBuyTime = getMinGoToTime(x, y, buy.x, buy.y);
+            goBuyTime = goBuyTime * 0.6 / (MAX_SPEED / 50);
             // 如果等待时间比路程时间长,就不用买了
             if (goBuyTime < waitBuyTime) continue;
             // 购买的产品
@@ -361,9 +356,7 @@ struct Robot{
                 if (sell.someWillSell[productId] == 0 || sell.type == 8 || sell.type == 9) {} else continue;
                 // 时间消耗
                 double goSellTime = WTtoWTwithItem[buy.id][sell.id];
-                // goSellTime = goSellTime * 0.6 / 0.1;
-                goSellTime = goSellTime * 0.6 / 0.11;
-                // double goSellTime = getMinGoToTime(buy.x, buy.y, sell.x, sell.y);
+                goSellTime = goSellTime * 0.6 / (MAX_SPEED / 50);
                 double sumTime = std::max(goBuyTime, waitBuyTime) + goSellTime;
                 if (sumTime + 50 + nowTime > MAX_TIME) continue;
                 // 时间损失
@@ -692,8 +685,8 @@ struct Robot{
     void checkWall() {
         if (worktableTogo == -1) return;
         bool wallnear = false;
-        double toWallX = std::min(worktables[worktableTogo].y - 0.53 - 0.12, 50 - 0.53 - 0.12 -worktables[worktableTogo].y);
-        double toWallY = std::min(worktables[worktableTogo].x - 0.53 - 0.12, 50 - 0.53 - 0.12 -worktables[worktableTogo].x);
+        double toWallX = std::min(worktables[worktableTogo].y - 0.53 - MAX_SPEED / 50, 50 - 0.53 - MAX_SPEED / 50 -worktables[worktableTogo].y);
+        double toWallY = std::min(worktables[worktableTogo].x - 0.53 - MAX_SPEED / 50, 50 - 0.53 - MAX_SPEED / 50 -worktables[worktableTogo].x);
         // 刹车最常的距离 1.86
         if (toWallX < 0.02 * 3 * 31 || toWallY < 0.02 * 3 * 31) {
             wallnear = true;
@@ -716,8 +709,8 @@ struct Robot{
         // double radii = bringId == 0 ? 0.45 : 0.53;
         // double acceleration = 250 / (20 * M_PI * radii * radii * 50);
         // double length = speed * speed / (2 * acceleration);
-        toWallX = std::min(y - 0.53 - 0.12, 50 - 0.53 - 0.12 -y);
-        toWallY = std::min(x - 0.53 - 0.12, 50 - 0.53 - 0.12 -x);
+        toWallX = std::min(y - 0.53 - MAX_SPEED / 50, 50 - 0.53 - MAX_SPEED / 50 -y);
+        toWallY = std::min(x - 0.53 - MAX_SPEED / 50, 50 - 0.53 - MAX_SPEED / 50 -x);
         TESTOUTPUT(fout << "robot" << id << " length=" << length << " toWallX=" << toWallX << " toWallY=" << toWallY << std::endl;)
         if (toWallX < std::abs(length * sin(direction)) || toWallY < std::abs(length * cos(direction))) {
             TESTOUTPUT(fout << "robot" << id << " 有撞墙风险 " << std::endl;)
@@ -880,17 +873,6 @@ struct Robot{
 };
 
 Robot robots[MAX_Robot_Num];
-
-double solveChangeSpeed(double speed, double diff) {
-    speed += diff;
-    if (speed > 6) {
-        speed = 6;
-    }
-    if (speed < -2) {
-        speed = -2;
-    }
-    return speed;
-}
 
 std::set<Vector2D> *getPathLabel(std::vector<Vector2D> path, int id) {
     std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};

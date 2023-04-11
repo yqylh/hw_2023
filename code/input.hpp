@@ -391,6 +391,15 @@ void solveRobotToWorktable(){
     }
 }
 void inputMap(){
+    std::string line;
+    getline(std::cin, line);
+    if (line == std::string("BLUE")) {
+        RoB = BLUE;
+        MAX_SPEED = 6;
+    } else {
+        RoB = RED;
+        MAX_SPEED = 7;
+    }
     for (int i = 0; i < MAP_Line_Length; i++) {
         std::string line;
         getline(std::cin, line);
@@ -406,19 +415,43 @@ void inputMap(){
                 // 墙壁
                 continue;
             }
-            if (line[j] == 'A') {
-                grids[Vector2D(x,y)] = new Grid(Vector2D(x,y), 0);
-                robotNum++;
-                robots[robotNum] = Robot(robotNum, x,y);
+            grids[Vector2D(x,y)] = new Grid(Vector2D(x,y), 0);
+            if (RoB == BLUE) {
+                // 蓝方
+                if (line[j] == 'A') {
+                    // A 表示自己的机器人 蓝色
+                    robotNum++;
+                    robots[robotNum] = Robot(robotNum, x,y);
+                } else if (line[j] == 'B') {
+                    // B 表示对方的机器人 红色
+                    // todo
+                } else if (line[j] >= 'a' && line[j] <= 'i') {
+                    // 对方工作台 红色
+                } else if (line[j] >= '0' && line[j] <= '9') {
+                    // 自己的工作台 蓝色
+                    worktableNum++;
+                    worktables[worktableNum] = Worktable(worktableNum, x,y, char(line[j]) - '0');
+                } else throw;
             } else {
-                grids[Vector2D(x,y)] = new Grid(Vector2D(x,y), 0);
-                worktableNum++;
-                worktables[worktableNum] = Worktable(worktableNum, x,y, char(line[j]) - '0');
+                // 红方
+                if (line[j] == 'A') {
+                    // A 表示对方的机器人 蓝色
+                    // todo
+                } else if (line[j] == 'B') {
+                    // B 表示自己的机器人 红色
+                    robotNum++;
+                    robots[robotNum] = Robot(robotNum, x,y);
+                } else if (line[j] >= 'a' && line[j] <= 'i') {
+                    // 自己的工作台 蓝色
+                    worktableNum++;
+                    worktables[worktableNum] = Worktable(worktableNum, x,y, char(line[j]) - 'a' + 1);
+                } else if (line[j] >= '0' && line[j] <= '9') {
+                    // 对方工作台 红色
+                } else throw;
             }
         }
     }
     detectionObstacle();
-    std::string line;
     while(getline(std::cin, line) && line != "OK");
     deleteWorktable();
     solveWorktableToWorktable();
@@ -455,6 +488,11 @@ bool inputFrame() {
     // 处理机器人的信息
     for (int i = 0; i <= robotNum; i++) {
         scanf("%d%d%lf%lf%lf%lf%lf%lf%lf%lf", &robots[i].worktableId, &robots[i].bringId, &robots[i].timeCoef, &robots[i].crashCoef, &robots[i].angularSeppd, &robots[i].linearSpeedX, &robots[i].linearSpeedY, &robots[i].direction, &robots[i].x, &robots[i].y);
+    }
+    for (int i = 0; i <= robotNum; i++) {
+        for (int j = 0; j < 360; j++) {
+            scanf("%lf", &robots[i].lasers[j]);
+        }
     }
     std::string line;
     while(getline(std::cin, line) && line != "OK");
