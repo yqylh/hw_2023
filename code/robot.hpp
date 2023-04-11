@@ -330,6 +330,7 @@ struct Robot{
             } else {
                 goBuyTime = WTtoWT[worktableId][buy.id];
             }
+            if (goBuyTime > 1e6) continue;
             goBuyTime = goBuyTime * 0.6 / (MAX_SPEED / 50);
             // 如果等待时间比路程时间长,就不用买了
             if (goBuyTime < waitBuyTime) continue;
@@ -356,6 +357,7 @@ struct Robot{
                 if (sell.someWillSell[productId] == 0 || sell.type == 8 || sell.type == 9) {} else continue;
                 // 时间消耗
                 double goSellTime = WTtoWTwithItem[buy.id][sell.id];
+                if (goSellTime > 1e6) continue;
                 goSellTime = goSellTime * 0.6 / (MAX_SPEED / 50);
                 double sumTime = std::max(goBuyTime, waitBuyTime) + goSellTime;
                 if (sumTime + 50 + nowTime > MAX_TIME) continue;
@@ -585,9 +587,11 @@ struct Robot{
                     // 不携带物品
                     // 可以碰两个角
                     int num = 0;
+                    std::vector<Vector2D> obstacles;
                     if (!(next == to))for (auto & item : grids[next]->obstacles) {
                         if ((next - item).length() < 0.45) {
                             num++;
+                            obstacles.push_back(item);
                         }
                     }
                     int nowNum = 0;
@@ -600,6 +604,10 @@ struct Robot{
                         if (num > 1) continue; 
                     } else 
                     if (num > 2) continue;
+                    // 被两边的卡死
+                    if (num == 2 && (obstacles[0]-obstacles[1]).length() > 0.51) continue;
+                    // 在墙角斜着走
+                    if (num == 2 && nowNum == 2 && add.first != 0 && add.second != 0) continue;
                 } else {
                     // 携带物品
                     int num = 0;
@@ -772,9 +780,11 @@ struct Robot{
                     // 不携带物品
                     // 可以碰两个角
                     int num = 0;
+                    std::vector<Vector2D> obstacles;
                     for (auto & item : grids[next]->obstacles) {
                         if ((next - item).length() < 0.45) {
                             num++;
+                            obstacles.push_back(item);
                         }
                     }
                     int nowNum = 0;
@@ -787,6 +797,9 @@ struct Robot{
                         if (num > 1) continue; 
                     } else 
                     if (num > 2) continue;
+                    if (num == 2 && (obstacles[0]-obstacles[1]).length() > 0.5) continue;
+                    // 在墙角斜着走
+                    if (num == 2 && nowNum == 2 && add.first != 0 && add.second != 0) continue;
                 } else {
                     // 携带物品
                     int num = 0;

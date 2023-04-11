@@ -144,74 +144,6 @@ void solveGraph() {
     }
 }
 
-void deleteWorktable() {
-    for (int i = 0; i <= worktableNum; i++) {
-        int corner = 0;
-        std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}};
-        for (auto &add : adds) {
-            Vector2D index = Vector2D(worktables[i].x, worktables[i].y) + Vector2D(add.first, add.second);
-            if (grids[index]->type == 1) {
-                corner++;
-            }
-        }
-        if (corner > 1) {
-            worktables[i].isNearCorner = 1;
-            TESTOUTPUT(fout << "worktable " << i << " is near corner" << std::endl;)
-        } else {
-            worktables[i].isNearCorner = 0;
-        }
-    }
-    for (int i = 0; i <= worktableNum; i++) {
-        std::set<Vector2D> reach;
-        std::queue<Vector2D> q;
-        q.push(Vector2D(worktables[i].x, worktables[i].y));
-        reach.insert(Vector2D(worktables[i].x, worktables[i].y));
-        bool flag = 0;
-        while (!q.empty() && flag == 0) {
-            Vector2D now = q.front();
-            q.pop();
-            std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}};
-            for (auto &add : adds) {
-                Vector2D index = now + Vector2D(add.first, add.second);
-                if (index.x <= 0.25 || index.x >= 49.75 || index.y <= 0.25 || index.y >= 49.75) continue;
-                if (reach.find(index) != reach.end()) continue;
-                if (grids[index]->type == 1) continue;
-                // 间隔 0.5m
-                if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-0.5, 0)]->type == 1) continue;
-                if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(0, -0.5)]->type == 1) continue;
-                // 间隔 1m
-                if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(0, -1)]->type == 1) continue;
-                if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(0.5, -1)]->type == 1) continue;
-                if (grids[index + Vector2D(0, 0.5)]->type == 1 && grids[index + Vector2D(-0.5, -1)]->type == 1) continue;
-                if (grids[index + Vector2D(0, -0.5)]->type == 1 && grids[index + Vector2D(0, 1)]->type == 1) continue;
-                if (grids[index + Vector2D(0, -0.5)]->type == 1 && grids[index + Vector2D(0.5, 1)]->type == 1) continue;
-                if (grids[index + Vector2D(0, -0.5)]->type == 1 && grids[index + Vector2D(-0.5, 1)]->type == 1) continue;
-                
-                if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-1, 0)]->type == 1) continue;
-                if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-1, 0.5)]->type == 1) continue;
-                if (grids[index + Vector2D(0.5, 0)]->type == 1 && grids[index + Vector2D(-1, -0.5)]->type == 1) continue;
-                if (grids[index + Vector2D(-0.5, 0)]->type == 1 && grids[index + Vector2D(1, 0)]->type == 1) continue;
-                if (grids[index + Vector2D(-0.5, 0)]->type == 1 && grids[index + Vector2D(1, 0.5)]->type == 1) continue;
-                if (grids[index + Vector2D(-0.5, 0)]->type == 1 && grids[index + Vector2D(1, -0.5)]->type == 1) continue;
-
-                reach.insert(index);
-                q.push(index);
-                for (int j = 0; j <= robotNum; j++) {
-                    if (index == Vector2D(robots[j].x, robots[j].y)) {
-                        flag = 1;
-                        break;
-                    }
-                }
-            }
-        }
-        if (flag == 0) {
-            worktables[i].near7 = 0;
-            TESTOUTPUT(fout << "delete id=" << i << std::endl;)
-            // worktables[i].outputTest();
-        }
-    }
-} 
-
 double bfs(Vector2D from, Vector2D to, int bring) {
         std::vector<Vector2D> path;
         std::map<Vector2D, Vector2D> fromWhere;
@@ -234,11 +166,14 @@ double bfs(Vector2D from, Vector2D to, int bring) {
                 // 是墙
                 if (grids[next]->type == 1) continue;
                 if (bring == 0) {
-                    // 不携带物品 可以碰两个角
+                    // 不携带物品
+                    // 可以碰两个角
                     int num = 0;
+                    std::vector<Vector2D> obstacles;
                     if (!(next == to))for (auto & item : grids[next]->obstacles) {
                         if ((next - item).length() < 0.45) {
                             num++;
+                            obstacles.push_back(item);
                         }
                     }
                     int nowNum = 0;
@@ -251,6 +186,10 @@ double bfs(Vector2D from, Vector2D to, int bring) {
                         if (num > 1) continue; 
                     } else 
                     if (num > 2) continue;
+                    // 被两边的卡死
+                    if (num == 2 && (obstacles[0]-obstacles[1]).length() > 0.51) continue;
+                    // 在墙角斜着走
+                    if (num == 2 && nowNum == 2 && add.first != 0 && add.second != 0) continue;
                 } else {
                     // 携带物品
                     int num = 0;
@@ -453,7 +392,6 @@ void inputMap(){
     }
     detectionObstacle();
     while(getline(std::cin, line) && line != "OK");
-    deleteWorktable();
     solveWorktableToWorktable();
     solveGraph();
     solveRobotToWorktable();
