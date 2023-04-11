@@ -8,3 +8,4 @@ upload/*
 *.zip
 .DS_Store
 .VSCodeCounter
+oldFileLog

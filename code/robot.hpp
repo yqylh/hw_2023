@@ -507,9 +507,6 @@ struct Robot{
                     if ((item - p1).length() < 0.45) {
                         auto delta = p1 - item;
                         double ratio = 0.49 / 0.25;
-                        if (mapId == 1) {
-                            ratio = 1 / 0.25;
-                        }
                         // double ratio = 0.5 / delta.length();
                         // if (num == 0) {
                             p2 = item + delta * ratio;
@@ -530,9 +527,6 @@ struct Robot{
                             ratio = 0.7788;
                         } else {
                             ratio = 0.6;
-                        }
-                        if (mapId == 1) {
-                            ratio = 2;
                         }
                         p2 = item - delta / delta.length() * ratio;
                         // auto delta = p1 - item;
