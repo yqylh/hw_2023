@@ -330,8 +330,9 @@ struct Robot{
             } else {
                 goBuyTime = WTtoWT[worktableId][buy.id];
             }
+            TESTOUTPUT(fout << "from " << worktableId << " to " << buy.id << " goBuyTime " << goBuyTime << std::endl;)
             if (goBuyTime > 1e6) continue;
-            goBuyTime = goBuyTime * 0.6 / (MAX_SPEED / 50);
+            goBuyTime = goBuyTime * 0.65 / (MAX_SPEED * 0.9 / 50);
             // 如果等待时间比路程时间长,就不用买了
             if (goBuyTime < waitBuyTime) continue;
             // 购买的产品
@@ -358,7 +359,7 @@ struct Robot{
                 // 时间消耗
                 double goSellTime = WTtoWTwithItem[buy.id][sell.id];
                 if (goSellTime > 1e6) continue;
-                goSellTime = goSellTime * 0.6 / (MAX_SPEED / 50);
+                goSellTime = goSellTime * 0.65 / (MAX_SPEED * 0.9 / 50);
                 double sumTime = std::max(goBuyTime, waitBuyTime) + goSellTime;
                 if (sumTime + 50 + nowTime > MAX_TIME) continue;
                 // 时间损失
