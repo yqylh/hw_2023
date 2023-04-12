@@ -244,10 +244,16 @@ struct Robot{
             collisionSpeedTime--;
             speed = collisionSpeed;
         }
-        if (Vector2D(vec2[0], vec2[1]).length() < 1.25 && speed > 0) {
-            // TESTOUTPUT(fout << "changed from" << speed << " route=" << absRotate << std::endl;)
-            speed = Vector2D(vec2[0], vec2[1]).length() / 1.25 * 6;
-            if (speed < 1.5) speed = 1.5;
+        if (RoB == RED) {
+            if (Vector2D(vec2[0], vec2[1]).length() < (bringId == 0 ? 1.2 : 1.6) && speed > 0) {
+                speed = Vector2D(vec2[0], vec2[1]).length() / 1.4 * MAX_SPEED;
+                if (speed < 1) speed = 1;
+            }
+        } else {
+            if (Vector2D(vec2[0], vec2[1]).length() < (bringId == 0 ? 1.1 : 1.25) && speed > 0) {
+                speed = Vector2D(vec2[0], vec2[1]).length() / 1.1 * MAX_SPEED;
+                if (speed < 2.3) speed = 2.3;
+            }
         }
         TESTOUTPUT(fout << "forward " << id << " " << speed << std::endl;)
         printf("forward %d %lf\n", id, speed);
@@ -330,7 +336,6 @@ struct Robot{
             } else {
                 goBuyTime = WTtoWT[worktableId][buy.id];
             }
-            TESTOUTPUT(fout << "from " << worktableId << " to " << buy.id << " goBuyTime " << goBuyTime << std::endl;)
             if (goBuyTime > 1e6) continue;
             goBuyTime = goBuyTime * 0.65 / (MAX_SPEED * 0.9 / 50);
             // 如果等待时间比路程时间长,就不用买了
