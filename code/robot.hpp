@@ -136,6 +136,7 @@ struct Robot{
                     for (int item = 1; item <= MAX_Item_Type_Num; item++) {
                         worktables[worktableId].inputId[item] = 0;
                     }
+                    worktables[worktableId].waitPriority = 3;
                 }
             }
             worktables[worktableId].someWillSell[bringId]--;
@@ -360,7 +361,16 @@ struct Robot{
                  * 确保没人预约卖
                  * 或者类型是8 || 9
                 */
-                if (sell.someWillSell[productId] == 0 || sell.type == 8 || sell.type == 9) {} else continue;
+                if (sell.someWillSell[productId] == 0 
+                    // 4 5 6有人预约卖,但是缺的这一个卖完就可以再卖
+                    || (sell.someWillSell[productId] == 1 && sell.waitPriority == 4 && (sell.type == 4 || sell.type == 5 || sell.type == 6) 
+                        && (sell.output == false || sell.remainTime == -1))
+                    // 7有人预约卖,但是缺的这一个卖完就可以再卖
+                    || (sell.someWillSell[productId] == 1 && sell.waitPriority == 5 && (sell.type == 7)
+                        && (sell.output == false || sell.remainTime == -1)) 
+                    // 8 9 直接卖
+                    || sell.type == 8 || sell.type == 9) {} else continue;
+                
                 // 时间消耗
                 double goSellTime = WTtoWTwithItem[buy.id][sell.id];
                 if (goSellTime > 1e6) continue;
@@ -695,56 +705,6 @@ struct Robot{
         Buy();
         checkDead();
         TESTOUTPUT(fout << "robot" << id << " want-go " << worktableTogo << " type=" << worktables[worktableTogo].type << std::endl;)
-    }
-    void checkWall() {
-        if (worktableTogo == -1) return;
-        bool wallnear = false;
-        double toWallX = std::min(worktables[worktableTogo].y - 0.53 - MAX_SPEED / 50, 50 - 0.53 - MAX_SPEED / 50 -worktables[worktableTogo].y);
-        double toWallY = std::min(worktables[worktableTogo].x - 0.53 - MAX_SPEED / 50, 50 - 0.53 - MAX_SPEED / 50 -worktables[worktableTogo].x);
-        // 刹车最常的距离 1.86
-        if (toWallX < 0.02 * 3 * 31 || toWallY < 0.02 * 3 * 31) {
-            wallnear = true;
-        }
-        if (wallnear == false) return;
-        if (worktables[worktableTogo].type == 9 || worktables[worktableTogo].type == 8) {
-            return;
-        }
-        if (bringId > 0 && worktables[worktableTogo].output == false) {
-            return;
-        }
-        double speed = Vector2D(linearSpeedX, linearSpeedY).length();
-        double length = 0;
-        int costTime = 0;
-        while (speed > 0) {
-            length += speed * 0.02;
-            costTime++;
-            speed -= 0.3;
-        }
-        // double radii = bringId == 0 ? 0.45 : 0.53;
-        // double acceleration = 250 / (20 * M_PI * radii * radii * 50);
-        // double length = speed * speed / (2 * acceleration);
-        toWallX = std::min(y - 0.53 - MAX_SPEED / 50, 50 - 0.53 - MAX_SPEED / 50 -y);
-        toWallY = std::min(x - 0.53 - MAX_SPEED / 50, 50 - 0.53 - MAX_SPEED / 50 -x);
-        TESTOUTPUT(fout << "robot" << id << " length=" << length << " toWallX=" << toWallX << " toWallY=" << toWallY << std::endl;)
-        if (toWallX < std::abs(length * sin(direction)) || toWallY < std::abs(length * cos(direction))) {
-            TESTOUTPUT(fout << "robot" << id << " 有撞墙风险 " << std::endl;)
-            // Vector2D normal(0, 0);
-            // if (toWallX < length * sin(direction) && toWallX == y-0.53-0.1) {
-            //     normal = Vector2D(0, -1);
-            // } else if (toWallX < length * sin(direction) && toWallX == 50-0.53-0.1-y) {
-            //     normal = Vector2D(0, 1);
-            // } else if (toWallY < length * cos(direction) && toWallY == x-0.53-0.1) {
-            //     normal = Vector2D(-1, 0);
-            // } else if (toWallY < length * cos(direction) && toWallY == 50-0.53-0.1-x) {
-            //     normal = Vector2D(1, 0);
-            // }
-            // collisionSpeed = -2;
-            // collisionRotate = normal^Vector2D(cos(direction), sin(direction)) * M_PI;
-            collisionSpeed = -2;
-            collisionSpeedTime = costTime - 1;
-            // if (bringId != 0)
-            // collisionRotate = M_PI;
-        }
     }
     void findNullPath(std::set<Vector2D> *cantGo, std::set<Vector2D> *blocked) {
         isWait = true;
