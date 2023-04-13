@@ -391,7 +391,7 @@ struct Robot{
                 earnMoney *= buy.near7;
                 earnMoney *= sell.near7;
                 if (sell.waitPriority == 5) {
-                    earnMoney *= 1.2;
+                    earnMoney *= 2;
                 }
                 if (buy.isNearCorner) {
                     earnMoney *= 0.1;
