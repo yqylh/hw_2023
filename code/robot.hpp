@@ -468,7 +468,7 @@ struct Robot{
                         for (auto & obstacle : grids[Vector2D(x, y)]->obstacles) {
                             // 计算obstacle到 begin->end这条线段的距离
                             double distance = point_to_segment_distance(begin->second, end->second, obstacle);
-                            if (distance < 0.53) {// 碰撞了
+                            if (distance < (bringId == 0 ? 0.45 : 0.53)) {// 碰撞了
                                 // TESTOUTPUT(fout << "碰撞点" << obstacle.x << "," << obstacle.y << std::endl;)
                                 flag = true;
                                 break;
@@ -517,7 +517,7 @@ struct Robot{
                 for (auto & item : grids[p1]->obstacles) {
                     if ((item - p1).length() < 0.45) {
                         auto delta = p1 - item;
-                        double ratio = 0.49 / 0.25;
+                        double ratio = 0.53 / 0.25;
                         // double ratio = 0.5 / delta.length();
                         // if (num == 0) {
                             p2 = item + delta * ratio;
@@ -537,7 +537,7 @@ struct Robot{
                         if ( !(lastPoint == p1) && deltaLastToNow.angle(delta) < M_PI / 2) {
                             ratio = 0.7788;
                         } else {
-                            ratio = 0.6;
+                            ratio = 0.63;
                         }
                         p2 = item - delta / delta.length() * ratio;
                         // auto delta = p1 - item;

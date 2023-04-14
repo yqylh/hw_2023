@@ -42,15 +42,33 @@ void detectionObstacle() {
     for (auto & i : grids) {
         double addx[] = {0, 0.5, -0.5};
         double addy[] = {0, 0.5, -0.5};
+        std::set<int> visited;
         for (int j = 0; j < 3; j++) {
             for (int k = 0; k < 3; k++) {
                 Vector2D index = i.second->index + Vector2D(addx[j], addy[k]);
                 if (grids.find(index) != grids.end()) {
                     if (grids[index]->type == 1) {
-                        i.second->obstacles.emplace_back(index.x+0.25, index.y+0.25);
-                        i.second->obstacles.emplace_back(index.x+0.25, index.y-0.25);
-                        i.second->obstacles.emplace_back(index.x-0.25, index.y+0.25);
-                        i.second->obstacles.emplace_back(index.x-0.25, index.y-0.25);
+                        // 把浮点数坐标映射到整数区间
+                        int numInt = round((index.x + 0.25) * 1000000) + round((index.y + 0.25)*100);
+                        if (visited.find(numInt) == visited.end()) {
+                            visited.insert(numInt);
+                            i.second->obstacles.emplace_back(index.x + 0.25, index.y + 0.25);
+                        }
+                        numInt = round((index.x + 0.25) * 1000000) + round((index.y - 0.25)*100);
+                        if (visited.find(numInt) == visited.end()) {
+                            visited.insert(numInt);
+                            i.second->obstacles.emplace_back(index.x + 0.25, index.y - 0.25);
+                        }
+                        numInt = round((index.x - 0.25) * 1000000) + round((index.y + 0.25)*100);
+                        if (visited.find(numInt) == visited.end()) {
+                            visited.insert(numInt);
+                            i.second->obstacles.emplace_back(index.x - 0.25, index.y + 0.25);
+                        }
+                        numInt = round((index.x - 0.25) * 1000000) + round((index.y - 0.25)*100);
+                        if (visited.find(numInt) == visited.end()) {
+                            visited.insert(numInt);
+                            i.second->obstacles.emplace_back(index.x - 0.25, index.y - 0.25);
+                        }
                     }
                 }
             }
