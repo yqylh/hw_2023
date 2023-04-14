@@ -21,7 +21,7 @@ const int MAP_Col_Length = 100; // 地图有多少列
 const int MAX_TIME = 4 * 60 * 50; // 最大帧数
 const int futureTime = 27;     // 预测的时间, 从 6->-2需要 27 帧
 int canBuy[MAX_Item_Type_Num + 1] = {0}; // 当前物品需求
-const double TOL_Collision = 3.8; // 碰撞检测的距离
+const double TOL_Collision = 5; // 碰撞检测的距离
 double TC; // 调参
 const int RED = 0;
 const int BLUE = 1;

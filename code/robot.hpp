@@ -1,5 +1,6 @@
 #ifndef __REBOT_H__
 #define __REBOT_H__
+#pragma GCC optimize(3)
 
 #include "config.hpp"
 #include "worktable.hpp"
