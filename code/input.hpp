@@ -436,7 +436,30 @@ bool inputFrame() {
     while(getline(std::cin, line) && line != "OK");
     return true;
 }
-
+std::vector<std::pair<int, int>> getRobotPriority() {
+    std::vector<std::pair<int, int>> robotPriority;
+    for (int i = 0; i <= robotNum; i++) {
+        auto gotoTable = robots[i].worktableTogo;
+        auto type = worktables[gotoTable].type;
+        if (robots[i].bringId == 0) {
+            if (type == 7) robotPriority.push_back(std::make_pair(i, 4));
+            if (type == 4 || type == 5 || type == 6) robotPriority.push_back(std::make_pair(i, 5));
+            if (type == 1 || type == 2 || type == 3) robotPriority.push_back(std::make_pair(i, 6));
+        } else {
+            if (robots[i].bringId == 7) robotPriority.push_back(std::make_pair(i, 1));
+            if (robots[i].bringId == 4 || robots[i].bringId == 5 || robots[i].bringId == 6) robotPriority.push_back(std::make_pair(i, 2));
+            if (robots[i].bringId == 1 || robots[i].bringId == 2 || robots[i].bringId == 3) robotPriority.push_back(std::make_pair(i, 3));
+        }
+    }
+    std::sort(robotPriority.begin(), robotPriority.end(), [](const std::pair<int, int> &a, const std::pair<int, int> &b) {
+        if (a.second == b.second) {
+            return a.first < b.first;
+        } else {
+            return a.second < b.second;
+        }
+    });
+    return robotPriority;
+}
 void solveFrame() {
     printf("%d\n", nowTime);
     TESTOUTPUT(fout << nowTime << std::endl;)
@@ -454,11 +477,13 @@ void solveFrame() {
         robots[i].action();
         // TESTOUTPUT(robots[i].outputTest();) 
     }
+    auto robotPriority = getRobotPriority();
     for (int robot2 = 1; robot2 <= robotNum; robot2++) {
         std::set<Vector2D> *robot1PathPoints = new std::set<Vector2D>();
         std::set<Vector2D> *robot1Points = new std::set<Vector2D>();        
         for (int robot1 = 0; robot1 < robot2; robot1++) {
-            DetecteCollision(robot1, robot2, robot1PathPoints, robot1Points);
+            DetecteCollision(robotPriority[robot1].first, robotPriority[robot2].first, robot1PathPoints, robot1Points);
+            // DetecteCollision(robot1, robot2, robot1PathPoints, robot1Points);
         }
     }
     for (int i = 0; i <= robotNum; i++) {

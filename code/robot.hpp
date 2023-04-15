@@ -536,9 +536,9 @@ struct Robot{
                         auto deltaLastToNow = p1 - lastPoint;
                         double ratio;
                         if ( !(lastPoint == p1) && deltaLastToNow.angle(delta) < M_PI / 2) {
-                            ratio = 0.7788;
+                            ratio = 0.79;
                         } else {
-                            ratio = 0.63;
+                            ratio = 0.67;
                         }
                         p2 = item - delta / delta.length() * ratio;
                         // auto delta = p1 - item;
