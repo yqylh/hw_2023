@@ -440,6 +440,10 @@ std::vector<std::pair<int, int>> getRobotPriority() {
     std::vector<std::pair<int, int>> robotPriority;
     for (int i = 0; i <= robotNum; i++) {
         auto gotoTable = robots[i].worktableTogo;
+        if (gotoTable <= 0) {
+            robotPriority.push_back(std::make_pair(i, 0));
+            continue;
+        }
         auto type = worktables[gotoTable].type;
         if (robots[i].bringId == 0) {
             if (type == 7) robotPriority.push_back(std::make_pair(i, 4));

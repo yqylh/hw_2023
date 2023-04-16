@@ -564,6 +564,29 @@ struct Robot{
         return path;
     }
     /**
+     * 模拟运动
+     * 已知现在机器人的速度和一条 n 个点构成的路径, 仿真这条路径上每个格子会在那一段时间被机器人经过, 需要考虑的是转向和速度，也就是角加速度和加速度
+     * 通过每个格子在什么时间会经过来判断两个机器人是否会碰撞
+     * 输入参数是机器人的id和路径
+     * 返回值是一个map，key是格子的坐标，value是一个pair，pair的第一个值是最早到达这个格子的时间, 第二个值是最晚到达这个格子的时间
+     * robots[robotId]可以获取机器人的信息, 具体的信息参加 Robot 的前几行
+     * 可能用到的参数如下:
+     *  int id; // 机器人的 id
+        double x; // 机器人的 x 坐标
+        double y; // 机器人的 y 坐标
+        int worktableId; // 机器人正在处理的工作台的 id, -1 表示没有
+        int bringId; // 携带的物品的类型, 0 表示没有
+        double angularSeppd; // 机器人的角速度
+        double linearSpeedX; // 机器人的线速度X
+        double linearSpeedY; // 机器人的线速度Y
+        double direction; // 机器人的方向
+        std::vector<Vector2D> pathPoints; // 机器人的路径点
+     * 为了仿真,需要看一下 Robot::Move 函数 中关于速度的控制逻辑
+    */
+    std::map<Vector2D, std::pair<int, int>> simulation(int robotId, std::vector<Vector2D> path) {
+
+    }
+    /**
      * 计算路径
      * 计算从一个坐标移动到另一个坐标的路径
      * 通过 BFS 实现
