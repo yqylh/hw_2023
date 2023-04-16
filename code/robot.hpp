@@ -247,14 +247,24 @@ struct Robot{
             speed = collisionSpeed;
         }
         if (RoB == RED) {
-            if (Vector2D(vec2[0], vec2[1]).length() < (bringId == 0 ? 1.2 : 1.6) && speed > 0) {
-                speed = Vector2D(vec2[0], vec2[1]).length() / 1.4 * MAX_SPEED;
-                if (speed < 1) speed = 1;
+            if (Vector2D(vec2[0], vec2[1]).length() < (bringId != 0 ? 1.6 : 1.1) && speed > 0) {
+                speed = Vector2D(vec2[0], vec2[1]).length() / (bringId != 0 ? 1.6 : 1.1) * MAX_SPEED;
+                if (bringId != 0) {
+                    if (speed < 1) 
+                        speed = 1;
+                } else {
+                    if (speed < 3) 
+                        speed = 3;
+                }
             }
         } else {
-            if (Vector2D(vec2[0], vec2[1]).length() < (bringId == 0 ? 1.1 : 1.25) && speed > 0) {
+            if (Vector2D(vec2[0], vec2[1]).length() < (bringId == 0 ? 1.4 : 1.1) && speed > 0) {
                 speed = Vector2D(vec2[0], vec2[1]).length() / 1.1 * MAX_SPEED;
-                if (speed < 2.3) speed = 2.3;
+                if (bringId != 0) {
+                    if (speed < 1) speed = 1;
+                } else {
+                    if (speed < 3) speed = 3;
+                }
             }
         }
         TESTOUTPUT(fout << "forward " << id << " " << speed << std::endl;)
@@ -538,7 +548,7 @@ struct Robot{
                         if ( !(lastPoint == p1) && deltaLastToNow.angle(delta) < M_PI / 2) {
                             ratio = 0.79;
                         } else {
-                            ratio = 0.67;
+                            ratio = 0.72;
                         }
                         p2 = item - delta / delta.length() * ratio;
                         // auto delta = p1 - item;
