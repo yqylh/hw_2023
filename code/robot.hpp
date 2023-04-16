@@ -901,6 +901,16 @@ std::set<Vector2D> *getPathLabel(std::vector<Vector2D> path, int id) {
 void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPointsAll, std::set<Vector2D> *robot1PointsAll){
     if (robots[robot1].worktableTogo == -1 || robots[robot2].worktableTogo == -1) return;
     if ((Vector2D(robots[robot1].x, robots[robot1].y) - Vector2D(robots[robot2].x, robots[robot2].y)).length() > TOL_Collision) return;
+    // 如果两个机器人卡死了
+    bool isRobotStop = false;
+    if ((Vector2D(robots[robot1].x, robots[robot1].y) - Vector2D(robots[robot2].x, robots[robot2].y)).length() 
+        < (robots[robot1].bringId == 0 ? 0.45 : 0.53) + (robots[robot2].bringId == 0 ? 0.45 : 0.53) + 0.1 
+        && Vector2D(robots[robot1].linearSpeedX, robots[robot1].linearSpeedY).length() < 0.1
+        && Vector2D(robots[robot2].linearSpeedX, robots[robot2].linearSpeedY).length() < 0.1) {
+        TESTOUTPUT(fout << "robot" << robot1 << " and robot" << robot2 << " 卡死了" << std::endl;)
+        isRobotStop = true;
+        // std::swap(robot1, robot2);
+    }
     // 给 robot1/robot2 的路径打标签
     std::set<Vector2D> *robot1PathPoints = getPathLabel(robots[robot1].pathPoints, robot1);
     std::set<Vector2D> *robot2PathPoints = getPathLabel(robots[robot2].pathPoints, robot2);
@@ -937,6 +947,11 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
         std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
         for (auto & add : adds) {
             robot1Points->insert(Vector2D(nowx + add.first, nowy + add.second));
+            if (isRobotStop) {
+                for (auto & add2 : adds) {
+                    robot1Points->insert(Vector2D(nowx + add.first + add2.first, nowy + add.second + add2.second));
+                }
+            }
         }
     }
     // 记录 robot2 现在的位置
@@ -946,16 +961,28 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
         std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
         for (auto & add : adds) {
             robot2Points->insert(Vector2D(nowx + add.first, nowy + add.second));
+            if (isRobotStop) {
+                for (auto & add2 : adds) {
+                    robot2Points->insert(Vector2D(nowx + add.first + add2.first, nowy + add.second + add2.second));
+                }
+            }
         }
     }
-    // 把robot1Points中的点加入到robot1PointsAll中
+    // 把 robot1Points 中的点加入到 robot1PointsAll 中
     {
         if (robot1PointsAll->size() == 0)
         for (auto & item : *robot1Points) {
             robot1PointsAll->insert(item);
         }
     }
-    // 把robot1PathPoints中的点加入到robot1PathPointsAll中
+    // 把 robot1Points 中的点加入到 robot1PathPoints 中
+    // 为了防止 robot1 起始点被删除了,两方过于相近,走了不该走的路
+    {
+        for (auto & item : *robot1Points) {
+            robot1PathPoints->insert(item);
+        }
+    }
+    // 把 robot1PathPoints 中的点加入到 robot1PathPointsAll 中
     {
         for (auto & item : *robot1PathPoints) {
             robot1PathPointsAll->insert(item);
