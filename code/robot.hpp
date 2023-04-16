@@ -34,10 +34,6 @@ struct Robot{
     double linearSpeedY; // 机器人的线速度Y
     double direction; // 机器人的方向
     int worktableTogo; // 机器人要去的工作台的 id
-    double collisionRotate; // 机器人为防止碰撞的旋转角度
-    double collisionSpeed; // 机器人为防止碰撞的线速度
-    int collisionSpeedTime; // 机器人为防止碰撞的调整速度的时间
-    int collisionRotateTime; // 机器人为防止碰撞的时间
     Path *path; // 机器人的路径
     std::vector<Vector2D> pathPoints; // 机器人的路径点
     int zeroTime = 0; // 机器人的零速度时间
@@ -56,8 +52,6 @@ struct Robot{
         linearSpeedX = 0;
         linearSpeedY = 0;
         direction = 0;
-        collisionSpeedTime = 0;
-        collisionRotateTime = 0;
         path = nullptr;
         zeroTime = 0;
     }
@@ -73,8 +67,6 @@ struct Robot{
         linearSpeedX = 0;
         linearSpeedY = 0;
         direction = 0;
-        collisionSpeedTime = 0;
-        collisionRotateTime = 0;
         path = nullptr;
         zeroTime = 0;
     }
@@ -96,8 +88,6 @@ struct Robot{
         // TESTOUTPUT(fout << "linearSpeedY: " << linearSpeedY << std::endl;)
         // TESTOUTPUT(fout << "direction: " << direction << std::endl;)
         // TESTOUTPUT(fout << "worktableTogo: " << worktableTogo << std::endl;)
-        // TESTOUTPUT(fout << "collisionRotate: " << collisionRotate << std::endl;)
-        // TESTOUTPUT(fout << "collisionSpeed: " << collisionSpeed << std::endl;)
         TESTOUTPUT(fout << "speed" << Vector2D(linearSpeedX, linearSpeedY).length() << std::endl;)
     }
     // 卖材料的函数
@@ -242,10 +232,6 @@ struct Robot{
             // 如果度数大于90°, 就先倒退转过去
             speed = -0.65;
         }
-        if (collisionSpeedTime > 0) {
-            collisionSpeedTime--;
-            speed = collisionSpeed;
-        }
         if (RoB == RED) {
             if (Vector2D(vec2[0], vec2[1]).length() < (bringId != 0 ? 1.6 : 1.1) && speed > 0) {
                 speed = Vector2D(vec2[0], vec2[1]).length() / (bringId != 0 ? 1.6 : 1.1) * MAX_SPEED;
@@ -281,10 +267,6 @@ struct Robot{
             } else {
                 rotate = rotate / absRotate * M_PI;
             }
-        }
-        if (collisionRotateTime > 0) {
-            collisionRotateTime--;
-            rotate = collisionRotate;
         }
         TESTOUTPUT(fout << "rotate " << id << " " << rotate << std::endl;)
         printf("rotate %d %lf\n", id, rotate);
