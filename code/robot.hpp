@@ -884,10 +884,10 @@ struct Robot{
 
 Robot robots[MAX_Robot_Num];
 
-std::set<Vector2D> *getPathLabel(std::vector<Vector2D> path, int id) {
+std::map<Vector2D, double> *getPathLabel(std::vector<Vector2D> path, int id) {
     std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
     path.insert(path.begin(), Vector2D(robots[id].x, robots[id].y));
-    std::set<Vector2D> *pathPoints = new std::set<Vector2D>();
+    std::map<Vector2D, double> *pathPoints = new std::map<Vector2D, double>();
     double sum = 0;
     for (auto from = path.begin(); from != path.end(); from++) {
         auto next = from + 1;
@@ -898,7 +898,7 @@ std::set<Vector2D> *getPathLabel(std::vector<Vector2D> path, int id) {
             double nowx = int(nextVec.x / 0.5) * 0.5 + 0.25;
             double nowy = int(nextVec.y / 0.5) * 0.5 + 0.25;
             for (auto & add : adds) {
-                pathPoints->insert(Vector2D(nowx + add.first, nowy + add.second));
+                pathPoints->insert(std::make_pair(Vector2D(nowx + add.first, nowy + add.second), sum));
             }
             sum += 0.25;
             if (sum > TOL_Collision) break;
@@ -908,7 +908,7 @@ std::set<Vector2D> *getPathLabel(std::vector<Vector2D> path, int id) {
     double nowx = int(path.rbegin()->x / 0.5) * 0.5 + 0.25;
     double nowy = int(path.rbegin()->y / 0.5) * 0.5 + 0.25;
     for (auto & add : adds) {
-        pathPoints->insert(Vector2D(nowx + add.first, nowy + add.second));
+        pathPoints->insert(std::make_pair(Vector2D(nowx + add.first, nowy + add.second), sum));
     }
     return pathPoints;
 }
@@ -927,18 +927,34 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
         // std::swap(robot1, robot2);
     }
     // 给 robot1/robot2 的路径打标签
-    std::set<Vector2D> *robot1PathPoints = getPathLabel(robots[robot1].pathPoints, robot1);
-    std::set<Vector2D> *robot2PathPoints = getPathLabel(robots[robot2].pathPoints, robot2);
-    bool isCollision = false;
+    std::map<Vector2D, double> *robot1PathPointsMap = getPathLabel(robots[robot1].pathPoints, robot1);
+    std::map<Vector2D, double> *robot2PathPointsMap = getPathLabel(robots[robot2].pathPoints, robot2);
+    int isCollision = 0;
+    double minCollisionLength2on1 = 1e9;
+    double minCollisionLength1on2 = 1e9;
     // 检测 robot1 的路径上是否有 robot2 的位置
-    for (auto & item : *robot2PathPoints) {
-        if (robot1PathPoints->find(item) != robot1PathPoints->end()) {
+    for (auto & item : *robot2PathPointsMap) {
+        if (robot1PathPointsMap->find(item.first) != robot1PathPointsMap->end()) {
             // 发生碰撞
-            isCollision = true;
-            break;
+            isCollision++;
+            minCollisionLength2on1 = std::min(minCollisionLength2on1, item.second);
         }
     }
-    if (isCollision == false) return;
+    // 检测碰撞点最近的距离
+    for (auto & item : *robot1PathPointsMap) {
+        if (robot2PathPointsMap->find(item.first) != robot2PathPointsMap->end()) {
+            minCollisionLength1on2 = std::min(minCollisionLength1on2, item.second);
+        }
+    }
+    if (isCollision < 2) return;
+    // 追逐情况
+    if (minCollisionLength2on1 > 1 || minCollisionLength1on2 > 1) return;    
+
+    std::set<Vector2D> *robot1PathPoints = new std::set<Vector2D>();
+    std::set<Vector2D> *robot2PathPoints = new std::set<Vector2D>();
+    for (auto & item : *robot1PathPointsMap) robot1PathPoints->insert(item.first);
+    for (auto & item : *robot2PathPointsMap) robot2PathPoints->insert(item.first);
+
     TESTOUTPUT(fout << "robot" << robot1 << " and robot" << robot2 << " 检测碰撞" << std::endl;)
     std::vector<Vector2D> erasedPoints, erasedPoints2;
     // 在robot1的路径上删除 robot2 开始的位置
