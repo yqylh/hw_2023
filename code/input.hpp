@@ -335,9 +335,11 @@ void inputMap(){
     if (line == std::string("BLUE")) {
         RoB = BLUE;
         MAX_SPEED = 6;
+        TOL_Collision = 4;
     } else {
         RoB = RED;
         MAX_SPEED = 7;
+        TOL_Collision = 5;
     }
     for (int i = 0; i < MAP_Line_Length; i++) {
         std::string line;
