@@ -749,15 +749,14 @@ struct Robot{
                 // 是墙
                 if (grids[next]->type == 1) continue;
                 // 是其他机器人的位置
-                // int cantGoFlag = 0;
-                // for (auto & add2 : adds) {
-                //     if (cantGo->find(next + Vector2D(add2.first, add2.second)) != cantGo->end()
-                //         || grids[next + Vector2D(add2.first, add2.second)]->type == 1) {
-                //         cantGoFlag++;
-                //     }
-                // }
-                // if (cantGoFlag > 0) continue;
-                if (cantGo->find(next) != cantGo->end()) continue;
+                int cantGoFlag = 0;
+                for (auto & add2 : adds) {
+                    if (cantGo->find(next + Vector2D(add2.first, add2.second)) != cantGo->end()) {
+                        cantGoFlag++;
+                    }
+                }
+                if (cantGoFlag > 2) continue;
+                // if (cantGo->find(next) != cantGo->end()) continue;
                 if (bringId == 0) {
                     // 不携带物品
                     // 可以碰两个角
@@ -925,7 +924,7 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
     }
     if (isCollision == false) return;
     TESTOUTPUT(fout << "robot" << robot1 << " and robot" << robot2 << " 检测碰撞" << std::endl;)
-    std::vector<Vector2D> erasedPoints;
+    std::vector<Vector2D> erasedPoints, erasedPoints2;
     // 在robot1的路径上删除 robot2 开始的位置
     {
         double nowx = int(robots[robot2].x / 0.5) * 0.5 + 0.25;
@@ -938,6 +937,18 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
             }
         }
     }
+    // 在robot2的路径上删除 robot1 开始的位置
+    {
+        double nowx = int(robots[robot1].x / 0.5) * 0.5 + 0.25;
+        double nowy = int(robots[robot1].y / 0.5) * 0.5 + 0.25;
+        std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
+        for (auto & add : adds) {
+            if (robot2PathPoints->find(Vector2D(nowx + add.first, nowy + add.second)) != robot2PathPoints->end()) {
+                robot2PathPoints->erase(Vector2D(nowx + add.first, nowy + add.second));
+                erasedPoints2.push_back(Vector2D(nowx + add.first, nowy + add.second));
+            }
+        }
+    }
     std::set<Vector2D> *robot1Points = new std::set<Vector2D>();
     std::set<Vector2D> *robot2Points = new std::set<Vector2D>();
     // 记录 robot1 现在的位置
@@ -947,11 +958,6 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
         std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
         for (auto & add : adds) {
             robot1Points->insert(Vector2D(nowx + add.first, nowy + add.second));
-            if (isRobotStop) {
-                for (auto & add2 : adds) {
-                    robot1Points->insert(Vector2D(nowx + add.first + add2.first, nowy + add.second + add2.second));
-                }
-            }
         }
     }
     // 记录 robot2 现在的位置
@@ -961,11 +967,6 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
         std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
         for (auto & add : adds) {
             robot2Points->insert(Vector2D(nowx + add.first, nowy + add.second));
-            if (isRobotStop) {
-                for (auto & add2 : adds) {
-                    robot2Points->insert(Vector2D(nowx + add.first + add2.first, nowy + add.second + add2.second));
-                }
-            }
         }
     }
     // 把 robot1Points 中的点加入到 robot1PointsAll 中
@@ -982,6 +983,13 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
             robot1PathPoints->insert(item);
         }
     }
+    // 把 robot2Points 中的点加入到 robot2PathPoints 中
+    // 为了防止 robot2 起始点被删除了,两方过于相近,走了不该走的路
+    {
+        for (auto & item : *robot2Points) {
+            robot2PathPoints->insert(item);
+        }
+    }
     // 把 robot1PathPoints 中的点加入到 robot1PathPointsAll 中
     {
         for (auto & item : *robot1PathPoints) {
@@ -995,11 +1003,18 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
         for (auto & item : erasedPoints) {
             robot1PathPointsAll->insert(item);
         }
+        for (auto & item : erasedPoints2) {
+            robot2PathPoints->insert(item);
+        }
         robots[robot2].findNullPath(robot1PointsAll, robot1PathPointsAll);
         if (robots[robot2].pathPoints[0] == Vector2D(0,0)) {
             TESTOUTPUT(fout << "robot" << robot2 << " 无法找到空路径" << std::endl;)
             robots[robot1].findNullPath(robot2Points, robot2PathPoints);
             robots[robot2].movePath();
+            if (robots[robot1].pathPoints[0] == Vector2D(0,0)) {
+                TESTOUTPUT(fout << "robot" << robot1 << " 也无法找到空路径" << std::endl;)
+                robots[robot1].pathPoints = robots[robot2].pathPoints;
+            }
         }
     } else {
         TESTOUTPUT(fout << "robot" << robot2 << " 已重新规划路径" << std::endl;)
@@ -1026,6 +1041,11 @@ void Robot::checkDead(){
         TESTOUTPUT(fout << "robotDead " << id << " " << nowTime << std::endl;)
         pathPoints = movePath();
         isWait = false;
+    }
+    if (zeroTime == 0) {
+        if (nowTime % 100 == 0) {
+            pathPoints = movePath();
+        }
     }
 }
 
