@@ -613,8 +613,17 @@ struct Robot{
                 if (fromWhere.find(next) != fromWhere.end()) continue;
                 // 是墙
                 if (grids[next]->type == 1) continue;
+                if (blocked != nullptr) {
+                    int cantGoFlag = 0;
+                    for (auto & add2 : adds) {
+                        if (blocked->find(next + Vector2D(add2.first, add2.second)) != blocked->end()) {
+                            cantGoFlag++;
+                        }
+                    }
+                    if (cantGoFlag > 2) continue;
+                }
                 // 是其他机器人的位置
-                if (blocked != nullptr && blocked->find(next) != blocked->end()) continue;
+                // if (blocked != nullptr && blocked->find(next) != blocked->end()) continue;
                 if (bringId == 0) {
                     // 不携带物品
                     // 可以碰两个角
