@@ -616,7 +616,8 @@ struct Robot{
                 if (blocked != nullptr) {
                     int cantGoFlag = 0;
                     for (auto & add2 : adds) {
-                        if (blocked->find(next + Vector2D(add2.first, add2.second)) != blocked->end()) {
+                        if (blocked->find(next + Vector2D(add2.first, add2.second)) != blocked->end()
+                            || grids[next + Vector2D(add2.first, add2.second)]->type == 1) {
                             cantGoFlag++;
                         }
                     }
@@ -760,7 +761,8 @@ struct Robot{
                 // 是其他机器人的位置
                 int cantGoFlag = 0;
                 for (auto & add2 : adds) {
-                    if (cantGo->find(next + Vector2D(add2.first, add2.second)) != cantGo->end()) {
+                    if (cantGo->find(next + Vector2D(add2.first, add2.second)) != cantGo->end()
+                        || grids[next + Vector2D(add2.first, add2.second)]->type == 1) {
                         cantGoFlag++;
                     }
                 }
@@ -1022,7 +1024,8 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
             robots[robot2].movePath();
             if (robots[robot1].pathPoints[0] == Vector2D(0,0)) {
                 TESTOUTPUT(fout << "robot" << robot1 << " 也无法找到空路径" << std::endl;)
-                robots[robot1].pathPoints = robots[robot2].pathPoints;
+                robots[robot1].pathPoints.clear();
+                robots[robot1].pathPoints.push_back(robots[robot2].pathPoints.back());
             }
         }
     } else {
@@ -1032,19 +1035,10 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
 
 
 void Robot::checkDead(){
-    if (isWait == false && pathPoints.size() == 0) return;
-    if (pathPoints[0] == Vector2D(0,0)) return;
     if (std::abs(Vector2D(linearSpeedX,linearSpeedY).length()) < 0.0001) {
         zeroTime++;
     } else {
         zeroTime = 0;
-    }
-    for (int i = 0; i <= robotNum; i++) {
-        if (i == id) continue;
-        // 碰撞
-        if (Vector2D(x - robots[i].x, y - robots[i].y).length() < 0.53 * 2 + 0.3) {
-            return;
-        }
     }
     if (zeroTime > 30) {
         TESTOUTPUT(fout << "robotDead " << id << " " << nowTime << std::endl;)
