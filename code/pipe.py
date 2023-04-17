@@ -17,7 +17,7 @@ def runMapRed(mapName, randomSeed):
     match = re.search(r'"score":\[(\d+),(\d+)\]', output.stdout.decode('utf-8'))
     return match.group(2)
 
-if os.system('g++ main.cpp -o main -std=c++17 -DEBUG -DCREATE -O3 -pthread') != 0:
+if os.system('g++ main.cpp -o main -std=c++17 -O3 -pthread') != 0:
     print("compiling failed")
     exit(0)
 print("compiling successfully")
