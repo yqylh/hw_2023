@@ -444,16 +444,55 @@ std::vector<std::pair<int, int>> getRobotPriority() {
             robotPriority.push_back(std::make_pair(i, 0));
             continue;
         }
+        if (robots[i].path == nullptr) {
+            robotPriority.push_back(std::make_pair(i, 0));
+            continue;
+        }
         auto type = worktables[gotoTable].type;
         if (robots[i].bringId == 0) {
-            if (type == 7) robotPriority.push_back(std::make_pair(i, 4));
-            if (type == 4 || type == 5 || type == 6) robotPriority.push_back(std::make_pair(i, 5));
-            if (type == 1 || type == 2 || type == 3) robotPriority.push_back(std::make_pair(i, 6));
+            if (type == 7) robotPriority.push_back(std::make_pair(i, 3));
+            if (type == 4 || type == 5 || type == 6) {
+                if (worktables[robots[i].path->sellWorktableId].type == 7 && worktables[robots[i].path->sellWorktableId].waitPriority == 5) {
+                    robotPriority.push_back(std::make_pair(i, 1));
+                } else robotPriority.push_back(std::make_pair(i, 5));
+            }
+            if (type == 1 || type == 2 || type == 3) {
+                if (worktables[robots[i].path->sellWorktableId].waitPriority == 4) {
+                    robotPriority.push_back(std::make_pair(i, 3));
+                } else robotPriority.push_back(std::make_pair(i, 6));
+            }
         } else {
             if (robots[i].bringId == 7) robotPriority.push_back(std::make_pair(i, 1));
-            if (robots[i].bringId == 4 || robots[i].bringId == 5 || robots[i].bringId == 6) robotPriority.push_back(std::make_pair(i, 2));
-            if (robots[i].bringId == 1 || robots[i].bringId == 2 || robots[i].bringId == 3) robotPriority.push_back(std::make_pair(i, 3));
+            if (robots[i].bringId == 4 || robots[i].bringId == 5 || robots[i].bringId == 6) {
+                if (worktables[robots[i].path->sellWorktableId].type == 7 && worktables[robots[i].path->sellWorktableId].waitPriority == 5) {
+                    robotPriority.push_back(std::make_pair(i, 1));
+                } else robotPriority.push_back(std::make_pair(i, 2));  
+            } 
+            if (robots[i].bringId == 1 || robots[i].bringId == 2 || robots[i].bringId == 3) {
+                if (worktables[robots[i].path->sellWorktableId].waitPriority == 4) {
+                    robotPriority.push_back(std::make_pair(i, 2));
+                } else robotPriority.push_back(std::make_pair(i, 4));
+            }
         }
+        // if (robots[i].bringId == 0) {
+        //     if (type == 7) {
+        //         robotPriority.push_back(std::make_pair(i, INT_MAX));
+        //     } else {
+        //         robotPriority.push_back(std::make_pair(i, nowTime - robots[i].runTime));
+        //         if (type == 4 || type == 5 || type == 6) {
+        //             robotPriority.back().second *= 1.2;
+        //         }
+        //     }
+        // } else {
+        //     if (robots[i].bringId == 7) {
+        //         robotPriority.push_back(std::make_pair(i, INT_MAX));
+        //     } else {
+        //         robotPriority.push_back(std::make_pair(i, nowTime - robots[i].runTime));
+        //         if (robots[i].bringId == 4 || robots[i].bringId == 5 || robots[i].bringId == 6) {
+        //             robotPriority.back().second *= 1.4;
+        //         }
+        //     }
+        // }
     }
     std::sort(robotPriority.begin(), robotPriority.end(), [](const std::pair<int, int> &a, const std::pair<int, int> &b) {
         if (a.second == b.second) {

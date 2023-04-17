@@ -40,6 +40,7 @@ struct Robot{
     bool isWait = false; // 机器人是否在等待
     std::vector<int> couldReach; // 机器人能够到达的工作台
     double lasers[360]; // 机器人的激光雷达
+    int runTime; // 机器人的运行时间
     Robot() {
         this->id = -1;
         this->x = -1;
@@ -54,6 +55,7 @@ struct Robot{
         direction = 0;
         path = nullptr;
         zeroTime = 0;
+        runTime = 0;
     }
     Robot(int id, double x, double y) {
         this->id = id;
@@ -69,6 +71,7 @@ struct Robot{
         direction = 0;
         path = nullptr;
         zeroTime = 0;
+        runTime = 0;
     }
     void checkCanBuy() {
         if (bringId != 0) {
@@ -134,6 +137,7 @@ struct Robot{
             bringId = 0;
             path = nullptr;
             worktableTogo = -1;
+            runTime = nowTime;
         }
     }
     // 买商品的函数
@@ -156,6 +160,7 @@ struct Robot{
             }
             worktableTogo = path->sellWorktableId;
             pathPoints = movePath();
+            runTime = nowTime;
         }
     }
 
