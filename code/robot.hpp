@@ -1063,7 +1063,7 @@ void Robot::checkDead(){
     } else {
         zeroTime = 0;
     }
-    if (zeroTime > 30) {
+    if (zeroTime > 10) {
         TESTOUTPUT(fout << "robotDead " << id << " " << nowTime << std::endl;)
         pathPoints = movePath();
         isWait = false;
