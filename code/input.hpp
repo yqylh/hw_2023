@@ -339,7 +339,7 @@ void inputMap(){
     } else {
         RoB = RED;
         MAX_SPEED = 7;
-        TOL_Collision = 5;
+        TOL_Collision = 6;
     }
     for (int i = 0; i < MAP_Line_Length; i++) {
         std::string line;
