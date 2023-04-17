@@ -1046,7 +1046,7 @@ void Robot::checkDead(){
         isWait = false;
     }
     if (zeroTime == 0) {
-        if (nowTime % 100 == 0) {
+        if (nowTime % 100 == id * 10) {
             pathPoints = movePath();
         }
     }
