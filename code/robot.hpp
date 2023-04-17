@@ -948,7 +948,11 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
     }
     if (isCollision < 2) return;
     // 追逐情况
-    if (minCollisionLength2on1 > 1 || minCollisionLength1on2 > 1) return;    
+    if (RoB == RED) {
+        if (minCollisionLength2on1 > 1.2 || minCollisionLength1on2 > 1.2) return;    
+    } else {
+        if (minCollisionLength2on1 > 1 || minCollisionLength1on2 > 1) return;    
+    }
 
     std::set<Vector2D> *robot1PathPoints = new std::set<Vector2D>();
     std::set<Vector2D> *robot2PathPoints = new std::set<Vector2D>();
