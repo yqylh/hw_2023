@@ -145,3 +145,25 @@ scoresBlueMap1Avg= 397425.125
 scoresRedMap1Avg= 401196.6875
 scoresBlueMap2Avg= 363470.34375
 scoresRedMap2Avg= 642928.0
+----------------------------------------
+增加短距离避免碰撞
+scoresBlueMap1Avg= 401461.53125
+scoresRedMap1Avg= 392022.5
+scoresBlueMap2Avg= 339403.46875
+scoresRedMap2Avg= 698530.3125
+避免最后还买了 7
+scoresBlueMap1Avg= 408123.875
+scoresRedMap1Avg= 391798.625
+scoresBlueMap2Avg= 370334.8125
+scoresRedMap2Avg= 696865.125
+----------------------------------------
+只做最后的避免买卖
+scoresBlueMap1Avg= 400818.90625
+scoresRedMap1Avg= 399702.375
+scoresBlueMap2Avg= 362811.0
+scoresRedMap2Avg= 648728.0
+相近距离0.8
+scoresBlueMap1Avg= 399103.3125
+scoresRedMap1Avg= 403800.5625
+scoresBlueMap2Avg= 354114.96875
+scoresRedMap2Avg= 669765.375

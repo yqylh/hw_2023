@@ -152,6 +152,18 @@ struct Robot{
         // 机器人正在工作台附近
         if (worktables[worktableId].output == true && money >= buyMoneyMap[createMap[worktables[worktableId].type]]) {
             // 如果买了卖不出去
+            {
+                // 如果因为碰撞到了这里发现买了卖不出去了
+                // 就直接去下个点吧,只不过不买
+                double goSellTime = WTtoWTwithItem[path->buyWorktableId][path->sellWorktableId];
+                goSellTime = goSellTime * 0.65 / (MAX_SPEED * 0.9 / 50);
+                if (goSellTime + nowTime > MAX_TIME) {
+                    worktables[worktableId].someWillBuy--;
+                    worktableTogo = path->sellWorktableId;
+                    pathPoints = movePath();
+                    return;
+                }
+            }
             TESTOUTPUT(fout << "buy " << id << std::endl;)
             printf("buy %d\n", id);
             bringId = createMap[worktables[worktableId].type];
@@ -966,6 +978,7 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
     } else {
         if (minCollisionLength2on1 > 1 || minCollisionLength1on2 > 1) return;    
     }
+    if (std::abs(minCollisionLength2on1 - minCollisionLength1on2) > 0.8) return;
 
     std::set<Vector2D> *robot1PathPoints = new std::set<Vector2D>();
     std::set<Vector2D> *robot2PathPoints = new std::set<Vector2D>();
