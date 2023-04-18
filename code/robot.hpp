@@ -41,6 +41,7 @@ struct Robot{
     std::vector<int> couldReach; // 机器人能够到达的工作台
     double lasers[360]; // 机器人的激光雷达
     int runTime; // 机器人的运行时间
+    bool isGanking; // 机器人是否正在干扰
     Robot() {
         this->id = -1;
         this->x = -1;
@@ -56,6 +57,7 @@ struct Robot{
         path = nullptr;
         zeroTime = 0;
         runTime = 0;
+        isGanking = false;
     }
     Robot(int id, double x, double y) {
         this->id = id;
@@ -72,6 +74,7 @@ struct Robot{
         path = nullptr;
         zeroTime = 0;
         runTime = 0;
+        isGanking = false;
     }
     void checkCanBuy() {
         if (bringId != 0) {
@@ -611,8 +614,13 @@ struct Robot{
      * 通过 BFS 实现
      * 返回值应该是一个n个点的坐标的数组
     */
-    std::vector<Vector2D> movePath(std::set<Vector2D> *blocked = nullptr){
-        Vector2D to(worktables[worktableTogo].x, worktables[worktableTogo].y);
+    std::vector<Vector2D> movePath(std::set<Vector2D> *blocked = nullptr, Vector2D *Point = nullptr){
+        Vector2D to;
+        if (Point != nullptr) {
+            to = *Point;
+        } else {
+            to = Vector2D(worktables[worktableTogo].x, worktables[worktableTogo].y);
+        }
         std::vector<Vector2D> path;
         std::map<Vector2D, Vector2D> fromWhere;
         std::queue<Vector2D> q;
@@ -907,6 +915,26 @@ struct Robot{
         CREATEMAP(mapOut << std::endl;)
         if (path.size() > 2) path = DodgingCorners(path);
         pathPoints = path;
+    }
+    void moveToPoint(Vector2D point){
+        if (pathPoints.size() == 0)
+        pathPoints = movePath(nullptr, &point);
+    }
+    void moveToFoeWT(int wtId) {
+        moveToPoint(Vector2D(worktablesFoe[wtId].x, worktablesFoe[wtId].y));
+        return;
+    }
+    void moveToWT(int wtId) {
+        moveToPoint(Vector2D(worktables[wtId].x, worktables[wtId].y));
+        return;
+    }
+    void buyOne(int wtId) {
+        if (worktableId == wtId) {
+            TESTOUTPUT(fout << "buy " << id << std::endl;)
+            printf("buy %d\n", id);
+            return;
+        }
+        if (pathPoints.size() == 0) moveToWT(wtId);
     }
 };
 
