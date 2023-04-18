@@ -63,6 +63,7 @@ std::map<int, int> buyPrioriryMap{
 double WTtoWT[MAX_Worktable_Num][MAX_Worktable_Num] = {-1}; // 不带物品工作台到工作台的距离
 double WTtoWTwithItem[MAX_Worktable_Num][MAX_Worktable_Num] = {-1}; // 带物品工作台到工作台的距离
 double RobotToWT[MAX_Robot_Num][MAX_Worktable_Num] = {-1}; // 机器人到工作台的距离
+int haveCreateNum[8] = {0}; // 工作台已经生产的物品数量
 
 int robotNum = -1; // 当前机器人标号,实际数量-1, 0-robotNum
 int worktableNum = -1; // 当前工作台标号,实际数量-1, 0-worktableNum

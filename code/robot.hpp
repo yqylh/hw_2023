@@ -134,6 +134,9 @@ struct Robot{
                 }
             }
             worktables[worktableId].someWillSell[bringId]--;
+            if (worktables[worktableId].near7 != 1) {
+                haveCreateNum[worktables[worktableId].type]++;
+            }
             bringId = 0;
             path = nullptr;
             worktableTogo = -1;
@@ -398,6 +401,13 @@ struct Robot{
                 if (canBuy[sell.type] > 0 && (sell.type == 4 || sell.type == 5 || sell.type == 6) && sell.near7 != 1) {
                     // TESTOUTPUT(fout << "canBuy " << sell.type << std::endl;)
                     earnMoney *= 1.2;
+                }
+                // 动态调度三种 456 的生产
+                if (sell.near7 != 1 && (sell.type >= 4 && sell.type <= 6)
+                    && haveCreateNum[4] >= haveCreateNum[sell.type] 
+                    && haveCreateNum[5] >= haveCreateNum[sell.type] 
+                    && haveCreateNum[6] >= haveCreateNum[sell.type]) {
+                    earnMoney *= 2;
                 }
                 Path * path = new Path(buy.id, sell.id, id, earnMoney, sumTime);
                 if ((productId == 4 || productId == 5 || productId == 6 || productId == 7) && ((buy.remainTime == 0 && buy.someWillBuy == 0) || (buy.remainTime < goBuyTime && buy.output == true && buy.someWillBuy == 0))) {
@@ -765,13 +775,16 @@ struct Robot{
                 if (grids[next]->type == 1) continue;
                 // 是其他机器人的位置
                 int cantGoFlag = 0;
+                std::vector<Vector2D> obstacles;
                 for (auto & add2 : adds) {
                     if (cantGo->find(next + Vector2D(add2.first, add2.second)) != cantGo->end()
                         || grids[next + Vector2D(add2.first, add2.second)]->type == 1) {
                         cantGoFlag++;
+                        obstacles.push_back(next + Vector2D(add2.first, add2.second));
                     }
                 }
                 if (cantGoFlag > 2) continue;
+                if (cantGoFlag == 2 && (obstacles[0] - obstacles[1]).length() < (bringId == 0 ? 0.45 : 0.53)) continue;
                 // if (cantGo->find(next) != cantGo->end()) continue;
                 if (bringId == 0) {
                     // 不携带物品

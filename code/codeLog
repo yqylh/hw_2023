@@ -133,8 +133,15 @@ scoresBlueMap1Avg= 409437.84375
 scoresRedMap1Avg= 385021.15625
 scoresBlueMap2Avg= 405321.5
 scoresRedMap2Avg= 656957.0
-最后允许卖一个 7  50hz
-scoresBlueMap1Avg= 401220.75
-scoresRedMap1Avg= 389035.96875
-scoresBlueMap2Avg= 401421.5
-scoresRedMap2Avg= 655737.0
+----------------------------------------
+✅456 的生产需要统一调度，现在的容易 56 卡死 4 没生产
+记录 456 生产过多少次，可以用原材料数量记录
+scoresBlueMap1Avg= 391890.84375
+scoresRedMap1Avg= 403241.53125
+scoresBlueMap2Avg= 247242.0
+scoresRedMap2Avg= 692676.0
+fix bug 1
+scoresBlueMap1Avg= 397425.125
+scoresRedMap1Avg= 401196.6875
+scoresBlueMap2Avg= 363470.34375
+scoresRedMap2Avg= 642928.0
