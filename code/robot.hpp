@@ -252,7 +252,7 @@ struct Robot{
         if (RoB == RED) {
             if (Vector2D(vec2[0], vec2[1]).length() < (bringId != 0 ? 1.6 : 1.1) && speed > 0) {
                 speed = Vector2D(vec2[0], vec2[1]).length() / (bringId != 0 ? 1.6 : 1.1) * MAX_SPEED;
-                if (bringId != 0) {
+                if (bringId != 0 && crashCoef > 0.92) { // 最多碰撞到 0.88
                     if (speed < 1) 
                         speed = 1;
                 } else {
@@ -263,7 +263,7 @@ struct Robot{
         } else {
             if (Vector2D(vec2[0], vec2[1]).length() < (bringId == 0 ? 1.4 : 1.1) && speed > 0) {
                 speed = Vector2D(vec2[0], vec2[1]).length() / 1.1 * MAX_SPEED;
-                if (bringId != 0) {
+                if (bringId != 0 && crashCoef > 0.85) { // 最多碰撞到 0.8
                     if (speed < 1) speed = 1;
                 } else {
                     if (speed < 3) speed = 3;
