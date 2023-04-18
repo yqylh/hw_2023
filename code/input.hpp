@@ -366,8 +366,12 @@ void inputMap(){
                 } else if (line[j] == 'B') {
                     // B 表示对方的机器人 红色
                     // todo
+                    robotNumFoe++;
+                    robotsFoe[robotNumFoe] = Robot(robotNumFoe, x,y);
                 } else if (line[j] >= 'a' && line[j] <= 'i') {
                     // 对方工作台 红色
+                    worktableNumFoe++;
+                    worktablesFoe[worktableNumFoe] = Worktable(worktableNumFoe, x,y, char(line[j]) - 'a' + 1);
                 } else if (line[j] >= '0' && line[j] <= '9') {
                     // 自己的工作台 蓝色
                     worktableNum++;
@@ -378,6 +382,8 @@ void inputMap(){
                 if (line[j] == 'A') {
                     // A 表示对方的机器人 蓝色
                     // todo
+                    robotNumFoe++;
+                    robotsFoe[robotNumFoe] = Robot(robotNumFoe, x,y);
                 } else if (line[j] == 'B') {
                     // B 表示自己的机器人 红色
                     robotNum++;
@@ -388,6 +394,8 @@ void inputMap(){
                     worktables[worktableNum] = Worktable(worktableNum, x,y, char(line[j]) - 'a' + 1);
                 } else if (line[j] >= '0' && line[j] <= '9') {
                     // 对方工作台 红色
+                    worktableNumFoe++;
+                    worktablesFoe[worktableNumFoe] = Worktable(worktableNumFoe, x,y, char(line[j]) - '0');
                 } else throw;
             }
         }
@@ -397,6 +405,12 @@ void inputMap(){
     solveWorktableToWorktable();
     solveGraph();
     solveRobotToWorktable();
+    for (auto & robot : robotsFoe) {
+        TESTOUTPUT(fout << "robot " << robot.id << " (" << robot.x << "," << robot.y << ") " << std::endl);
+    }
+    for (auto & wt : worktablesFoe) {
+        TESTOUTPUT(fout << "worktable " << wt.id << " (" << wt.x << "," << wt.y << ") " << " type=" << wt.type << std::endl);
+    }
     puts("OK");
     fflush(stdout);
 }

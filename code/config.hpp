@@ -66,7 +66,9 @@ double RobotToWT[MAX_Robot_Num][MAX_Worktable_Num] = {-1}; // 机器人到工作
 int haveCreateNum[8] = {0}; // 工作台已经生产的物品数量
 
 int robotNum = -1; // 当前机器人标号,实际数量-1, 0-robotNum
+int robotNumFoe = -1; // 对方机器人标号,实际数量-1, 0-robotNumFoe
 int worktableNum = -1; // 当前工作台标号,实际数量-1, 0-worktableNum
+int worktableNumFoe = -1; // 对方工作台标号,实际数量-1, 0-worktableNumFoe
 int money = 0; // 当前金钱
 int nowTime = 0; // 当前帧数
 int lossCollMoney = 0; // 当前损失的金钱

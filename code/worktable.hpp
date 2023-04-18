@@ -106,5 +106,6 @@ struct Worktable{
     }
 };
 Worktable worktables[MAX_Worktable_Num];
+Worktable worktablesFoe[MAX_Worktable_Num];
 
 #endif

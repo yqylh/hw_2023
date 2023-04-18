@@ -911,6 +911,7 @@ struct Robot{
 };
 
 Robot robots[MAX_Robot_Num];
+Robot robotsFoe[MAX_Robot_Num];
 
 std::map<Vector2D, double> *getPathLabel(std::vector<Vector2D> path, int id) {
     std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
