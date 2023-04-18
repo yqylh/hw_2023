@@ -337,10 +337,10 @@ struct Robot{
             }
             if (goBuyTime > 1e6) continue;
             goBuyTime = goBuyTime * 0.65 / (MAX_SPEED * 0.9 / 50);
-            // 如果等待时间比路程时间长,就不用买了
-            if (goBuyTime < waitBuyTime) continue;
             // 购买的产品
             int productId = createMap[buy.type];
+            // 如果等待时间比路程时间长,就不用买了
+            if (goBuyTime + ((productId == 7 && nowTime > MAX_TIME * 0.9) == true ? 30 : 0) < waitBuyTime) continue;
             for (auto & sell : worktables) {
                 if (sell.id == -1) break;
                 bool couldReachFlag = false;
@@ -515,7 +515,7 @@ struct Robot{
                 for (auto & item : grids[p1]->obstacles) {
                     if ((item - p1).length() < 0.45) {
                         auto delta = p1 - item;
-                        double ratio = 0.53 / 0.25;
+                        double ratio = 0.56 / 0.25;
                         // double ratio = 0.5 / delta.length();
                         // if (num == 0) {
                             p2 = item + delta * ratio;
@@ -533,9 +533,9 @@ struct Robot{
                         auto deltaLastToNow = p1 - lastPoint;
                         double ratio;
                         if ( !(lastPoint == p1) && deltaLastToNow.angle(delta) < M_PI / 2) {
-                            ratio = 0.79;
+                            ratio = 0.81;
                         } else {
-                            ratio = 0.72;
+                            ratio = 0.74;
                         }
                         p2 = item - delta / delta.length() * ratio;
                         // auto delta = p1 - item;
