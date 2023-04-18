@@ -23,7 +23,7 @@ void solveGraph() {
             double dis = 1e8;
             for (auto & j : worktables) {
                 if (j.type == 8 || j.type == 9) {
-                    dis = std::min(dis, WTtoWT[i.id][j.id]);
+                    dis = std::min(dis, WTtoWTwithItem[i.id][j.id]);
                 }
             }
             near7.push_back(std::make_pair(i.id, dis));
@@ -36,7 +36,7 @@ void solveGraph() {
                 double dis = 1e8;
                 for (auto & j : worktables) {
                     if (j.type == 9) {
-                        dis = std::min(dis, WTtoWT[i.id][j.id]);
+                        dis = std::min(dis, WTtoWTwithItem[i.id][j.id]);
                     }
                 }
                 near7.push_back(std::make_pair(i.id, dis));
@@ -61,11 +61,11 @@ void solveGraph() {
             std::vector<std::pair<int, double> > near1, near2;
             for (auto & i : worktables) {
                 if (i.type == 1 && i.near7 == 1) {
-                    double dis = WTtoWT[i.id][id7];
+                    double dis = WTtoWTwithItem[i.id][id7];
                     near1.push_back(std::make_pair(i.id, dis));
                 }
                 if (i.type == 2 && i.near7 == 1) {
-                    double dis = WTtoWT[i.id][id7];
+                    double dis = WTtoWTwithItem[i.id][id7];
                     near2.push_back(std::make_pair(i.id, dis));
                 }
             }
@@ -106,15 +106,15 @@ void solveGraph() {
         std::vector<std::pair<int, double> > near4, near5, near6;
         for (auto & i : worktables) {
             if (i.type == 4 && i.near7 == 1) {
-                double dis = WTtoWT[i.id][id7];
+                double dis = WTtoWTwithItem[i.id][id7];
                 near4.push_back(std::make_pair(i.id, dis));
             }
             if (i.type == 5 && i.near7 == 1) {
-                double dis = WTtoWT[i.id][id7];
+                double dis = WTtoWTwithItem[i.id][id7];
                 near5.push_back(std::make_pair(i.id, dis));
             }
             if (i.type == 6 && i.near7 == 1) {
-                double dis = WTtoWT[i.id][id7];
+                double dis = WTtoWTwithItem[i.id][id7];
                 near6.push_back(std::make_pair(i.id, dis));
             }
         }

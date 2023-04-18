@@ -388,7 +388,7 @@ struct Robot{
                 if (sell.type == 9) earnMoney = earnMoney * 0.6;
                 earnMoney *= buy.near7;
                 earnMoney *= sell.near7;
-                if (sell.waitPriority == 5) {
+                if (sell.waitPriority == 5 && sell.near7 != 1) {
                     earnMoney *= 2;
                 }
                 if (buy.isNearCorner) {
@@ -425,7 +425,7 @@ struct Robot{
         std::sort(paths4567.begin(), paths4567.end(), [](Path * a, Path * b) {
             return a->parameters > b->parameters;
         });
-        if (paths4567.size() > 0 && (paths.size() == 0 || paths4567[0]->parameters > paths[0]->parameters * 0.95)) {
+        if (paths4567.size() > 0 && (paths.size() == 0 || paths4567[0]->parameters > paths[0]->parameters * 0.8)) {
             path = paths4567[0];
         } else {
             path = paths[0];

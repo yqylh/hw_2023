@@ -86,13 +86,31 @@ scoresBlueMap1Avg= 366619.65625
 scoresRedMap1Avg= 348767.78125
 scoresBlueMap2Avg= 413569.0
 scoresRedMap2Avg= 705325.0
-追逐距离1 红 6 蓝 4  10帧卡死刷新    红色1.2追逐距离 蓝色1追逐距离
-scoresBlueMap1Avg= 366302.9375
-scoresRedMap1Avg= 351966.9375
-scoresBlueMap2Avg= 413569.0
-scoresRedMap2Avg= 705325.0
 追逐距离1 红 6 蓝 4  10帧卡死刷新    红色1.2追逐距离  蓝色0.9追逐距离
 scoresBlueMap1Avg= 365807.1875
 scoresRedMap1Avg= 350472.15625
 scoresBlueMap2Avg= 416103.28125
 scoresRedMap2Avg= 704426.9375
+追逐距离1 红 6 蓝 4  10帧卡死刷新    红色1.2追逐距离 蓝色1追逐距离
+scoresBlueMap1Avg= 366302.9375
+scoresRedMap1Avg= 351966.9375
+scoresBlueMap2Avg= 413569.0
+scoresRedMap2Avg= 705325.0
+----------------------------------------
+0.9
+scoresBlueMap1Avg= 366986.03125
+scoresRedMap1Avg= 352793.625
+scoresBlueMap2Avg= 413569.0
+scoresRedMap2Avg= 704677.40625
+
+0.8
+scoresBlueMap1Avg= 366182.84375
+scoresRedMap1Avg= 350767.4375
+scoresBlueMap2Avg= 413569.0
+scoresRedMap2Avg= 702045.53125
+----------------------------------------
+修改最优化工作台的参数,提高图 1 成绩
+scoresBlueMap1Avg= 383068.21875
+scoresRedMap1Avg= 365659.65625
+scoresBlueMap2Avg= 413569.0
+scoresRedMap2Avg= 705325.0
