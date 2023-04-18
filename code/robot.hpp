@@ -134,9 +134,6 @@ struct Robot{
                 }
             }
             worktables[worktableId].someWillSell[bringId]--;
-            if (worktables[worktableId].near7 != 1) {
-                haveCreateNum[worktables[worktableId].type]++;
-            }
             bringId = 0;
             path = nullptr;
             worktableTogo = -1;
@@ -415,7 +412,7 @@ struct Robot{
                     earnMoney *= 1.2;
                 }
                 // 动态调度三种 456 的生产
-                if (sell.near7 != 1 && (sell.type >= 4 && sell.type <= 6)
+                if (sell.near7 > 1 && (sell.type >= 4 && sell.type <= 6)
                     && haveCreateNum[4] >= haveCreateNum[sell.type] 
                     && haveCreateNum[5] >= haveCreateNum[sell.type] 
                     && haveCreateNum[6] >= haveCreateNum[sell.type]) {
@@ -454,6 +451,9 @@ struct Robot{
         }
         TESTOUTPUT(fout << "robot" << id << " find path " << path->buyWorktableId << " " << path->sellWorktableId << std::endl;)
         worktableTogo = path->buyWorktableId;
+        if (worktables[worktableTogo].near7 > 1 && (worktables[worktableTogo].type >= 4 && worktables[worktableTogo].type <= 6)) {
+            haveCreateNum[worktables[worktableTogo].type]++;
+        }
         pathPoints = movePath();
         worktables[path->buyWorktableId].someWillBuy++;
         worktables[path->sellWorktableId].someWillSell[createMap[worktables[path->buyWorktableId].type]]++;
@@ -642,13 +642,16 @@ struct Robot{
                 if (grids[next]->type == 1) continue;
                 if (blocked != nullptr) {
                     int cantGoFlag = 0;
+                    std::vector<Vector2D> obstacles;
                     for (auto & add2 : adds) {
                         if (blocked->find(next + Vector2D(add2.first, add2.second)) != blocked->end()
                             || grids[next + Vector2D(add2.first, add2.second)]->type == 1) {
                             cantGoFlag++;
+                            obstacles.push_back(next + Vector2D(add2.first, add2.second));
                         }
                     }
                     if (cantGoFlag > 2) continue;
+                    if (cantGoFlag == 2 && (obstacles[0] - obstacles[1]).length() < (bringId == 0 ? 0.45 : 0.53)) continue;
                 }
                 // 是其他机器人的位置
                 // if (blocked != nullptr && blocked->find(next) != blocked->end()) continue;
