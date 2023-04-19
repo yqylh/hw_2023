@@ -3,6 +3,7 @@
 #include "config.hpp"
 #include "robot.hpp"
 #include "worktable.hpp"
+#include "radar.hpp"
 #include "grid.hpp"
 #include <fstream>
 #include <set>
@@ -445,6 +446,9 @@ void inputMap(){
     fflush(stdout);
 }
 
+
+std::vector<std::vector<double>> lastEnemyRobotPoint;
+std::vector<int> lastEnemyRobotCarry;
 bool inputFrame() {
     if (scanf("%d%d",&nowTime, &money ) == EOF) {
         return false;
@@ -473,15 +477,87 @@ bool inputFrame() {
     for (int i = 0; i <= robotNum; i++) {
         scanf("%d%d%lf%lf%lf%lf%lf%lf%lf%lf", &robots[i].worktableId, &robots[i].bringId, &robots[i].timeCoef, &robots[i].crashCoef, &robots[i].angularSeppd, &robots[i].linearSpeedX, &robots[i].linearSpeedY, &robots[i].direction, &robots[i].x, &robots[i].y);
     }
+
+    std::vector<std::vector<double>> enemyRobotPoint;
+    std::vector<int> enemyRobotCarry;
+    std::vector<std::vector<double>> enemyRobotVelocity;
+
     for (int i = 0; i <= robotNum; i++) {
+        std::vector<double> laser;
         for (int j = 0; j < 360; j++) {
             scanf("%lf", &robots[i].lasers[j]);
+            laser.push_back(robots[i].lasers[j]);
+        }
+
+        double nowRobotX = robots[i].x;
+        double nowRobotY = robots[i].y;
+        double nowRobotDirection = robots[i].direction;
+        std::vector<std::vector< double>> robotPoint;
+        std::vector<int> robotCarry;
+        robotPoint.clear();
+        robotCarry.clear();
+        Radar radar(nowRobotX, nowRobotY, nowRobotDirection, laser);
+        radar.searchRobot(robotPoint, robotCarry);
+
+        if (robotPoint.size() > 0) {
+            // LOGGER_RADAR("nowTime=" << nowTime << "robotId=" << i);
+            int robotPointCnt = 0;
+            for (auto &point : robotPoint) {
+                robotPointCnt++;
+                // LOGGER_RADAR(point[0] << " " << point[1]);
+                bool skip = false;
+                for (int j = 0; j <= robotNum; j++) {
+                    if (j == i) continue;
+                    if (EQUAL(robots[j].x, point[0], 1e-1) and EQUAL(robots[j].y, point[1], 1e-1)) {
+                        skip = true; // is our robots
+                        break;
+                    }
+                }
+                if (skip) continue;
+                for (auto & enemyPoints : enemyRobotPoint) {
+                    if (EQUAL(enemyPoints[0], point[0], 1e-2) and EQUAL(enemyPoints[1], point[1], 1e-2)) {
+                        skip = true; // have been calculated
+                        break;
+                    }
+                }
+                if (skip) continue;
+                enemyRobotPoint.push_back(point);
+                enemyRobotCarry.push_back(robotCarry[robotPointCnt - 1]);
+            }
         }
     }
+
+    LOGGER_RADAR("nowTime=" << nowTime << " enemyRobotPoint.size()=" << enemyRobotPoint.size());
+    for (int i = 0; i < enemyRobotPoint.size(); i++) {
+        LOGGER_RADAR("enemyRobotPoint[" << i << "]=" << enemyRobotPoint[i][0] << " " << enemyRobotPoint[i][1] << " " << enemyRobotCarry[i]);
+    }
+
+    for (int i = 0; i < lastEnemyRobotPoint.size(); i++) {
+        bool foundInLastFrame = false;
+        for (int j = 0; j < enemyRobotPoint.size(); j++) {
+            if (EQUAL(lastEnemyRobotPoint[i][0], enemyRobotPoint[j][0], 0.4) and 
+                EQUAL(lastEnemyRobotPoint[i][1], enemyRobotPoint[j][1], 0.4)) {
+                // same enemy robot
+                foundInLastFrame = true;
+                double velocityX = enemyRobotPoint[j][0] - lastEnemyRobotPoint[i][0];
+                double velocityY = enemyRobotPoint[j][1] - lastEnemyRobotPoint[i][1];
+                enemyRobotVelocity.push_back({velocityX, velocityY});
+                break;
+            }
+        }
+        if (not foundInLastFrame) {
+            enemyRobotVelocity.push_back({0, 0});
+        }
+    }
+
+    lastEnemyRobotPoint = enemyRobotPoint;
+    lastEnemyRobotCarry = enemyRobotCarry;
+
     std::string line;
     while(getline(std::cin, line) && line != "OK");
     return true;
 }
+
 std::vector<std::pair<int, int>> getRobotPriority() {
     std::vector<std::pair<int, int>> robotPriority;
     for (int i = 0; i <= robotNum; i++) {

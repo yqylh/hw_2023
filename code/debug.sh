@@ -1,5 +1,5 @@
 rm ../judge-1/replay/*
-if g++ main.cpp -o main -std=c++17 -O3 -pthread -DEBUG -DCREATE; then
+if g++ main.cpp -o main -std=c++17 -O3 -pthread -DEBUG -DCREATE -DDEBUG_RADAR; then
     # 如果$2为1
     if [ $2 -eq 0 ]; then
         echo "map$mapNum :"
