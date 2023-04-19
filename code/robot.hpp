@@ -181,15 +181,13 @@ struct Robot{
 
 
     void Move() {
-        if (worktableTogo == -1 && isGanking == false) {
+        if (worktableTogo == -1) {
             pathPoints.push_back(Vector2D(worktables[1].x, worktables[1].y));
         }
         while (pathPoints.size() > 0 && (Vector2D(x, y) - pathPoints[0]).length() < 0.4) {
-            // 只有一个点,应该不删除
-            if (pathPoints.size() == 1) break;
             pathPoints.erase(pathPoints.begin());
         }
-        if (isWait == true && pathPoints.size() == 0) {
+        if (pathPoints.size() == 0) {
             TESTOUTPUT(fout << "forward " << id << " " << 0 << std::endl;)
             printf("forward %d %d\n", id, 0);
             TESTOUTPUT(fout << "rotate " << id << " " << 0 << std::endl;)
@@ -615,13 +613,8 @@ struct Robot{
      * 通过 BFS 实现
      * 返回值应该是一个n个点的坐标的数组
     */
-    std::vector<Vector2D> movePath(std::set<Vector2D> *blocked = nullptr, Vector2D *Point = nullptr){
-        Vector2D to;
-        if (Point != nullptr) {
-            to = *Point;
-        } else {
-            to = Vector2D(worktables[worktableTogo].x, worktables[worktableTogo].y);
-        }
+    std::vector<Vector2D> movePath(std::set<Vector2D> *blocked = nullptr){
+        Vector2D to(worktables[worktableTogo].x, worktables[worktableTogo].y);
         std::vector<Vector2D> path;
         std::map<Vector2D, Vector2D> fromWhere;
         std::queue<Vector2D> q;
@@ -944,15 +937,23 @@ struct Robot{
         pathPoints = path;
     }
     void moveToPoint(Vector2D point){
-        if (pathPoints.size() == 0){
-            if ((Vector2D(x, y)-point).length() > 0.3) {
-                pathPoints = movePath(nullptr, &point);
+        worktableTogo = worktableNum + 1 + id;
+        worktables[worktableTogo].x = point.x;
+        worktables[worktableTogo].y = point.y;
+        // 还没到
+        if ((Vector2D(x, y)-point).length() > 0.3) {
+            // 路径正确,检查是否死锁
+            if (pathPoints.size() > 0 && pathPoints.back() == point) {
+                checkDead();
             } else {
-                pathPoints.push_back(point);
+                // 路径空的或者路径错误,重新规划
+                pathPoints = movePath();
             }
+            isGanking = false;
         } else {
-            if (pathPoints.back() == point) {}
-            else pathPoints = movePath(nullptr, &point);
+            // 到了
+            pathPoints.push_back(point);
+            isGanking = true;
         }
     }
     void moveToFoeWT(int wtId) {
@@ -964,13 +965,12 @@ struct Robot{
         return;
     }
     void buyOne(int wtId) {
-        worktableTogo = wtId;
         if (worktableId == wtId) {
             TESTOUTPUT(fout << "buy " << id << std::endl;)
             printf("buy %d\n", id);
             return;
         }
-        if (pathPoints.size() == 0) moveToWT(wtId);
+        moveToWT(wtId);
     }
 };
 

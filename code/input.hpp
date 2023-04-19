@@ -570,7 +570,6 @@ void solveFrame() {
                 }
                 else {
                     robots[i].moveToFoeWT(8);
-                    robots[i].isGanking = true;
                 }
                 continue;
             }
@@ -580,7 +579,6 @@ void solveFrame() {
                 }
                 else {
                     robots[i].moveToFoeWT(12);
-                    robots[i].isGanking = true;
                 }
                 continue;
             }
@@ -588,19 +586,16 @@ void solveFrame() {
         if (gankType == 3) {
             if (i == 3) {
                 robots[i].moveToPoint(Vector2D(9.75, 25.75));
-                robots[i].isGanking = true;
                 continue;
             }
         }
         if (gankType == 4) {
             if (i == 2) {
                 robots[i].moveToPoint(Vector2D(37.25, 10.75));
-                robots[i].isGanking = true;
                 continue;
             }
             if (i == 3) {
                 robots[i].moveToPoint(Vector2D(38.25, 8.75));
-                robots[i].isGanking = true;
                 continue;
             }
         }
@@ -615,7 +610,6 @@ void solveFrame() {
             if (robots[robotPriority[robot1].first].isGanking) continue;
             if (robots[robotPriority[robot2].first].isGanking) continue;
             DetecteCollision(robotPriority[robot1].first, robotPriority[robot2].first, robot1PathPoints, robot1Points);
-            // DetecteCollision(robot1, robot2, robot1PathPoints, robot1Points);
         }
     }
     for (int i = 0; i <= robotNum; i++) {

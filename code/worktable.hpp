@@ -105,7 +105,7 @@ struct Worktable{
         // if (all == 7 || all == 1) this->waitPriority = 2;
     }
 };
-Worktable worktables[MAX_Worktable_Num];
+Worktable worktables[MAX_Worktable_Num + 5];
 Worktable worktablesFoe[MAX_Worktable_Num];
 
 #endif
