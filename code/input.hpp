@@ -499,12 +499,12 @@ std::vector<std::pair<int, int>> getRobotPriority() {
             if (type == 7) robotPriority.push_back(std::make_pair(i, 3));
             if (type == 4 || type == 5 || type == 6) {
                 if (worktables[robots[i].path->sellWorktableId].type == 7 && worktables[robots[i].path->sellWorktableId].waitPriority == 5) {
-                    robotPriority.push_back(std::make_pair(i, 1));
-                } else robotPriority.push_back(std::make_pair(i, 5));
+                    robotPriority.push_back(std::make_pair(i, 3));
+                } else robotPriority.push_back(std::make_pair(i, 4));
             }
             if (type == 1 || type == 2 || type == 3) {
                 if (worktables[robots[i].path->sellWorktableId].waitPriority == 4) {
-                    robotPriority.push_back(std::make_pair(i, 3));
+                    robotPriority.push_back(std::make_pair(i, 5));
                 } else robotPriority.push_back(std::make_pair(i, 6));
             }
         } else {
@@ -516,8 +516,8 @@ std::vector<std::pair<int, int>> getRobotPriority() {
             } 
             if (robots[i].bringId == 1 || robots[i].bringId == 2 || robots[i].bringId == 3) {
                 if (worktables[robots[i].path->sellWorktableId].waitPriority == 4) {
-                    robotPriority.push_back(std::make_pair(i, 2));
-                } else robotPriority.push_back(std::make_pair(i, 4));
+                    robotPriority.push_back(std::make_pair(i, 4));
+                } else robotPriority.push_back(std::make_pair(i, 5));
             }
         }
         // if (robots[i].bringId == 0) {
@@ -563,39 +563,39 @@ void solveFrame() {
         robots[i].checkCanBuy();
     }
     for (int i = 0; i <= robotNum; i++) {
-        if (gankType == 1 || gankType == 2) {
-            if (i == 2) {
-                if (robots[i].bringId == 0) robots[i].buyOne(5);
-                else robots[i].moveToFoeWT(8);
-                robots[i].isGanking = true;
-                continue;
-            }
-            if (i == 3) {
-                if (robots[i].bringId == 0) robots[i].buyOne(5);
-                else robots[i].moveToFoeWT(12);
-                robots[i].isGanking = true;
-                continue;
-            }
-        }
-        if (gankType == 3) {
-            if (i == 3) {
-                robots[i].moveToPoint(Vector2D(9.75, 25.75));
-                robots[i].isGanking = true;
-                continue;
-            }
-        }
-        if (gankType == 4) {
-            if (i == 2) {
-                robots[i].moveToPoint(Vector2D(37.25, 10.75));
-                robots[i].isGanking = true;
-                continue;
-            }
-            if (i == 3) {
-                robots[i].moveToPoint(Vector2D(38.25, 8.75));
-                robots[i].isGanking = true;
-                continue;
-            }
-        }
+        // if (gankType == 1 || gankType == 2) {
+        //     if (i == 2) {
+        //         if (robots[i].bringId == 0) robots[i].buyOne(5);
+        //         else robots[i].moveToFoeWT(8);
+        //         robots[i].isGanking = true;
+        //         continue;
+        //     }
+        //     if (i == 3) {
+        //         if (robots[i].bringId == 0) robots[i].buyOne(5);
+        //         else robots[i].moveToFoeWT(12);
+        //         robots[i].isGanking = true;
+        //         continue;
+        //     }
+        // }
+        // if (gankType == 3) {
+        //     if (i == 3) {
+        //         robots[i].moveToPoint(Vector2D(9.75, 25.75));
+        //         robots[i].isGanking = true;
+        //         continue;
+        //     }
+        // }
+        // if (gankType == 4) {
+        //     if (i == 2) {
+        //         robots[i].moveToPoint(Vector2D(37.25, 10.75));
+        //         robots[i].isGanking = true;
+        //         continue;
+        //     }
+        //     if (i == 3) {
+        //         robots[i].moveToPoint(Vector2D(38.25, 8.75));
+        //         robots[i].isGanking = true;
+        //         continue;
+        //     }
+        // }
         robots[i].action();
         // TESTOUTPUT(robots[i].outputTest();) 
     }

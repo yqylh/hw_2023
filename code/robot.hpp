@@ -640,6 +640,15 @@ struct Robot{
             q.pop();
             // 八个方向的移动
             std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
+            int nowCantGo = 0;
+            std::vector<Vector2D> obstaclesNow;
+            if (blocked != nullptr) for (auto & add2 : adds) {
+                if (blocked->find(now + Vector2D(add2.first, add2.second)) != blocked->end()
+                    || grids[now + Vector2D(add2.first, add2.second)]->type == 1) {
+                    nowCantGo++;
+                    obstaclesNow.push_back(now + Vector2D(add2.first, add2.second));
+                }
+            }
             for (auto &add : adds) {
                 // 移动后的位置
                 Vector2D next = now + Vector2D(add.first, add.second);
@@ -659,7 +668,11 @@ struct Robot{
                         }
                     }
                     if (cantGoFlag > 2) continue;
-                    if (cantGoFlag == 2 && (obstacles[0] - obstacles[1]).length() < (bringId == 0 ? 0.45 : 0.53)) continue;
+                    if (cantGoFlag == 2 && (obstacles[0] - obstacles[1]).length() > 0.5) continue;
+                    // 如果已经被卡了,只能往后走,不许往前走
+                    if ((nowCantGo == 2 && (obstaclesNow[0] - obstaclesNow[1]).length() > 0.5) || nowCantGo > 2) {
+                        if (Vector2D(add.first, add.second).angle(Vector2D(cos(direction), sin(direction))) < M_PI / 2) continue;
+                    }
                 }
                 // 是其他机器人的位置
                 // if (blocked != nullptr && blocked->find(next) != blocked->end()) continue;
@@ -788,6 +801,15 @@ struct Robot{
             q.pop();
             // 八个方向的移动
             std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
+            int nowCantGo = 0;
+            std::vector<Vector2D> obstaclesNow;
+            for (auto & add2 : adds) {
+                if (cantGo->find(now + Vector2D(add2.first, add2.second)) != cantGo->end()
+                    || grids[now + Vector2D(add2.first, add2.second)]->type == 1) {
+                    nowCantGo++;
+                    obstaclesNow.push_back(now + Vector2D(add2.first, add2.second));
+                }
+            }
             for (auto &add : adds) {
                 // 移动后的位置
                 Vector2D next = now + Vector2D(add.first, add.second);
@@ -807,7 +829,11 @@ struct Robot{
                     }
                 }
                 if (cantGoFlag > 2) continue;
-                if (cantGoFlag == 2 && (obstacles[0] - obstacles[1]).length() < (bringId == 0 ? 0.45 : 0.53)) continue;
+                if (cantGoFlag == 2 && (obstacles[0] - obstacles[1]).length() > 0.5) continue;
+                // 如果已经被卡了,只能往后走,不许往前走
+                if ((nowCantGo == 2 && (obstaclesNow[0] - obstaclesNow[1]).length() > 0.5) || nowCantGo > 2) {
+                    if (Vector2D(add.first, add.second).angle(Vector2D(cos(direction), sin(direction))) < M_PI / 2) continue;
+                }
                 // if (cantGo->find(next) != cantGo->end()) continue;
                 if (bringId == 0) {
                     // 不携带物品
