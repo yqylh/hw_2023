@@ -563,39 +563,39 @@ void solveFrame() {
         robots[i].checkCanBuy();
     }
     for (int i = 0; i <= robotNum; i++) {
-        // if (gankType == 1 || gankType == 2) {
-        //     if (i == 2) {
-        //         if (robots[i].bringId == 0) robots[i].buyOne(5);
-        //         else robots[i].moveToFoeWT(8);
-        //         robots[i].isGanking = true;
-        //         continue;
-        //     }
-        //     if (i == 3) {
-        //         if (robots[i].bringId == 0) robots[i].buyOne(5);
-        //         else robots[i].moveToFoeWT(12);
-        //         robots[i].isGanking = true;
-        //         continue;
-        //     }
-        // }
-        // if (gankType == 3) {
-        //     if (i == 3) {
-        //         robots[i].moveToPoint(Vector2D(9.75, 25.75));
-        //         robots[i].isGanking = true;
-        //         continue;
-        //     }
-        // }
-        // if (gankType == 4) {
-        //     if (i == 2) {
-        //         robots[i].moveToPoint(Vector2D(37.25, 10.75));
-        //         robots[i].isGanking = true;
-        //         continue;
-        //     }
-        //     if (i == 3) {
-        //         robots[i].moveToPoint(Vector2D(38.25, 8.75));
-        //         robots[i].isGanking = true;
-        //         continue;
-        //     }
-        // }
+        if (gankType == 1 || gankType == 2) {
+            if (i == 2) {
+                if (robots[i].bringId == 0) robots[i].buyOne(5);
+                else robots[i].moveToFoeWT(8);
+                robots[i].isGanking = true;
+                continue;
+            }
+            if (i == 3) {
+                if (robots[i].bringId == 0) robots[i].buyOne(5);
+                else robots[i].moveToFoeWT(12);
+                robots[i].isGanking = true;
+                continue;
+            }
+        }
+        if (gankType == 3) {
+            if (i == 3) {
+                robots[i].moveToPoint(Vector2D(9.75, 25.75));
+                robots[i].isGanking = true;
+                continue;
+            }
+        }
+        if (gankType == 4) {
+            if (i == 2) {
+                robots[i].moveToPoint(Vector2D(37.25, 10.75));
+                robots[i].isGanking = true;
+                continue;
+            }
+            if (i == 3) {
+                robots[i].moveToPoint(Vector2D(38.25, 8.75));
+                robots[i].isGanking = true;
+                continue;
+            }
+        }
         robots[i].action();
         // TESTOUTPUT(robots[i].outputTest();) 
     }

@@ -943,7 +943,7 @@ struct Robot{
         pathPoints = path;
     }
     void moveToPoint(Vector2D point){
-        if (pathPoints.size() == 0)
+        if (pathPoints.size() == 0 && (Vector2D(x, y)-point).length() > 0.3 )
         pathPoints = movePath(nullptr, &point);
     }
     void moveToFoeWT(int wtId) {
