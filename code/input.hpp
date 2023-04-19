@@ -94,15 +94,15 @@ void solveGraph() {
     std::sort(near7.begin(), near7.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
         return a.second < b.second;
     }); // 按照距离排序
-    // int index = 0;
+    int index = 0;
     for (auto & num7 : near7) {
         int id7 = num7.first;
-        // if (index < near7.size() * 0.5) {
-        //     worktables[id7].near7 = 4;
-        // } else {
-        //     break;
-        // }
-        worktables[id7].near7 = 4;
+        if (index++ < near7.size() / 2) {
+            worktables[id7].near7 = 4;
+        } else {
+            break;
+        }
+        // worktables[id7].near7 = 4;
         std::vector<std::pair<int, double> > near4, near5, near6;
         for (auto & i : worktables) {
             if (i.type == 4 && i.near7 == 1) {
@@ -563,42 +563,42 @@ void solveFrame() {
         robots[i].checkCanBuy();
     }
     for (int i = 0; i <= robotNum; i++) {
-        if (gankType == 1 || gankType == 2) {
-            if (i == 2) {
-                if (robots[i].bringId == 0) {
-                    robots[i].buyOne(5);
-                }
-                else {
-                    robots[i].moveToFoeWT(8);
-                }
-                continue;
-            }
-            if (i == 3) {
-                if (robots[i].bringId == 0) {
-                    robots[i].buyOne(5);
-                }
-                else {
-                    robots[i].moveToFoeWT(12);
-                }
-                continue;
-            }
-        }
-        if (gankType == 3) {
-            if (i == 3) {
-                robots[i].moveToPoint(Vector2D(9.75, 25.75));
-                continue;
-            }
-        }
-        if (gankType == 4) {
-            if (i == 2) {
-                robots[i].moveToPoint(Vector2D(37.25, 10.75));
-                continue;
-            }
-            if (i == 3) {
-                robots[i].moveToPoint(Vector2D(38.25, 8.75));
-                continue;
-            }
-        }
+        // if (gankType == 1 || gankType == 2) {
+        //     if (i == 2) {
+        //         if (robots[i].bringId == 0) {
+        //             robots[i].buyOne(5);
+        //         }
+        //         else {
+        //             robots[i].moveToFoeWT(8);
+        //         }
+        //         continue;
+        //     }
+        //     if (i == 3) {
+        //         if (robots[i].bringId == 0) {
+        //             robots[i].buyOne(5);
+        //         }
+        //         else {
+        //             robots[i].moveToFoeWT(12);
+        //         }
+        //         continue;
+        //     }
+        // }
+        // if (gankType == 3) {
+        //     if (i == 3) {
+        //         robots[i].moveToPoint(Vector2D(9.75, 25.75));
+        //         continue;
+        //     }
+        // }
+        // if (gankType == 4) {
+        //     if (i == 2) {
+        //         robots[i].moveToPoint(Vector2D(37.25, 10.75));
+        //         continue;
+        //     }
+        //     if (i == 3) {
+        //         robots[i].moveToPoint(Vector2D(38.25, 8.75));
+        //         continue;
+        //     }
+        // }
         robots[i].action();
         // TESTOUTPUT(robots[i].outputTest();) 
     }
