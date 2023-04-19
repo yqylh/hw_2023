@@ -565,15 +565,23 @@ void solveFrame() {
     for (int i = 0; i <= robotNum; i++) {
         if (gankType == 1 || gankType == 2) {
             if (i == 2) {
-                if (robots[i].bringId == 0) robots[i].buyOne(5);
-                else robots[i].moveToFoeWT(8);
-                robots[i].isGanking = true;
+                if (robots[i].bringId == 0) {
+                    robots[i].buyOne(5);
+                }
+                else {
+                    robots[i].moveToFoeWT(8);
+                    robots[i].isGanking = true;
+                }
                 continue;
             }
             if (i == 3) {
-                if (robots[i].bringId == 0) robots[i].buyOne(5);
-                else robots[i].moveToFoeWT(12);
-                robots[i].isGanking = true;
+                if (robots[i].bringId == 0) {
+                    robots[i].buyOne(5);
+                }
+                else {
+                    robots[i].moveToFoeWT(12);
+                    robots[i].isGanking = true;
+                }
                 continue;
             }
         }

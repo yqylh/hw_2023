@@ -181,11 +181,12 @@ struct Robot{
 
 
     void Move() {
-        Vector2D go;
-        if (worktableTogo == -1) {
+        if (worktableTogo == -1 && isGanking == false) {
             pathPoints.push_back(Vector2D(worktables[1].x, worktables[1].y));
         }
         while (pathPoints.size() > 0 && (Vector2D(x, y) - pathPoints[0]).length() < 0.4) {
+            // 只有一个点,应该不删除
+            if (pathPoints.size() == 1) break;
             pathPoints.erase(pathPoints.begin());
         }
         if (isWait == true && pathPoints.size() == 0) {
@@ -943,8 +944,16 @@ struct Robot{
         pathPoints = path;
     }
     void moveToPoint(Vector2D point){
-        if (pathPoints.size() == 0 && (Vector2D(x, y)-point).length() > 0.3 )
-        pathPoints = movePath(nullptr, &point);
+        if (pathPoints.size() == 0){
+            if ((Vector2D(x, y)-point).length() > 0.3) {
+                pathPoints = movePath(nullptr, &point);
+            } else {
+                pathPoints.push_back(point);
+            }
+        } else {
+            if (pathPoints.back() == point) {}
+            else pathPoints = movePath(nullptr, &point);
+        }
     }
     void moveToFoeWT(int wtId) {
         moveToPoint(Vector2D(worktablesFoe[wtId].x, worktablesFoe[wtId].y));
@@ -955,6 +964,7 @@ struct Robot{
         return;
     }
     void buyOne(int wtId) {
+        worktableTogo = wtId;
         if (worktableId == wtId) {
             TESTOUTPUT(fout << "buy " << id << std::endl;)
             printf("buy %d\n", id);
