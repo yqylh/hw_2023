@@ -604,6 +604,8 @@ void solveFrame() {
         std::set<Vector2D> *robot1PathPoints = new std::set<Vector2D>();
         std::set<Vector2D> *robot1Points = new std::set<Vector2D>();        
         for (int robot1 = 0; robot1 < robot2; robot1++) {
+            if (robots[robotPriority[robot1].first].isGanking) continue;
+            if (robots[robotPriority[robot2].first].isGanking) continue;
             DetecteCollision(robotPriority[robot1].first, robotPriority[robot2].first, robot1PathPoints, robot1Points);
             // DetecteCollision(robot1, robot2, robot1PathPoints, robot1Points);
         }
