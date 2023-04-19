@@ -1106,11 +1106,11 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
             robots[robot1].findNullPath(robot2Points, robot2PathPoints);
             if (robots[robot1].pathPoints[0] == Vector2D(0,0)) {
                 TESTOUTPUT(fout << "robot" << robot1 << " 也无法找到空路径" << std::endl;)
-                robots[robot1].movePath();
+                robots[robot1].pathPoints = robots[robot1].movePath();
                 robots[robot2].pathPoints.clear();
                 robots[robot2].pathPoints.push_back(robots[robot1].pathPoints.back());
             } else {
-                robots[robot2].movePath();
+                robots[robot2].pathPoints = robots[robot2].movePath();
             }
         }
     } else {
