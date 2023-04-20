@@ -45,6 +45,7 @@ struct Robot{
     double lasers[360]; // 机器人的激光雷达
     int runTime; // 机器人的运行时间
     bool isGanking; // 机器人是否正在干扰
+    bool willDestroy;
     Robot() {
         this->id = -1;
         this->x = -1;
@@ -61,6 +62,7 @@ struct Robot{
         zeroTime = 0;
         runTime = 0;
         isGanking = false;
+        willDestroy = false;
     }
     Robot(int id, double x, double y) {
         this->id = id;
@@ -78,6 +80,7 @@ struct Robot{
         zeroTime = 0;
         runTime = 0;
         isGanking = false;
+        willDestroy = false;
     }
     void checkCanBuy() {
         if (bringId != 0) {

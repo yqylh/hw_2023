@@ -535,6 +535,16 @@ bool checkFoeWall(std::vector<double> point) {
     if (flagLeft && flagRight && flagBottom) return true;
     return false;
 }
+void checkDestory(int id) {
+    if (robots[id].willDestroy == true) {
+        robots[id].willDestroy = false;
+        printf("destroy %d\n", id);
+        TESTOUTPUT(fout << "destroy " << id << std::endl;)
+    }
+}
+void delayDestroy(int id) {
+    robots[id].willDestroy = true;
+}
 void solveWTblocked() {
     std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
     for (int i = 0; i <= worktableNum; i++) {
@@ -597,7 +607,7 @@ void solveWTblocked() {
                         continue;
                     }
                     // 找不到则销毁 重新规划路径
-                    printf("destroy %d", j);
+                    delayDestroy(j);
                     robots[j].path = nullptr;
                     robots[j].bringId = 0;
                     worktables[i].someWillSell[robots[j].bringId]--;
@@ -663,6 +673,7 @@ std::vector<std::vector<double>> lastEnemyRobotPoint;
 std::vector<int> lastEnemyRobotCarry;
 bool inputFrame() {
     if (scanf("%d%d",&nowTime, &money ) == EOF) {
+        inputFlag = false;
         return false;
     }
     int tableNum;
@@ -842,7 +853,7 @@ std::vector<std::pair<int, int>> getRobotPriority() {
 void solveFrame() {
     printf("%d\n", nowTime);
     TESTOUTPUT(fout << nowTime << std::endl;)
-    
+    for (int i = 0; i <= robotNum; i++) checkDestory(i);
     std::fill(canBuy, canBuy + MAX_Item_Type_Num + 1, 0);
     for (int i = 0; i <= worktableNum; i++) {
         worktables[i].checkWait();
@@ -853,7 +864,7 @@ void solveFrame() {
         robots[i].checkCanBuy();
     }
     for (int i = 0; i <= robotNum; i++) {
-#ifdef HACK
+// #ifdef HACK
         // if (i == 0) {
         //     robots[i].moveToPoint(Vector2D(30.25, 14.25));
         //     continue;
@@ -906,7 +917,7 @@ void solveFrame() {
                 continue;
             }
         }
-#endif
+// #endif
         robots[i].action();
         // TESTOUTPUT(robots[i].outputTest();) 
     }
