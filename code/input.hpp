@@ -635,6 +635,13 @@ void solveFoeRobotPosition(std::vector<std::vector<double>> enemyRobotPoint) {
             pos++;
         }
     }
+    // 删除靠墙的虚假机器人
+    std::vector<std::vector<double>> enemyRobotPoint2;
+    for (auto & point : enemyRobotPoint) {
+        if (point[0] < 0.5 || point[0] > 49.5 || point[1] < 0.5 || point[1] > 49.5) continue;
+        enemyRobotPoint2.push_back(point);
+    }
+    enemyRobotPoint = enemyRobotPoint2;
     // 两个机器人距离小于1.4, 撞不开
     bool flag[4] = {false, false, false, false};
     for (int i = 0; i < enemyRobotPoint.size(); i++) {
@@ -659,6 +666,7 @@ void solveFoeRobotPosition(std::vector<std::vector<double>> enemyRobotPoint) {
             Vector2D now(nowx, nowy);
             for (auto & add : adds) {
                 Vector2D pos = now + Vector2D(add.first, add.second);
+                if (grids.find(pos) == grids.end()) continue;
                 if (grids[pos]->type == 0 || grids[pos]->foeTime > 0) {
                     grids[pos]->setFoe(nowTime);
                     FoeBlockPos.insert(pos);
@@ -775,9 +783,7 @@ bool inputFrame() {
 
     lastEnemyRobotPoint = enemyRobotPoint;
     lastEnemyRobotCarry = enemyRobotCarry;
-#ifndef HACK
     solveFoeRobotPosition(enemyRobotPoint);
-#endif
     std::string line;
     while(getline(std::cin, line) && line != "OK");
     return true;
