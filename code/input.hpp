@@ -536,8 +536,24 @@ bool checkFoeWall(std::vector<double> point) {
     return false;
 }
 void solveWTblocked() {
+    std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
     for (int i = 0; i <= worktableNum; i++) {
         worktables[i].blocked = grids[Vector2D(worktables[i].x, worktables[i].y)]->type;
+        if (worktables[i].blocked == false) {
+            double blockedNum = 0;
+            std::vector<Vector2D> obstacles;
+            for (auto & add : adds) {
+                Vector2D index = Vector2D(worktables[i].x, worktables[i].y) + Vector2D(add.first, add.second);
+                if (grids.find(index) != grids.end()) {
+                    if (grids[index]->type == 1) {
+                        blockedNum++;
+                        obstacles.emplace_back(index);
+                    }
+                }
+            }
+            if (blockedNum > 2) worktables[i].blocked = true;
+            if (blockedNum == 2 && (obstacles[0] - obstacles[1]).length() > 0.5) worktables[i].blocked = true;
+        }
         if (worktables[i].blocked == false) continue;
         TESTOUTPUT(fout << "there" << std::endl;)
         TESTOUTPUT(fout << worktables[i].x << " " << worktables[i].y << " been blocked" << std::endl;)
@@ -838,59 +854,59 @@ void solveFrame() {
     }
     for (int i = 0; i <= robotNum; i++) {
 #ifdef HACK
-        if (i == 0) {
-            robots[i].moveToPoint(Vector2D(30.25, 14.25));
-            continue;
+        // if (i == 0) {
+        //     robots[i].moveToPoint(Vector2D(30.25, 14.25));
+        //     continue;
+        // }
+        // if (i == 1) {
+        //     robots[i].moveToPoint(Vector2D(30.25, 20.75));
+        //     continue;
+        // }
+        // if (i == 2) {
+        //     robots[i].moveToPoint(Vector2D(8.25, 28.25));
+        //     continue;
+        // }
+        // if (i == 3) {
+        //     robots[i].moveToPoint(Vector2D(8.25, 26.25));
+        //     continue;
+        // }
+        if (gankType == 1 || gankType == 2) {
+            if (i == 2) {
+                if (robots[i].bringId == 0) {
+                    robots[i].buyOne(5);
+                }
+                else {
+                    robots[i].moveToFoeWT(8);
+                }
+                continue;
+            }
+            if (i == 3) {
+                if (robots[i].bringId == 0) {
+                    robots[i].buyOne(5);
+                }
+                else {   
+                    robots[i].moveToFoeWT(12);
+                }
+                continue;
+            }
         }
-        if (i == 1) {
-            robots[i].moveToPoint(Vector2D(30.25, 20.75));
-            continue;
+        if (gankType == 3) {
+            if (i == 3) {
+                robots[i].moveToPoint(Vector2D(9.75, 25.75));
+                continue;
+            }
         }
-        if (i == 2) {
-            robots[i].moveToPoint(Vector2D(8.25, 28.25));
-            continue;
-        }
-        if (i == 3) {
-            robots[i].moveToPoint(Vector2D(8.25, 26.25));
-            continue;
+        if (gankType == 4) {
+            if (i == 2) {
+                robots[i].moveToPoint(Vector2D(37.25, 10.75));
+                continue;
+            }
+            if (i == 3) {
+                robots[i].moveToPoint(Vector2D(38.25, 8.75));
+                continue;
+            }
         }
 #endif
-        // if (gankType == 1 || gankType == 2) {
-        //     if (i == 2) {
-        //         if (robots[i].bringId == 0) {
-        //             robots[i].buyOne(5);
-        //         }
-        //         else {
-        //             robots[i].moveToFoeWT(8);
-        //         }
-        //         continue;
-        //     }
-        //     if (i == 3) {
-        //         if (robots[i].bringId == 0) {
-        //             robots[i].buyOne(5);
-        //         }
-        //         else {   
-        //             robots[i].moveToFoeWT(12);
-        //         }
-        //         continue;
-        //     }
-        // }
-        // if (gankType == 3) {
-        //     if (i == 3) {
-        //         robots[i].moveToPoint(Vector2D(9.75, 25.75));
-        //         continue;
-        //     }
-        // }
-        // if (gankType == 4) {
-        //     if (i == 2) {
-        //         robots[i].moveToPoint(Vector2D(37.25, 10.75));
-        //         continue;
-        //     }
-        //     if (i == 3) {
-        //         robots[i].moveToPoint(Vector2D(38.25, 8.75));
-        //         continue;
-        //     }
-        // }
         robots[i].action();
         // TESTOUTPUT(robots[i].outputTest();) 
     }
