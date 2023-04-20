@@ -10,6 +10,8 @@ struct Grid {
     int type; // 0->空地 1->障碍物
     std::pair<int, int> *visited; // robotId, time
     std::vector<Vector2D> obstacles; // 障碍物的四个坐标
+    int foeTime = 0; // 被敌人占据的次数
+    int foeEndTime = 0; // 被敌人占据的结束时间
     Grid(){
         visited = nullptr;
         obstacles = std::vector<Vector2D>();
@@ -17,6 +19,17 @@ struct Grid {
     Grid(Vector2D index, int type) : index(index), type(type){
         visited = nullptr;
         obstacles = std::vector<Vector2D>();
+    }
+    void solveEndTime(int nowTime) {
+        if (nowTime - foeEndTime > 1200) foeTime = 0;
+        foeEndTime = nowTime;
+        foeEndTime += (foeTime / 5 + 2) * 5;
+        TESTOUTPUT(fout << "(" << index.x << "," << index.y << ") " << "foeEndTime: " << foeEndTime << std::endl;)
+    }
+    void setFoe(int noeTime) {
+        foeTime++;
+        type = 1;
+        solveEndTime(noeTime);
     }
 };
 std::map<Vector2D, Grid *> grids;

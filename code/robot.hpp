@@ -7,6 +7,7 @@
 #include "vector.hpp"
 #include "path.hpp"
 #include "grid.hpp"
+#include "radar.hpp"
 #include <fstream>
 #include <set>
 #include <map>
@@ -406,17 +407,20 @@ struct Robot{
                 if (sell.type == 9) earnMoney = earnMoney * 0.6;
                 earnMoney *= buy.near7;
                 earnMoney *= sell.near7;
-                if (sell.waitPriority == 5 && sell.near7 != 1) {
+                if (sell.waitPriority == 5 && (EQUAL(sell.near7, 1, 1e-3)) == false) {
+                    earnMoney *= 2;
+                }
+                if (sell.waitPriority == 4 && (EQUAL(sell.near7, 1, 1e-3)) == false && sell.type != 7) {
                     earnMoney *= 2;
                 }
                 if (buy.isNearCorner) {
                     earnMoney *= 0.1;
                 }
-                // 有资源缺口 即卖工作台的类型对应的产品(type 相同)有缺口 就促进生产
-                if (canBuy[sell.type] > 0 && (sell.type == 4 || sell.type == 5 || sell.type == 6) && sell.near7 != 1) {
-                    // TESTOUTPUT(fout << "canBuy " << sell.type << std::endl;)
-                    earnMoney *= 1.2;
-                }
+                // // 有资源缺口 即卖工作台的类型对应的产品(type 相同)有缺口 就促进生产
+                // if (canBuy[sell.type] > 0 && (sell.type == 4 || sell.type == 5 || sell.type == 6) && (EQUAL(sell.near7, 1, 1e-3)) == false) {
+                //     // TESTOUTPUT(fout << "canBuy " << sell.type << std::endl;)
+                //     earnMoney *= 1.2;
+                // }
                 // 动态调度三种 456 的生产
                 if (sell.near7 > 1 && (sell.type >= 4 && sell.type <= 6)
                     && haveCreateNum[4] >= haveCreateNum[sell.type] 

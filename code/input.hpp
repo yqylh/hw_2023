@@ -61,11 +61,11 @@ void solveGraph() {
             // }
             std::vector<std::pair<int, double> > near1, near2;
             for (auto & i : worktables) {
-                if (i.type == 1 && i.near7 == 1) {
+                if (i.type == 1 && EQUAL(i.near7, 1, 1e-3)) {
                     double dis = WTtoWTwithItem[i.id][id7];
                     near1.push_back(std::make_pair(i.id, dis));
                 }
-                if (i.type == 2 && i.near7 == 1) {
+                if (i.type == 2 && EQUAL(i.near7, 1, 1e-3)) {
                     double dis = WTtoWTwithItem[i.id][id7];
                     near2.push_back(std::make_pair(i.id, dis));
                 }
@@ -98,7 +98,7 @@ void solveGraph() {
     int index = 0;
     for (auto & num7 : near7) {
         int id7 = num7.first;
-        if (index++ < near7.size() / 2) {
+        if (index++ < near7.size() / 2 || near7.size() == 1) {
             worktables[id7].near7 = 4;
         } else {
             break;
@@ -106,15 +106,15 @@ void solveGraph() {
         // worktables[id7].near7 = 4;
         std::vector<std::pair<int, double> > near4, near5, near6;
         for (auto & i : worktables) {
-            if (i.type == 4 && i.near7 == 1) {
+            if (i.type == 4 && EQUAL(i.near7, 1, 1e-3)) {
                 double dis = WTtoWTwithItem[i.id][id7];
                 near4.push_back(std::make_pair(i.id, dis));
             }
-            if (i.type == 5 && i.near7 == 1) {
+            if (i.type == 5 && EQUAL(i.near7, 1, 1e-3)) {
                 double dis = WTtoWTwithItem[i.id][id7];
                 near5.push_back(std::make_pair(i.id, dis));
             }
-            if (i.type == 6 && i.near7 == 1) {
+            if (i.type == 6 && EQUAL(i.near7, 1, 1e-3)) {
                 double dis = WTtoWTwithItem[i.id][id7];
                 near6.push_back(std::make_pair(i.id, dis));
             }
@@ -130,15 +130,15 @@ void solveGraph() {
         }); // 按照距离排序
         TESTOUTPUT(fout << "near with id=" << id7 << " is ";)
         if (near4.size() >= 1 ) {
-            worktables[near4[0].first].near7 = 1.2;
+            worktables[near4[0].first].near7 = 2;
             TESTOUTPUT(fout << near4[0].first << " ";)
         }
         if (near5.size() >= 1) {
-            worktables[near5[0].first].near7 = 1.2;
+            worktables[near5[0].first].near7 = 2;
             TESTOUTPUT(fout << near5[0].first << " ";)
         }
         if (near6.size() >= 1) {
-            worktables[near6[0].first].near7 = 1.2;
+            worktables[near6[0].first].near7 = 2;
             TESTOUTPUT(fout << near6[0].first << " ";)
         }
         TESTOUTPUT(fout << std::endl;)
@@ -313,7 +313,7 @@ void solveRobotToWorktable(){
     }
     for (int i = 0; i <= robotNum; i++) {
         for (int j = 0; j <= worktableNum; j++) {
-            if (worktables[j].near7 == 0) continue;
+            if (EQUAL(worktables[j].near7, 0, 1e-3)) continue;
             double distance = bfs(Vector2D(robots[i].x, robots[i].y), Vector2D(worktables[j].x, worktables[j].y), 0);
             if (distance < 1e7) {
                 robots[i].couldReach.push_back(j);
@@ -446,6 +446,202 @@ void inputMap(){
     fflush(stdout);
 }
 
+void reSolveGrids() {
+    // 对所有的网格计算 3*3 内的所有障碍物的四个坐标
+    for (auto & point : FoeBlockPos) {
+        double addx[] = {0, 0.5, -0.5};
+        double addy[] = {0, 0.5, -0.5};
+        std::set<int> visited;
+        for (int j = 0; j < 3; j++) {
+            for (int k = 0; k < 3; k++) {
+                Vector2D index = grids[point]->index + Vector2D(addx[j], addy[k]);
+                if (grids.find(index) != grids.end()) {
+                    if (grids[index]->type == 1) {
+                        // 把浮点数坐标映射到整数区间
+                        int numInt = round((index.x + 0.25) * 1000000) + round((index.y + 0.25)*100);
+                        if (visited.find(numInt) == visited.end()) {
+                            visited.insert(numInt);
+                            grids[point]->obstacles.emplace_back(index.x + 0.25, index.y + 0.25);
+                        }
+                        numInt = round((index.x + 0.25) * 1000000) + round((index.y - 0.25)*100);
+                        if (visited.find(numInt) == visited.end()) {
+                            visited.insert(numInt);
+                            grids[point]->obstacles.emplace_back(index.x + 0.25, index.y - 0.25);
+                        }
+                        numInt = round((index.x - 0.25) * 1000000) + round((index.y + 0.25)*100);
+                        if (visited.find(numInt) == visited.end()) {
+                            visited.insert(numInt);
+                            grids[point]->obstacles.emplace_back(index.x - 0.25, index.y + 0.25);
+                        }
+                        numInt = round((index.x - 0.25) * 1000000) + round((index.y - 0.25)*100);
+                        if (visited.find(numInt) == visited.end()) {
+                            visited.insert(numInt);
+                            grids[point]->obstacles.emplace_back(index.x - 0.25, index.y - 0.25);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+bool checkFoeWall(std::vector<double> point) {
+    double nowx = int(point[0] / 0.5) * 0.5 + 0.25;
+    double nowy = int(point[1] / 0.5) * 0.5 + 0.25;
+    Vector2D index = Vector2D(nowx, nowy);
+    std::vector<std::pair<double, double>> top = {{0, 1}, {0.5, 1}, {-0.5, 1}, {0, 0.5}, {0.5, 0.5}, {-0.5, 0.5}};
+    std::vector<std::pair<double, double>> bottom = {{0, -1}, {0.5, -1}, {-0.5, -1}, {0, -0.5}, {0.5, -0.5}, {-0.5, -0.5}};
+    std::vector<std::pair<double, double>> left = {{-1, 0}, {-1, 0.5}, {-1, -0.5}, {-0.5, 0}, {-0.5, 0.5}, {-0.5, -0.5}};
+    std::vector<std::pair<double, double>> right = {{1, 0}, {1, 0.5}, {1, -0.5}, {0.5, 0}, {0.5, 0.5}, {0.5, -0.5}};
+    int flagTop = 0, flagBottom = 0, flagLeft = 0, flagRight = 0;
+    for (auto & add : top) {
+        Vector2D index2 = index + Vector2D(add.first, add.second);
+        if (grids.find(index2) != grids.end()) {
+            if (grids[index2]->type == 1) {
+                flagTop++;
+            }
+        }
+    }
+    for (auto & add : bottom) {
+        Vector2D index2 = index + Vector2D(add.first, add.second);
+        if (grids.find(index2) != grids.end()) {
+            if (grids[index2]->type == 1) {
+                flagBottom++;
+            }
+        }
+    }
+    for (auto & add : left) {
+        Vector2D index2 = index + Vector2D(add.first, add.second);
+        if (grids.find(index2) != grids.end()) {
+            if (grids[index2]->type == 1) {
+                flagLeft++;
+            }
+        }
+    }
+    for (auto & add : right) {
+        Vector2D index2 = index + Vector2D(add.first, add.second);
+        if (grids.find(index2) != grids.end()) {
+            if (grids[index2]->type == 1) {
+                flagRight++;
+            }
+        }
+    }
+    if (flagTop && flagLeft && flagTop + flagLeft > 2) return true;
+    if (flagTop && flagRight && flagTop + flagRight > 2) return true;
+    if (flagBottom && flagLeft && flagBottom + flagLeft > 2) return true;
+    if (flagBottom && flagRight && flagBottom + flagRight > 2) return true;
+    if (flagTop && flagBottom && flagLeft) return true;
+    if (flagTop && flagBottom && flagRight) return true;
+    if (flagLeft && flagRight && flagTop) return true;
+    if (flagLeft && flagRight && flagBottom) return true;
+    return false;
+}
+void solveWTblocked() {
+    for (int i = 0; i <= worktableNum; i++) {
+        worktables[i].blocked = grids[Vector2D(worktables[i].x, worktables[i].y)]->type;
+        if (worktables[i].blocked == false) continue;
+        TESTOUTPUT(fout << "there" << std::endl;)
+        TESTOUTPUT(fout << worktables[i].x << " " << worktables[i].y << " been blocked" << std::endl;)
+        for (int j = 0; j <= robotNum; j++) if (robots[j].path != nullptr) {
+            // 正在去卖
+            if (robots[j].path->sellWorktableId == robots[j].worktableTogo) {
+                // 卖给的是这个工作台
+                if (robots[j].worktableTogo == i) {
+                    int newWorktable = -1;
+                    auto productId = robots[j].bringId;
+                    // 找一个新的工作台去卖
+                    for (auto & couldReachItem : robots[j].couldReach) {
+                        auto & sell = worktables[couldReachItem];
+                        if (sell.blocked == true) continue;
+                        // 确保这个工作台支持买,而且输入口是空的
+                        if (sellSet.find(std::make_pair(productId, sell.type)) == sellSet.end() || sell.inputId[productId] == 1) continue;
+                        // 确保不是墙角
+                        if (sell.isNearCorner) continue;
+                        /**
+                         * 确保没人预约卖
+                         * 或者类型是8 || 9
+                        */
+                        if (sell.someWillSell[productId] == 0 
+                            // 4 5 6有人预约卖,但是缺的这一个卖完就可以再卖
+                            || (sell.someWillSell[productId] == 1 && sell.waitPriority == 4 && (sell.type == 4 || sell.type == 5 || sell.type == 6) 
+                                && (sell.output == false || sell.remainTime == -1))
+                            // 7有人预约卖,但是缺的这一个卖完就可以再卖
+                            || (sell.someWillSell[productId] == 1 && sell.waitPriority == 5 && (sell.type == 7)
+                                && (sell.output == false || sell.remainTime == -1)) 
+                            // 8 9 直接卖
+                            || sell.type == 8 || sell.type == 9) {} else continue;      
+                        newWorktable = couldReachItem;
+                        break;        
+                    }
+                    if (newWorktable != -1) {
+                        robots[j].worktableTogo = newWorktable;
+                        robots[j].path->sellWorktableId = newWorktable;
+                        worktables[i].someWillSell[productId]--;
+                        worktables[newWorktable].someWillSell[productId]++;
+                        robots[j].pathPoints = robots[j].movePath();
+                        continue;
+                    }
+                    // 找不到则销毁 重新规划路径
+                    printf("destroy %d", j);
+                    robots[j].path = nullptr;
+                    robots[j].bringId = 0;
+                    worktables[i].someWillSell[robots[j].bringId]--;
+                    robots[j].worktableTogo = -1;
+                }
+            }
+            // 正在去买 也就是 还没买
+            else if (robots[j].path->buyWorktableId == robots[j].worktableTogo) {
+                // 买的是这个工作台 或者 卖的是这个工作台
+                if (robots[j].worktableTogo == i || robots[j].path->sellWorktableId == i) {
+                    // 重新规划一个买卖阶段
+                    robots[j].path = nullptr;
+                }
+            }
+        }
+    }
+}
+void solveFoeRobotPosition(std::vector<std::vector<double>> enemyRobotPoint) {
+    std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
+    for (auto pos = FoeBlockPos.begin(); pos != FoeBlockPos.end();) {
+        if (grids[*pos]->foeEndTime <= nowTime) {
+            grids[*pos]->type = 0;
+            pos = FoeBlockPos.erase(pos);
+        } else {
+            pos++;
+        }
+    }
+    // 两个机器人距离小于1.4, 撞不开
+    bool flag[4] = {false, false, false, false};
+    for (int i = 0; i < enemyRobotPoint.size(); i++) {
+        for (int j = i + 1; j < enemyRobotPoint.size(); j++) {
+            if ((Vector2D(enemyRobotPoint[i][0], enemyRobotPoint[i][1])-Vector2D(enemyRobotPoint[j][0], enemyRobotPoint[j][1])).length() < 1.4) {
+                flag[i] = true;
+                flag[j] = true;
+            }
+        }
+    }
+    // 机器人在一个墙的胡同里
+    for (int i = 0; i < enemyRobotPoint.size(); i++) {
+        if (!flag[i]) {
+            flag[i] = checkFoeWall(enemyRobotPoint[i]);
+        }
+    }
+    // 覆盖障碍物
+    for (int i = 0; i < enemyRobotPoint.size(); i++) {
+        if (flag[i]) {
+            double nowx = int(enemyRobotPoint[i][0] / 0.5) * 0.5 + 0.25;
+            double nowy = int(enemyRobotPoint[i][1] / 0.5) * 0.5 + 0.25;
+            Vector2D now(nowx, nowy);
+            for (auto & add : adds) {
+                Vector2D pos = now + Vector2D(add.first, add.second);
+                if (grids[pos]->type == 0) {
+                    grids[pos]->setFoe(nowTime);
+                    FoeBlockPos.insert(pos);
+                }
+            }
+        }
+    }
+    solveWTblocked();
+}
 
 std::vector<std::vector<double>> lastEnemyRobotPoint;
 std::vector<int> lastEnemyRobotCarry;
@@ -552,7 +748,9 @@ bool inputFrame() {
 
     lastEnemyRobotPoint = enemyRobotPoint;
     lastEnemyRobotCarry = enemyRobotCarry;
-
+#ifndef HACK
+    solveFoeRobotPosition(enemyRobotPoint);
+#endif
     std::string line;
     while(getline(std::cin, line) && line != "OK");
     return true;
@@ -639,6 +837,24 @@ void solveFrame() {
         robots[i].checkCanBuy();
     }
     for (int i = 0; i <= robotNum; i++) {
+#ifdef HACK
+        if (i == 0) {
+            robots[i].moveToPoint(Vector2D(30.25, 14.25));
+            continue;
+        }
+        if (i == 1) {
+            robots[i].moveToPoint(Vector2D(30.25, 20.75));
+            continue;
+        }
+        if (i == 2) {
+            robots[i].moveToPoint(Vector2D(8.25, 28.25));
+            continue;
+        }
+        if (i == 3) {
+            robots[i].moveToPoint(Vector2D(8.25, 26.25));
+            continue;
+        }
+#endif
         // if (gankType == 1 || gankType == 2) {
         //     if (i == 2) {
         //         if (robots[i].bringId == 0) {
@@ -653,7 +869,7 @@ void solveFrame() {
         //         if (robots[i].bringId == 0) {
         //             robots[i].buyOne(5);
         //         }
-        //         else {
+        //         else {   
         //             robots[i].moveToFoeWT(12);
         //         }
         //         continue;
