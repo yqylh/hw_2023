@@ -488,10 +488,10 @@ bool checkFoeWall(std::vector<double> point) {
     double nowx = int(point[0] / 0.5) * 0.5 + 0.25;
     double nowy = int(point[1] / 0.5) * 0.5 + 0.25;
     Vector2D index = Vector2D(nowx, nowy);
-    std::vector<std::pair<double, double>> top = {{0, 1}, {0.5, 1}, {-0.5, 1}, {0, 0.5}, {0.5, 0.5}, {-0.5, 0.5}};
-    std::vector<std::pair<double, double>> bottom = {{0, -1}, {0.5, -1}, {-0.5, -1}, {0, -0.5}, {0.5, -0.5}, {-0.5, -0.5}};
-    std::vector<std::pair<double, double>> left = {{-1, 0}, {-1, 0.5}, {-1, -0.5}, {-0.5, 0}, {-0.5, 0.5}, {-0.5, -0.5}};
-    std::vector<std::pair<double, double>> right = {{1, 0}, {1, 0.5}, {1, -0.5}, {0.5, 0}, {0.5, 0.5}, {0.5, -0.5}};
+    std::vector<std::pair<double, double>> top = {{0, 1}, {0.5, 1}, {-0.5, 1}, {0, 0.5}}; //, {0.5, 0.5}, {-0.5, 0.5}
+    std::vector<std::pair<double, double>> bottom = {{0, -1}, {0.5, -1}, {-0.5, -1}, {0, -0.5}}; // , {0.5, -0.5}, {-0.5, -0.5}
+    std::vector<std::pair<double, double>> left = {{-1, 0}, {-1, 0.5}, {-1, -0.5}, {-0.5, 0}}; // , {-0.5, 0.5}, {-0.5, -0.5}
+    std::vector<std::pair<double, double>> right = {{1, 0}, {1, 0.5}, {1, -0.5}, {0.5, 0}}; // , {0.5, 0.5}, {0.5, -0.5}
     int flagTop = 0, flagBottom = 0, flagLeft = 0, flagRight = 0;
     for (auto & add : top) {
         Vector2D index2 = index + Vector2D(add.first, add.second);
