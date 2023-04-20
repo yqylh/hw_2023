@@ -496,7 +496,7 @@ bool checkFoeWall(std::vector<double> point) {
     for (auto & add : top) {
         Vector2D index2 = index + Vector2D(add.first, add.second);
         if (grids.find(index2) != grids.end()) {
-            if (grids[index2]->type == 1) {
+            if (grids[index2]->type == 1 && grids[index2]->foeTime == 0) {
                 flagTop++;
             }
         }
@@ -504,7 +504,7 @@ bool checkFoeWall(std::vector<double> point) {
     for (auto & add : bottom) {
         Vector2D index2 = index + Vector2D(add.first, add.second);
         if (grids.find(index2) != grids.end()) {
-            if (grids[index2]->type == 1) {
+            if (grids[index2]->type == 1 && grids[index2]->foeTime == 0) {
                 flagBottom++;
             }
         }
@@ -512,7 +512,7 @@ bool checkFoeWall(std::vector<double> point) {
     for (auto & add : left) {
         Vector2D index2 = index + Vector2D(add.first, add.second);
         if (grids.find(index2) != grids.end()) {
-            if (grids[index2]->type == 1) {
+            if (grids[index2]->type == 1 && grids[index2]->foeTime == 0) {
                 flagLeft++;
             }
         }
@@ -520,7 +520,7 @@ bool checkFoeWall(std::vector<double> point) {
     for (auto & add : right) {
         Vector2D index2 = index + Vector2D(add.first, add.second);
         if (grids.find(index2) != grids.end()) {
-            if (grids[index2]->type == 1) {
+            if (grids[index2]->type == 1 && grids[index2]->foeTime == 0) {
                 flagRight++;
             }
         }
@@ -633,7 +633,7 @@ void solveFoeRobotPosition(std::vector<std::vector<double>> enemyRobotPoint) {
             Vector2D now(nowx, nowy);
             for (auto & add : adds) {
                 Vector2D pos = now + Vector2D(add.first, add.second);
-                if (grids[pos]->type == 0) {
+                if (grids[pos]->type == 0 || grids[pos]->foeTime > 0) {
                     grids[pos]->setFoe(nowTime);
                     FoeBlockPos.insert(pos);
                 }

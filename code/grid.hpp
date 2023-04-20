@@ -21,7 +21,8 @@ struct Grid {
         obstacles = std::vector<Vector2D>();
     }
     void solveEndTime(int nowTime) {
-        if (nowTime - foeEndTime > 1200) foeTime = 0;
+        if (nowTime - foeEndTime > 1200) foeTime = 1;
+        if (foeTime > 1000) foeTime = 1000;
         foeEndTime = nowTime;
         foeEndTime += (foeTime / 5 + 2) * 5;
         TESTOUTPUT(fout << "(" << index.x << "," << index.y << ") " << "foeEndTime: " << foeEndTime << std::endl;)

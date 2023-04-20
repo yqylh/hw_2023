@@ -410,7 +410,7 @@ struct Robot{
                 if (sell.waitPriority == 5 && (EQUAL(sell.near7, 1, 1e-3)) == false) {
                     earnMoney *= 2;
                 }
-                if (sell.waitPriority == 4 && (EQUAL(sell.near7, 1, 1e-3)) == false && sell.type != 7) {
+                if (sell.waitPriority == 4 && (EQUAL(sell.near7, 1, 1e-3)) == false && sell.type != 7 && sell.output == false && sell.remainTime == -1) {
                     earnMoney *= 2;
                 }
                 if (buy.isNearCorner) {
