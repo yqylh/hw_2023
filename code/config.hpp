@@ -11,7 +11,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
-
+#include "vector.hpp"
 const int MAX_Item_Type_Num = 7; // 最大物品类型数 1-7
 const int MAX_Worktable_Type_Num = 9; // 最大工作台类型数 1-9
 const int MAX_Worktable_Num = 50; // 最大工作台数
@@ -74,6 +74,7 @@ int nowTime = 0; // 当前帧数
 int lossCollMoney = 0; // 当前损失的金钱
 int lossTimeMoney = 0; // 当前每帧的金钱
 int gankType = 0; // gank 对面的类型
+std::set<Vector2D> FoeBlockPos; // 对面的阻挡点
 #ifdef EBUG
     std::ofstream fout("output.txt"); // 测试用输出
     void quit() {

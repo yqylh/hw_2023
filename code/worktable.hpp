@@ -15,6 +15,7 @@ struct Worktable{
     int waitPriority; // 是否在等待
     double near7; // 卖时的参数
     bool isNearCorner; // 是否在角落
+    bool blocked; // 是否被占领
     Worktable() {
         this->id = -1;
         this->x = -1;

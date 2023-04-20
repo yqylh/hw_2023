@@ -20,7 +20,9 @@
 #include <cstdlib>
 #include <climits>
 #include <queue>
-
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 struct Robot{
     int id; // 机器人的 id
     double x; // 机器人的 x 坐标
@@ -334,6 +336,7 @@ struct Robot{
                 }
             }
             if (couldReachFlag == false) continue;
+            if (buy.blocked == true) continue;
             if ((buy.output == true && buy.someWillBuy == 0)
                 || (buy.output == true && buy.someWillBuy == 1 && buy.remainTime != -1)
                 || (buy.output == false && buy.someWillBuy == 0 && buy.remainTime != -1)
@@ -365,6 +368,7 @@ struct Robot{
                     }
                 }
                 if (couldReachFlag == false) continue;
+                if (sell.blocked == true) continue;
                 // 确保这个工作台支持买,而且输入口是空的
                 if (sellSet.find(std::make_pair(productId, sell.type)) == sellSet.end() || sell.inputId[productId] == 1) continue;
                 // 确保不是墙角
