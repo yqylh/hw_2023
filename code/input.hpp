@@ -548,7 +548,7 @@ void solveWTblocked() {
         }
     }
 }
-void solveFoeRobotPosition(std::vector<std::vector<double>> enemyRobotPoint) {
+void solveFoeRobotPosition(std::vector<std::vector<double>> enemyRobotPoint, std::vector<std::vector<double>> enemyRobotVelocity) {
     std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
     for (auto pos = FoeBlockPos.begin(); pos != FoeBlockPos.end();) {
         if (grids[*pos]->foeEndTime <= nowTime) {
@@ -560,7 +560,12 @@ void solveFoeRobotPosition(std::vector<std::vector<double>> enemyRobotPoint) {
     }
     // 删除靠墙的虚假机器人
     std::vector<std::vector<double>> enemyRobotPoint2;
+    int index = -1;
+    TESTOUTPUT(fout << "enemyRobotPoint.size() = " << enemyRobotPoint.size() << std::endl;)
+    TESTOUTPUT(fout << "enemyRobotVelocity.size() = " << enemyRobotVelocity.size() << std::endl;)
     for (auto & point : enemyRobotPoint) {
+        index++;
+        if (Vector2D(enemyRobotVelocity[index][0], enemyRobotVelocity[index][1]).length() * 50 > 3) continue;
         if (point[0] < 0.5 || point[0] > 49.5 || point[1] < 0.5 || point[1] > 49.5) continue;
         enemyRobotPoint2.push_back(point);
     }
@@ -695,16 +700,16 @@ bool inputFrame() {
         LOGGER_RADAR("enemyRobotPoint[" << i << "]=" << enemyRobotPoint[i][0] << " " << enemyRobotPoint[i][1] << " " << enemyRobotCarry[i]);
     }
 
-    for (int i = 0; i < lastEnemyRobotPoint.size(); i++) {
+    for (int i = 0; i < enemyRobotPoint.size(); i++) {
         bool foundInLastFrame = false;
-        for (int j = 0; j < enemyRobotPoint.size(); j++) {
-            double deltaX = lastEnemyRobotPoint[i][0] - enemyRobotPoint[j][0];
-            double deltaY = lastEnemyRobotPoint[i][1] - enemyRobotPoint[j][1];
+        for (int j = 0; j < lastEnemyRobotPoint.size(); j++) {
+            double deltaX = lastEnemyRobotPoint[j][0] - enemyRobotPoint[i][0];
+            double deltaY = lastEnemyRobotPoint[j][1] - enemyRobotPoint[i][1];
             if (deltaX * deltaX + deltaY * deltaY < 0.4 * 0.4) {
                 // same enemy robot
                 foundInLastFrame = true;
-                double velocityX = enemyRobotPoint[j][0] - lastEnemyRobotPoint[i][0];
-                double velocityY = enemyRobotPoint[j][1] - lastEnemyRobotPoint[i][1];
+                double velocityX = enemyRobotPoint[i][0] - lastEnemyRobotPoint[j][0];
+                double velocityY = enemyRobotPoint[i][1] - lastEnemyRobotPoint[j][1];
                 enemyRobotVelocity.push_back({velocityX, velocityY});
                 break;
             }
@@ -761,7 +766,7 @@ bool inputFrame() {
         robots[i].visibleRobotCarry = visibleRobotCarry[i];
     }
     
-    solveFoeRobotPosition(enemyRobotPoint);
+    solveFoeRobotPosition(enemyRobotPoint,enemyRobotVelocity);
     enemyRobotPointAll = enemyRobotPoint;
     enemyRobotCarryAll = enemyRobotCarry;
     enemyRobotVelocityAll = enemyRobotVelocity;
@@ -863,11 +868,7 @@ void solveFrame() {
                     robotFoeIndex.clear();
                     for (int j = 0; j < robots[i].visibleRobotPoint.size(); j++) robotFoeIndex.push_back(j);
                     std::sort(robotFoeIndex.begin(), robotFoeIndex.end(), [&](const int &a, const int &b) {
-                        if (robots[i].visibleRobotCarry[a] == robots[i].visibleRobotCarry[b]) {
-                            return (Vector2D(robots[i].x, robots[i].y) - Vector2D(robots[i].visibleRobotPoint[a][0], robots[i].visibleRobotPoint[a][1])).length() < (Vector2D(robots[i].x, robots[i].y) - Vector2D(robots[i].visibleRobotPoint[b][0], robots[i].visibleRobotPoint[b][1])).length();
-                        } else {
-                            return robots[i].visibleRobotCarry[a] > robots[i].visibleRobotCarry[b];
-                        }
+                        return (Vector2D(robots[i].x, robots[i].y) - Vector2D(robots[i].visibleRobotPoint[a][0], robots[i].visibleRobotPoint[a][1])).length() - robots[i].visibleRobotCarry[a] < (Vector2D(robots[i].x, robots[i].y) - Vector2D(robots[i].visibleRobotPoint[b][0], robots[i].visibleRobotPoint[b][1])).length() - robots[i].visibleRobotCarry[b];
                     });
                     for (auto & foeIndex : robotFoeIndex) {
                         auto & robotFoe = robots[i].visibleRobotPoint[foeIndex];
