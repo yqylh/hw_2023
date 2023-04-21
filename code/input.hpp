@@ -643,7 +643,8 @@ void solveFoeRobotPosition(std::vector<std::vector<double>> enemyRobotPoint) {
     }
     enemyRobotPoint = enemyRobotPoint2;
     // 两个机器人距离小于1.4, 撞不开
-    bool flag[4] = {false, false, false, false};
+    // bool flag[4] = {false, false, false, false};
+    std::vector<bool> flag(enemyRobotPoint.size(), false);
     for (int i = 0; i < enemyRobotPoint.size(); i++) {
         for (int j = i + 1; j < enemyRobotPoint.size(); j++) {
             if ((Vector2D(enemyRobotPoint[i][0], enemyRobotPoint[i][1])-Vector2D(enemyRobotPoint[j][0], enemyRobotPoint[j][1])).length() < 1.4) {
@@ -746,7 +747,9 @@ bool inputFrame() {
                 }
                 if (skip) continue;
                 for (auto & enemyPoints : enemyRobotPoint) {
-                    if (EQUAL(enemyPoints[0], point[0], 1e-2) and EQUAL(enemyPoints[1], point[1], 1e-2)) {
+                    double deltaX = enemyPoints[0] - point[0];
+                    double deltaY = enemyPoints[1] - point[1];
+                    if (deltaX * deltaX + deltaY * deltaY < 0.3 * 0.3) {
                         skip = true; // have been calculated
                         break;
                     }
