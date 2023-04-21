@@ -134,8 +134,8 @@ public:
         for (int nowLaserId = 0; nowLaserId < 360; nowLaserId++) {
             int nextLaserId = nowLaserId + 1;
             int lastLaserId = nowLaserId - 1;
-            if (nowLaserId == 360) nextLaserId = 0;
-            if (lastLaserId == -1) lastLaserId = 360;
+            if (nextLaserId == 360) nextLaserId = 0;
+            if (lastLaserId == -1) lastLaserId = 359;
 
             TVector lastContactCoor = self_contactCoor[lastLaserId];
             TVector nowContactCoor = self_contactCoor[nowLaserId];
