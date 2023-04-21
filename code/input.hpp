@@ -330,6 +330,7 @@ void solveRobotToWorktable(){
         TESTOUTPUT(fout << std::endl);
     }
 }
+int couldReachZero = 0;
 void solveMapNum() {
     int numWT[MAX_Worktable_Type_Num] = {0};
     int numWTFoe[MAX_Worktable_Type_Num] = {0};
@@ -339,25 +340,34 @@ void solveMapNum() {
     for (int i = 0; i <= worktableNumFoe; i++) {
         numWTFoe[worktablesFoe[i].type]++;
     }
-    if (worktableNumFoe == 13) {
-        // 地图 1
-        if (numWT[4] == 2 && numWT[5] == 2 && numWT[6] == 2) {
-            if (RoB == RED) {
-                gankType = 1;
-            } else {
-                gankType = 2;
-            }
+    for (int i = 0; i <= robotNum; i++) {
+        if (robots[i].couldReach.size() == 0) {
+            couldReachZero++;
         }
-        // 地图 2
-        if (numWT[6] == 1) {
-            if (RoB == RED) {
-                gankType = 3;
-            } else {
-                gankType = 4;
+    }
+    if (couldReachZero == 0 && worktableNumFoe > 0) {
+        // 可怜的三号
+        robots[3].isGankRobot = true;
+    }
+    if (couldReachZero == 1) {
+        // 1:3的情况
+        for (int i = 0; i <= robotNum; i++) {
+            if (robots[i].couldReach.size() == 0) {
+                robots[i].isGankRobot = true;
             }
         }
     }
-
+    if (couldReachZero == 4) {
+        for (int i = 0; i <= robotNum; i++) {
+            robots[i].isGankRobot = true;
+        }
+    }
+    if (couldReachZero == 0) couldReachZero++;
+    for (int i = 0; i <= worktableNumFoe; i++) {
+        if (worktablesFoe[i].type > 3 && worktablesFoe[i].type < 8) {
+            gankFoeWT.push_back(worktablesFoe[i].id);
+        }
+    }
 }
 void inputMap(){
     std::string line;
@@ -678,6 +688,10 @@ void solveFoeRobotPosition(std::vector<std::vector<double>> enemyRobotPoint) {
     solveWTblocked();
 }
 
+bool isSameRobot(const double & x1, const double & y1, const double & x2, const double & y2) {
+    return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) < 0.4 * 0.4;
+}
+
 std::vector<std::vector<double>> lastEnemyRobotPoint;
 std::vector<int> lastEnemyRobotCarry;
 bool inputFrame() {
@@ -713,18 +727,23 @@ bool inputFrame() {
     std::vector<std::vector<double>> enemyRobotPoint;
     std::vector<int> enemyRobotCarry;
     std::vector<std::vector<double>> enemyRobotVelocity;
+    std::vector<std::vector<std::vector<double>>> visibleRobotPoint;
+    std::vector<std::vector<std::vector<double>>> visibleRobotVelocity;
+    std::vector<std::vector<int>> visibleRobotCarry;
 
     for (int i = 0; i <= robotNum; i++) {
         std::vector<double> laser;
+        laser.clear();
         for (int j = 0; j < 360; j++) {
             scanf("%lf", &robots[i].lasers[j]);
             laser.push_back(robots[i].lasers[j]);
         }
+        visibleRobotPoint.push_back(std::vector<std::vector<double>>());
 
         double nowRobotX = robots[i].x;
         double nowRobotY = robots[i].y;
         double nowRobotDirection = robots[i].direction;
-        std::vector<std::vector< double>> robotPoint;
+        std::vector<std::vector<double>> robotPoint;
         std::vector<int> robotCarry;
         robotPoint.clear();
         robotCarry.clear();
@@ -738,9 +757,12 @@ bool inputFrame() {
                 robotPointCnt++;
                 // LOGGER_RADAR(point[0] << " " << point[1]);
                 bool skip = false;
+                if (point[0] < 0.5 || point[0] > 49.5 || point[1] < 0.5 || point[1] > 49.5) skip = true;
                 for (int j = 0; j <= robotNum; j++) {
                     if (j == i) continue;
-                    if (EQUAL(robots[j].x, point[0], 1e-1) and EQUAL(robots[j].y, point[1], 1e-1)) {
+                    double deltaX = robots[j].x - point[0];
+                    double deltaY = robots[j].y - point[1];
+                    if (deltaX * deltaX + deltaY * deltaY < 0.4 * 0.4) {
                         skip = true; // is our robots
                         break;
                     }
@@ -749,7 +771,7 @@ bool inputFrame() {
                 for (auto & enemyPoints : enemyRobotPoint) {
                     double deltaX = enemyPoints[0] - point[0];
                     double deltaY = enemyPoints[1] - point[1];
-                    if (deltaX * deltaX + deltaY * deltaY < 0.3 * 0.3) {
+                    if (deltaX * deltaX + deltaY * deltaY < 0.4 * 0.4) {
                         skip = true; // have been calculated
                         break;
                     }
@@ -757,6 +779,16 @@ bool inputFrame() {
                 if (skip) continue;
                 enemyRobotPoint.push_back(point);
                 enemyRobotCarry.push_back(robotCarry[robotPointCnt - 1]);
+            }
+        }
+
+        for (int j = 0; j < enemyRobotPoint.size(); j++) {
+            for (auto & point : robotPoint) {
+                double deltaX = enemyRobotPoint[j][0] - point[0];
+                double deltaY = enemyRobotPoint[j][1] - point[1];
+                if (deltaX * deltaX + deltaY * deltaY < 0.4 * 0.4) {
+                    visibleRobotPoint[i].push_back(point);
+                }
             }
         }
     }
@@ -769,8 +801,9 @@ bool inputFrame() {
     for (int i = 0; i < lastEnemyRobotPoint.size(); i++) {
         bool foundInLastFrame = false;
         for (int j = 0; j < enemyRobotPoint.size(); j++) {
-            if (EQUAL(lastEnemyRobotPoint[i][0], enemyRobotPoint[j][0], 0.4) and 
-                EQUAL(lastEnemyRobotPoint[i][1], enemyRobotPoint[j][1], 0.4)) {
+            double deltaX = lastEnemyRobotPoint[i][0] - enemyRobotPoint[j][0];
+            double deltaY = lastEnemyRobotPoint[i][1] - enemyRobotPoint[j][1];
+            if (deltaX * deltaX + deltaY * deltaY < 0.4 * 0.4) {
                 // same enemy robot
                 foundInLastFrame = true;
                 double velocityX = enemyRobotPoint[j][0] - lastEnemyRobotPoint[i][0];
@@ -779,14 +812,60 @@ bool inputFrame() {
                 break;
             }
         }
-        if (not foundInLastFrame) {
+        if (! foundInLastFrame) {
             enemyRobotVelocity.push_back({0, 0});
         }
     }
 
+
+    for (int i = 0; i <= robotNum; i++) {
+        visibleRobotVelocity.push_back(std::vector<std::vector<double>>());
+        for (int visibleRobotId = 0; visibleRobotId < visibleRobotPoint[i].size(); visibleRobotId++) {
+            bool foundInLastFrame = false;
+            for (int j = 0; j < lastEnemyRobotPoint.size(); j++) {
+                double deltaX = lastEnemyRobotPoint[j][0] - visibleRobotPoint[i][visibleRobotId][0];
+                double deltaY = lastEnemyRobotPoint[j][1] - visibleRobotPoint[i][visibleRobotId][1];
+                if (deltaX * deltaX + deltaY * deltaY < 0.4 * 0.4) {
+                    // same enemy robot
+                    foundInLastFrame = true;
+                    double velocityX = visibleRobotPoint[i][visibleRobotId][0] - lastEnemyRobotPoint[j][0];
+                    double velocityY = visibleRobotPoint[i][visibleRobotId][1] - lastEnemyRobotPoint[j][1];
+                    visibleRobotVelocity[i].push_back({velocityX, velocityY});
+                    break;
+                }
+            }
+            if (! foundInLastFrame) {
+                visibleRobotVelocity[i].push_back({0, 0});
+            }
+        }
+        visibleRobotCarry.push_back(std::vector<int>());
+        for (int visibleRobotId = 0; visibleRobotId < visibleRobotPoint[i].size(); visibleRobotId++) {
+            for (int j = 0; j < enemyRobotPoint.size(); j++) {
+                double deltaX = enemyRobotPoint[j][0] - visibleRobotPoint[i][visibleRobotId][0];
+                double deltaY = enemyRobotPoint[j][1] - visibleRobotPoint[i][visibleRobotId][1];
+                if (deltaX * deltaX + deltaY * deltaY < 0.4 * 0.4) {
+                    visibleRobotCarry[i].push_back(enemyRobotCarry[j]);
+                    break;
+                }
+            }
+        }
+    }
+
+
     lastEnemyRobotPoint = enemyRobotPoint;
     lastEnemyRobotCarry = enemyRobotCarry;
+
+    // visibleRobotPoint
+    // visibleRobotVelocity
+    // std::vector<std::vector<int>> visibleRobotCarry;
+    for (int i = 0; i <= robotNum; i++) {
+        robots[i].visibleRobotPoint = visibleRobotPoint[i];
+        robots[i].visibleRobotVelocity = visibleRobotVelocity[i];
+        robots[i].visibleRobotCarry = visibleRobotCarry[i];
+    }
+    
     solveFoeRobotPosition(enemyRobotPoint);
+
     std::string line;
     while(getline(std::cin, line) && line != "OK");
     return true;
@@ -873,60 +952,65 @@ void solveFrame() {
         robots[i].checkCanBuy();
     }
     for (int i = 0; i <= robotNum; i++) {
-// #ifdef HACK
-        // if (i == 0) {
-        //     robots[i].moveToPoint(Vector2D(30.25, 14.25));
-        //     continue;
-        // }
-        // if (i == 1) {
-        //     robots[i].moveToPoint(Vector2D(30.25, 20.75));
-        //     continue;
-        // }
-        // if (i == 2) {
-        //     robots[i].moveToPoint(Vector2D(8.25, 28.25));
-        //     continue;
-        // }
-        // if (i == 3) {
-        //     robots[i].moveToPoint(Vector2D(8.25, 26.25));
-        //     continue;
-        // }
-        if (gankType == 1 || gankType == 2) {
-            if (i == 2) {
-                if (robots[i].bringId == 0) {
-                    robots[i].buyOne(5);
+        if (robots[i].isGankRobot) {
+            robots[i].gankPoint = Vector2D(0,0);
+            // 激光雷达识别到了一个地方机器人
+            if (robots[i].visibleRobotPoint.size() != 0) {
+                std::vector<int> robotFoeIndex;
+                robotFoeIndex.clear();
+                for (int j = 0; j < robots[i].visibleRobotPoint.size(); j++) robotFoeIndex.push_back(j);
+                std::sort(robotFoeIndex.begin(), robotFoeIndex.end(), [&](const int &a, const int &b) {
+                    if (robots[i].visibleRobotCarry[a] == robots[i].visibleRobotCarry[b]) {
+                        return (Vector2D(robots[i].x, robots[i].y) - Vector2D(robots[i].visibleRobotPoint[a][0], robots[i].visibleRobotPoint[a][1])).length() < (Vector2D(robots[i].x, robots[i].y) - Vector2D(robots[i].visibleRobotPoint[b][0], robots[i].visibleRobotPoint[b][1])).length();
+                    } else {
+                        return robots[i].visibleRobotCarry[a] > robots[i].visibleRobotCarry[b];
+                    }
+                });
+                for (auto & foeIndex : robotFoeIndex) {
+                    auto & robotFoe = robots[i].visibleRobotPoint[foeIndex];
+                    // 站着不动
+                    if (Vector2D(robots[i].visibleRobotVelocity[foeIndex][0], robots[i].visibleRobotVelocity[foeIndex][1]).length() * 50 < 0.1) {
+                        continue;
+                    }
+                    // 距离太远
+                    if ((Vector2D(robots[i].x, robots[i].y) - Vector2D(robotFoe[0], robotFoe[1])).length() > 7.5) {
+                        continue;
+                    }
+                    // 检查是否有人在攻击
+                    bool isAttacking = false;
+                    for (int j = 0; j < i; j++) {
+                        if (robots[j].isGanking) {
+                            if (robots[i].gankPoint == Vector2D(0,0)) continue;
+                            if (isSameRobot(robots[j].gankPoint.x, robots[j].gankPoint.y, robotFoe[0], robotFoe[1])) {
+                                isAttacking = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (isAttacking) continue;
+                    // 没有人在攻击,就去攻击
+                    robots[i].gankPoint = Vector2D(robotFoe[0] + robots[i].visibleRobotVelocity[foeIndex][0], robotFoe[1] + robots[i].visibleRobotVelocity[foeIndex][1]);
+                    robots[i].gankPoint.x = int(robots[i].gankPoint.x / 0.5) * 0.5 + 0.25;
+                    robots[i].gankPoint.y = int(robots[i].gankPoint.y / 0.5) * 0.5 + 0.25;
+                    robots[i].moveToPoint(robots[i].gankPoint);
+                    TESTOUTPUT(fout << "robot " << i << " gank " << robotFoe[0] << "," << robotFoe[1] << std::endl;)
+                    robots[i].isGanking = true;
                 }
-                else {
-                    robots[i].moveToFoeWT(8);
-                }
-                continue;
             }
-            if (i == 3) {
-                if (robots[i].bringId == 0) {
-                    robots[i].buyOne(5);
+            if (robots[i].gankPoint == Vector2D(0,0)){
+                int &patrolNum = robots[i].patrolNum;
+                Vector2D togo(worktablesFoe[gankFoeWT[patrolNum]].x, worktablesFoe[gankFoeWT[patrolNum]].y);
+                // 没有识别到,去地方工作台巡逻
+                if ((Vector2D(robots[i].x, robots[i].y)-togo).length() < 0.4) {
+                    patrolNum = (patrolNum + couldReachZero) % gankFoeWT.size();
                 }
-                else {   
-                    robots[i].moveToFoeWT(12);
-                }
-                continue;
+                togo = Vector2D(worktablesFoe[gankFoeWT[patrolNum]].x, worktablesFoe[gankFoeWT[patrolNum]].y);
+                TESTOUTPUT(fout << "robot " << i << " on" << robots[i].x << "," << robots[i].y  << " is going to " << togo.x << "," << togo.y << " length=" << (Vector2D(robots[i].x, robots[i].y)-togo).length() << std::endl;)
+                robots[i].moveToPoint(togo);
+                robots[i].isGanking = false;
             }
+            continue;
         }
-        if (gankType == 3) {
-            if (i == 3) {
-                robots[i].moveToPoint(Vector2D(9.75, 25.75));
-                continue;
-            }
-        }
-        if (gankType == 4) {
-            if (i == 2) {
-                robots[i].moveToPoint(Vector2D(37.25, 10.75));
-                continue;
-            }
-            if (i == 3) {
-                robots[i].moveToPoint(Vector2D(38.25, 8.75));
-                continue;
-            }
-        }
-// #endif
         robots[i].action();
         // TESTOUTPUT(robots[i].outputTest();) 
     }

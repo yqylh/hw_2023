@@ -76,8 +76,13 @@ int lossTimeMoney = 0; // 当前每帧的金钱
 int gankType = 0; // gank 对面的类型
 bool inputFlag = true; // 是否input是否结束
 std::set<Vector2D> FoeBlockPos; // 对面的阻挡点
+std::vector<int> gankFoeWT; // gank 对面的工作台
 #ifdef EBUG
+#ifndef HACK
     std::ofstream fout("output.txt"); // 测试用输出
+#else
+    std::ofstream fout("outputHACK.txt"); // 测试用输出
+#endif
     void quit() {
         fout << "lossCollMoney: " << lossCollMoney << std::endl;
         fout << "lossTimeMoney: " << lossTimeMoney << std::endl;

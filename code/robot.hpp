@@ -45,6 +45,12 @@ struct Robot{
     double lasers[360]; // 机器人的激光雷达
     int runTime; // 机器人的运行时间
     bool isGanking; // 机器人是否正在干扰
+    bool isGankRobot = false; // 攻击机器人
+    int patrolNum = 0; // 巡逻到几号工作台了
+    Vector2D gankPoint; // 干扰点
+    std::vector<std::vector<double>> visibleRobotPoint;
+    std::vector<std::vector<double>> visibleRobotVelocity;
+    std::vector<int> visibleRobotCarry;
     bool willDestroy;
     Robot() {
         this->id = -1;
@@ -63,6 +69,7 @@ struct Robot{
         runTime = 0;
         isGanking = false;
         willDestroy = false;
+        gankPoint = Vector2D(0, 0);
     }
     Robot(int id, double x, double y) {
         this->id = id;
@@ -81,6 +88,7 @@ struct Robot{
         runTime = 0;
         isGanking = false;
         willDestroy = false;
+        gankPoint = Vector2D(0, 0);
     }
     void checkCanBuy() {
         if (bringId != 0) {
@@ -191,6 +199,7 @@ struct Robot{
             pathPoints.push_back(Vector2D(worktables[1].x, worktables[1].y));
         }
         while (pathPoints.size() > 0 && (Vector2D(x, y) - pathPoints[0]).length() < 0.4) {
+            if (isGanking && pathPoints.size() == 1) break;
             pathPoints.erase(pathPoints.begin());
         }
         if (pathPoints.size() == 0) {
@@ -257,24 +266,26 @@ struct Robot{
             // 如果度数大于90°, 就先倒退转过去
             speed = -0.65;
         }
-        if (RoB == RED) {
-            if (Vector2D(vec2[0], vec2[1]).length() < (bringId != 0 ? 1.6 : 1.1) && speed > 0) {
-                speed = Vector2D(vec2[0], vec2[1]).length() / (bringId != 0 ? 1.6 : 1.1) * MAX_SPEED;
-                if (bringId != 0 && crashCoef > 0.92) { // 最多碰撞到 0.88
-                    if (speed < 1) 
-                        speed = 1;
-                } else {
-                    if (speed < 3) 
-                        speed = 3;
+        if(isGanking == false) {
+            if (RoB == RED) {
+                if (Vector2D(vec2[0], vec2[1]).length() < (bringId != 0 ? 1.6 : 1.1) && speed > 0) {
+                    speed = Vector2D(vec2[0], vec2[1]).length() / (bringId != 0 ? 1.6 : 1.1) * MAX_SPEED;
+                    if (bringId != 0 && crashCoef > 0.92) { // 最多碰撞到 0.88
+                        if (speed < 1) 
+                            speed = 1;
+                    } else {
+                        if (speed < 3) 
+                            speed = 3;
+                    }
                 }
-            }
-        } else {
-            if (Vector2D(vec2[0], vec2[1]).length() < (bringId == 0 ? 1.4 : 1.1) && speed > 0) {
-                speed = Vector2D(vec2[0], vec2[1]).length() / 1.1 * MAX_SPEED;
-                if (bringId != 0 && crashCoef > 0.85) { // 最多碰撞到 0.8
-                    if (speed < 1) speed = 1;
-                } else {
-                    if (speed < 3) speed = 3;
+            } else {
+                if (Vector2D(vec2[0], vec2[1]).length() < (bringId == 0 ? 1.4 : 1.1) && speed > 0) {
+                    speed = Vector2D(vec2[0], vec2[1]).length() / 1.1 * MAX_SPEED;
+                    if (bringId != 0 && crashCoef > 0.85) { // 最多碰撞到 0.8
+                        if (speed < 1) speed = 1;
+                    } else {
+                        if (speed < 3) speed = 3;
+                    }
                 }
             }
         }
@@ -952,7 +963,7 @@ struct Robot{
         worktables[worktableTogo].x = point.x;
         worktables[worktableTogo].y = point.y;
         // 还没到
-        if ((Vector2D(x, y)-point).length() > 0.3) {
+        if ((Vector2D(x, y)-point).length() > 0.4) {
             // 路径正确,检查是否死锁
             if (pathPoints.size() > 0 && pathPoints.back() == point) {
                 checkDead();
@@ -960,11 +971,9 @@ struct Robot{
                 // 路径空的或者路径错误,重新规划
                 pathPoints = movePath();
             }
-            isGanking = false;
         } else {
             // 到了
             pathPoints.push_back(point);
-            isGanking = true;
         }
     }
     void moveToFoeWT(int wtId) {
