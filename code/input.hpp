@@ -852,6 +852,9 @@ void solveFrame() {
     }
     for (int i = 0; i <= robotNum; i++) {
         if (robots[i].isGankRobot) {
+            { // 撤销
+                for (auto pos = FoeBlockPos.begin(); pos != FoeBlockPos.end(); pos++)  grids[*pos]->type = 0;
+            }
             robots[i].gankPoint = Vector2D(0,0);
             // 激光雷达识别到了一个地方机器人
             if (flag2) {
@@ -936,6 +939,9 @@ void solveFrame() {
                 TESTOUTPUT(fout << "robot " << i << " on" << robots[i].x << "," << robots[i].y  << " is going to " << togo.x << "," << togo.y << " length=" << (Vector2D(robots[i].x, robots[i].y)-togo).length() << std::endl;)
                 robots[i].moveToPoint(togo);
                 robots[i].isGanking = false;
+            }
+            { // 撤销
+                for (auto pos = FoeBlockPos.begin(); pos != FoeBlockPos.end(); pos++)  grids[*pos]->type = 1;
             }
             continue;
         }
