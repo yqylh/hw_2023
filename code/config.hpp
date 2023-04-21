@@ -75,6 +75,7 @@ int lossCollMoney = 0; // 当前损失的金钱
 int lossTimeMoney = 0; // 当前每帧的金钱
 int gankType = 0; // gank 对面的类型
 bool inputFlag = true; // 是否input是否结束
+bool flag2 = true;
 std::set<Vector2D> FoeBlockPos; // 对面的阻挡点
 std::vector<int> gankFoeWT; // gank 对面的工作台
 #ifdef EBUG

@@ -15,7 +15,9 @@ std::ofstream radarOutput("radarOutput.txt");
 #endif
 
 #define EQUAL(x, y, eps) (fabs(x - y) < eps)
-
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 class TVector {
 public:
     double x, y;
