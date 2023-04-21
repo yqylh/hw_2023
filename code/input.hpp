@@ -872,6 +872,10 @@ void solveFrame() {
                         if ((Vector2D(robots[i].x, robots[i].y) - Vector2D(robotFoe[0], robotFoe[1])).length() > 7.5) {
                             continue;
                         }
+                        // 站着不动
+                        if (Vector2D(robots[i].visibleRobotVelocity[foeIndex][0], robots[i].visibleRobotVelocity[foeIndex][1]).length() * 50 < 0.1 && (Vector2D(robots[i].visibleRobotPoint[foeIndex][0], robots[i].visibleRobotPoint[foeIndex][1]) - Vector2D(robots[i].x, robots[i].y)).length() > 1.5) {
+                            continue;
+                        }
                         robots[i].gankPoint = Vector2D(robotFoe[0] + robots[i].visibleRobotVelocity[foeIndex][0], robotFoe[1] + robots[i].visibleRobotVelocity[foeIndex][1]);
                         robots[i].gankPoint.x = int(robots[i].gankPoint.x / 0.5) * 0.5 + 0.25;
                         robots[i].gankPoint.y = int(robots[i].gankPoint.y / 0.5) * 0.5 + 0.25;
@@ -890,6 +894,10 @@ void solveFrame() {
                     });
                     for (auto & foeIndex : robotFoeIndex) {
                         auto & robotFoe = enemyRobotPointAll[foeIndex];
+                        // 站着不动
+                        if (Vector2D(enemyRobotVelocityAll[foeIndex][0], enemyRobotVelocityAll[foeIndex][1]).length() * 50 < 0.1 && (Vector2D(enemyRobotPointAll[foeIndex][0], enemyRobotPointAll[foeIndex][1]) - Vector2D(robots[i].x, robots[i].y)).length() > 1.5) {
+                            continue;
+                        }
                         // 检查是否有人在攻击
                         bool isAttacking = false;
                         for (int j = 0; j < i; j++) {
