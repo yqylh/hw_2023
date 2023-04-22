@@ -780,11 +780,15 @@ std::vector<std::pair<int, int>> getRobotPriority() {
     for (int i = 0; i <= robotNum; i++) {
         auto gotoTable = robots[i].worktableTogo;
         if (gotoTable <= 0) {
-            robotPriority.push_back(std::make_pair(i, 0));
+            robotPriority.push_back(std::make_pair(i, 7));
+            continue;
+        }
+        if (gotoTable > worktableNum) {
+            robotPriority.push_back(std::make_pair(i, 7));
             continue;
         }
         if (robots[i].path == nullptr) {
-            robotPriority.push_back(std::make_pair(i, 0));
+            robotPriority.push_back(std::make_pair(i, 7));
             continue;
         }
         auto type = worktables[gotoTable].type;
