@@ -22,7 +22,7 @@ struct Grid {
     }
     void solveEndTime(int nowTime) {
         if (nowTime - foeEndTime > 500) foeTime = 1;
-        if (foeTime > 250) foeTime = 250;
+        if (foeTime > 100) foeTime = 100;
         foeEndTime = nowTime;
         foeEndTime += (foeTime / 5 + 2) * 5;
         TESTOUTPUT(fout << "(" << index.x << "," << index.y << ") " << "foeEndTime: " << foeEndTime << std::endl;)

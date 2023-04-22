@@ -949,6 +949,7 @@ void solveFrame() {
         robots[i].action();
         // TESTOUTPUT(robots[i].outputTest();) 
     }
+    TESTOUTPUT(fout << "碰撞检测" << std::endl;)
     auto robotPriority = getRobotPriority();
     for (int robot2 = 1; robot2 <= robotNum; robot2++) {
         std::set<Vector2D> *robot1PathPoints = new std::set<Vector2D>();
@@ -959,6 +960,7 @@ void solveFrame() {
             DetecteCollision(robotPriority[robot1].first, robotPriority[robot2].first, robot1PathPoints, robot1Points);
         }
     }
+    TESTOUTPUT(fout << "开始移动" << std::endl;)
     for (int i = 0; i <= robotNum; i++) {
         robots[i].Move();
     }
