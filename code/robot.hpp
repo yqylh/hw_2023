@@ -1008,8 +1008,8 @@ std::map<Vector2D, double> *getPathLabel(std::vector<Vector2D> path, int id) {
 
 void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPointsAll, std::set<Vector2D> *robot1PointsAll){
     if (robots[robot1].worktableTogo == -1 || robots[robot2].worktableTogo == -1) return;
-    // if (robots[robot1].pathPoints.size() != 0 && robots[robot1].pathPoints[0] == Vector2D(0,0)) return;
-    // if (robots[robot2].pathPoints.size() != 0 && robots[robot2].pathPoints[0] == Vector2D(0,0)) return;
+    if (robots[robot1].pathPoints.size() != 0 && robots[robot1].pathPoints[0] == Vector2D(0,0)) return;
+    if (robots[robot2].pathPoints.size() != 0 && robots[robot2].pathPoints[0] == Vector2D(0,0)) return;
     if ((Vector2D(robots[robot1].x, robots[robot1].y) - Vector2D(robots[robot2].x, robots[robot2].y)).length() > TOL_Collision) return;
     // 如果两个机器人卡死了
     bool isRobotStop = false;
