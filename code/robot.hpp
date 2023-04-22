@@ -166,19 +166,19 @@ struct Robot{
         if (worktableId != path->buyWorktableId) return; // 机器人不在预想工作台附近
         // 机器人正在工作台附近
         if (worktables[worktableId].output == true && money >= buyMoneyMap[createMap[worktables[worktableId].type]]) {
-            // 如果买了卖不出去
-            {
-                // 如果因为碰撞到了这里发现买了卖不出去了
-                // 就直接去下个点吧,只不过不买
-                double goSellTime = WTtoWTwithItem[path->buyWorktableId][path->sellWorktableId];
-                goSellTime = goSellTime * 0.65 / (MAX_SPEED * 0.9 / 50);
-                if (goSellTime + nowTime > MAX_TIME) {
-                    worktables[worktableId].someWillBuy--;
-                    worktableTogo = path->sellWorktableId;
-                    pathPoints = movePath();
-                    return;
-                }
-            }
+            // // 如果买了卖不出去
+            // {
+            //     // 如果因为碰撞到了这里发现买了卖不出去了
+            //     // 就直接去下个点吧,只不过不买
+            //     double goSellTime = WTtoWTwithItem[path->buyWorktableId][path->sellWorktableId];
+            //     goSellTime = goSellTime * 0.65 / (MAX_SPEED * 0.9 / 50);
+            //     if (goSellTime + nowTime > MAX_TIME) {
+            //         worktables[worktableId].someWillBuy--;
+            //         worktableTogo = path->sellWorktableId;
+            //         pathPoints = movePath();
+            //         return;
+            //     }
+            // }
             TESTOUTPUT(fout << "buy " << id << std::endl;)
             printf("buy %d\n", id);
             bringId = createMap[worktables[worktableId].type];
