@@ -332,8 +332,8 @@ void solveRobotToWorktable(){
 }
 int couldReachZero = 0;
 void solveMapNum() {
-    int numWT[MAX_Worktable_Type_Num] = {0};
-    int numWTFoe[MAX_Worktable_Type_Num] = {0};
+    int numWT[MAX_Worktable_Type_Num + 1] = {0};
+    int numWTFoe[MAX_Worktable_Type_Num + 1] = {0};
     for (int i = 0; i <= worktableNum; i++) {
         numWT[worktables[i].type]++;
     }
@@ -348,7 +348,10 @@ void solveMapNum() {
     // 有可能图四红方
     if (couldReachZero == 0 && worktableNumFoe > 0) {
         // 可怜的三号
-        robots[3].isGankRobot = true;
+        if (numWT[9] < 3) {
+            robots[2].isGankRobot = true;
+            robots[3].isGankRobot = true;
+        }
     }
     if (couldReachZero == 1) {
         // 1:3的情况
@@ -468,24 +471,19 @@ void checkDestory(int id) {
 void delayDestroy(int id) {
     robots[id].willDestroy = true;
 }
-void solveWTblocked() {
+void solveWTblocked(std::vector<std::vector<double>> enemyWT) {
     std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
     for (int i = 0; i <= worktableNum; i++) {
-        worktables[i].blocked = grids[Vector2D(worktables[i].x, worktables[i].y)]->type;
-        if (worktables[i].blocked == false) {
-            double blockedNum = 0;
-            std::vector<Vector2D> obstacles;
+        worktables[i].blocked = false;
+        for (auto & point : enemyWT) {
+            double nowx = int(point[0] / 0.5) * 0.5 + 0.25;
+            double nowy = int(point[1] / 0.5) * 0.5 + 0.25;
             for (auto & add : adds) {
-                Vector2D index = Vector2D(worktables[i].x, worktables[i].y) + Vector2D(add.first, add.second);
-                if (grids.find(index) != grids.end()) {
-                    if (grids[index]->type == 1) {
-                        blockedNum++;
-                        obstacles.emplace_back(index);
-                    }
+                if (Vector2D(point[0] + add.first, point[1] + add.second) == Vector2D(worktables[i].x, worktables[i].y)) {
+                    worktables[i].blocked = true;
+                    break;
                 }
             }
-            if (blockedNum > 2) worktables[i].blocked = true;
-            if (blockedNum == 2 && (obstacles[0] - obstacles[1]).length() > 0.5) worktables[i].blocked = true;
         }
         if (worktables[i].blocked == false) continue;
         TESTOUTPUT(fout << "there" << std::endl;)
@@ -558,6 +556,7 @@ void solveFoeRobotPosition(std::vector<std::vector<double>> enemyRobotPoint, std
             pos++;
         }
     }
+    std::vector<std::vector<double>> enemyWT;
     // 删除靠墙的虚假机器人
     std::vector<std::vector<double>> enemyRobotPoint2;
     int index = -1;
@@ -565,6 +564,9 @@ void solveFoeRobotPosition(std::vector<std::vector<double>> enemyRobotPoint, std
     TESTOUTPUT(fout << "enemyRobotVelocity.size() = " << enemyRobotVelocity.size() << std::endl;)
     for (auto & point : enemyRobotPoint) {
         index++;
+        if (Vector2D(enemyRobotVelocity[index][0], enemyRobotVelocity[index][1]).length() * 50 < 1) {
+            enemyWT.push_back(point);
+        }
         if (Vector2D(enemyRobotVelocity[index][0], enemyRobotVelocity[index][1]).length() * 50 > 3) continue;
         if (point[0] < 0.5 || point[0] > 49.5 || point[1] < 0.5 || point[1] > 49.5) continue;
         enemyRobotPoint2.push_back(point);
@@ -584,7 +586,7 @@ void solveFoeRobotPosition(std::vector<std::vector<double>> enemyRobotPoint, std
             }
         }
     }
-    solveWTblocked();
+    solveWTblocked(enemyWT);
 }
 
 bool isSameRobot(const double & x1, const double & y1, const double & x2, const double & y2) {
