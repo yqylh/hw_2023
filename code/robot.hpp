@@ -48,6 +48,7 @@ struct Robot{
     bool isGankRobot = false; // 攻击机器人
     int patrolNum = 0; // 巡逻到几号工作台了
     Vector2D gankPoint; // 干扰点
+    bool haveBeenGanked = false; // 是否被干扰
     std::vector<std::vector<double>> visibleRobotPoint;
     std::vector<std::vector<double>> visibleRobotVelocity;
     std::vector<int> visibleRobotCarry;
@@ -289,6 +290,7 @@ struct Robot{
                 }
             }
         }
+        if (haveBeenGanked) speed = MAX_SPEED;
         TESTOUTPUT(fout << "forward " << id << " " << speed << std::endl;)
         printf("forward %d %lf\n", id, speed);
         /*
@@ -304,6 +306,7 @@ struct Robot{
                 rotate = rotate / absRotate * M_PI;
             }
         }
+        if (haveBeenGanked) rotate = M_PI;
         TESTOUTPUT(fout << "rotate " << id << " " << rotate << std::endl;)
         printf("rotate %d %lf\n", id, rotate);
     }
@@ -1005,6 +1008,8 @@ std::map<Vector2D, double> *getPathLabel(std::vector<Vector2D> path, int id) {
 
 void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPointsAll, std::set<Vector2D> *robot1PointsAll){
     if (robots[robot1].worktableTogo == -1 || robots[robot2].worktableTogo == -1) return;
+    // if (robots[robot1].pathPoints.size() != 0 && robots[robot1].pathPoints[0] == Vector2D(0,0)) return;
+    // if (robots[robot2].pathPoints.size() != 0 && robots[robot2].pathPoints[0] == Vector2D(0,0)) return;
     if ((Vector2D(robots[robot1].x, robots[robot1].y) - Vector2D(robots[robot2].x, robots[robot2].y)).length() > TOL_Collision) return;
     // 如果两个机器人卡死了
     bool isRobotStop = false;
@@ -1167,6 +1172,11 @@ void Robot::checkDead(){
         if (nowTime % 100 == id * 10) {
             pathPoints = movePath();
         }
+    }
+    if (pathPoints.size() != 0 && pathPoints[0] == Vector2D(0,0)) {
+        haveBeenGanked = true;
+    } else {
+        haveBeenGanked = false;
     }
 }
 
