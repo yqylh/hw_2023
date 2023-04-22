@@ -410,7 +410,7 @@ struct Robot{
                 if (goSellTime > 1e6) continue;
                 goSellTime = goSellTime * 0.65 / (MAX_SPEED * 0.9 / 50);
                 double sumTime = std::max(goBuyTime, waitBuyTime) + goSellTime;
-                if (sumTime + 50 + nowTime > MAX_TIME) continue;
+                if (sumTime + 75 + nowTime > MAX_TIME) continue;
                 // 时间损失
                 double timeLoss;
                 if (sumTime >= 9000) {
