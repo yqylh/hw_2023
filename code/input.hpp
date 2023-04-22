@@ -349,8 +349,12 @@ void solveMapNum() {
     if (couldReachZero == 0 && worktableNumFoe > 0) {
         // 可怜的三号
         if (numWT[9] < 3) {
-            robots[2].isGankRobot = true;
-            robots[3].isGankRobot = true;
+            if (RoB == RED) {
+                robots[3].isGankRobot = true;
+            } else {
+                robots[2].isGankRobot = true;
+                robots[3].isGankRobot = true;
+            }
         }
     }
     if (couldReachZero == 1) {

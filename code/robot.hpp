@@ -1173,7 +1173,7 @@ void Robot::checkDead(){
             pathPoints = movePath();
         }
     }
-    if (pathPoints.size() != 0 && pathPoints[0] == Vector2D(0,0)) {
+    if (pathPoints.size() != 0 && pathPoints[0] == Vector2D(0,0) && Vector2D(linearSpeedX,linearSpeedY).length() < 1) {
         haveBeenGanked = true;
     } else {
         haveBeenGanked = false;
