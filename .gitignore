@@ -4,8 +4,8 @@ judge-1/
 judge-初赛/
 upload/*
 
-*.txt
 *.zip
+*.rar
 .DS_Store
 .VSCodeCounter
 oldFileLog
