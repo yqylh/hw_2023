@@ -22,7 +22,7 @@ createMap.py 是一个自动随机地图生成器,适合随机一些地图然后
 
 ## 主要思路
 
-大部分的思路和小 track 都记录在 https://yqylh.notion.site/2023-04c704bdecdc4862810668c64ebd9017中
+大部分的思路和小 track 都记录在 [NotionLink](https://yqylh.notion.site/2023-14ed9cecfea04a179d557eb3e2da4bcd)  中, 所有commitLog里也写的比较详细，下面只是做一个简单的介绍
 
 ### main
 
