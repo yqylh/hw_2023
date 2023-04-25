@@ -1,11 +1,7 @@
 # 华为软件精英挑战赛2023 年年旅游嘎嘎开心团队 代码开源
-华为软件精英挑战赛 2023
+华为软件精英挑战赛 2023  年年旅游嘎嘎开心团队 代码
 
-年年旅游嘎嘎开心团队 代码
-
-比赛成绩: 江山赛区第一, 总决赛战绩1-2(现场赛名次不好,匹配的对手太强了)
-
-大部分的思路和小 track 都记录在 [NotionLink](https://yqylh.notion.site/2023-14ed9cecfea04a179d557eb3e2da4bcd)  中, 所有commitLog里也写的比较详细，下面只是做一个简单的介绍
+比赛成绩: 江山赛区第一, 总决赛战绩1-2(现场赛刚开始有 bug，名次不好，双败赛制匹配的对手太强了)
 
 
 
@@ -22,7 +18,7 @@ createMap.py 是一个自动随机地图生成器,适合随机一些地图然后
 
 ## 主要思路
 
-大部分的思路和小 track 都记录在 [NotionLink](https://yqylh.notion.site/2023-14ed9cecfea04a179d557eb3e2da4bcd)  中, 所有commitLog里也写的比较详细，下面只是做一个简单的介绍
+大部分的思路和小 tracks 都记录在 [NotionLink](https://yqylh.notion.site/2023-14ed9cecfea04a179d557eb3e2da4bcd)  中, 所有commitLog里也写的比较详细，下面只是做一个简单的介绍
 
 ### main
 
