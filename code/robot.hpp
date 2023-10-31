@@ -1156,7 +1156,58 @@ void DetecteCollision(int robot1, int robot2, std::set<Vector2D> *robot1PathPoin
     }
 }
 
-
+void checkDestory(int id) {
+    if (robots[id].willDestroy == true) {
+        robots[id].willDestroy = false;
+        printf("destroy %d\n", id);
+        TESTOUTPUT(fout << "destroy " << id << std::endl;)
+    }
+}
+void delayDestroy(int id) {
+    robots[id].willDestroy = true;
+}
+void refindsell(int wtId, int id) {
+    int newWorktable = -1;
+    auto productId = robots[id].bringId;
+    // 找一个新的工作台去卖
+    for (auto & couldReachItem : robots[id].couldReach) {
+        auto & sell = worktables[couldReachItem];
+        if (sell.blocked == true) continue;
+        // 确保这个工作台支持买,而且输入口是空的
+        if (sellSet.find(std::make_pair(productId, sell.type)) == sellSet.end() || sell.inputId[productId] == 1) continue;
+        // 确保不是墙角
+        if (sell.isNearCorner) continue;
+        /**
+         * 确保没人预约卖
+         * 或者类型是8 || 9
+        */
+        if (sell.someWillSell[productId] == 0 
+            // 4 5 6有人预约卖,但是缺的这一个卖完就可以再卖
+            || (sell.someWillSell[productId] == 1 && sell.waitPriority == 4 && (sell.type == 4 || sell.type == 5 || sell.type == 6) 
+                && (sell.output == false || sell.remainTime == -1))
+            // 7有人预约卖,但是缺的这一个卖完就可以再卖
+            || (sell.someWillSell[productId] == 1 && sell.waitPriority == 5 && (sell.type == 7)
+                && (sell.output == false || sell.remainTime == -1)) 
+            // 8 9 直接卖
+            || sell.type == 8 || sell.type == 9) {} else continue;      
+        newWorktable = couldReachItem;
+        break;        
+    }
+    if (newWorktable != -1) {
+        robots[id].worktableTogo = newWorktable;
+        robots[id].path->sellWorktableId = newWorktable;
+        worktables[wtId].someWillSell[productId]--;
+        worktables[newWorktable].someWillSell[productId]++;
+        robots[id].pathPoints = robots[id].movePath();
+        return;
+    }
+    // 找不到则销毁 重新规划路径
+    delayDestroy(id);
+    robots[id].path = nullptr;
+    robots[id].bringId = 0;
+    worktables[wtId].someWillSell[robots[id].bringId]--;
+    robots[id].worktableTogo = -1;
+}
 void Robot::checkDead(){
     if (std::abs(Vector2D(linearSpeedX,linearSpeedY).length()) < 0.0001) {
         zeroTime++;
@@ -1171,6 +1222,9 @@ void Robot::checkDead(){
     if (zeroTime == 0) {
         if (nowTime % 100 == id * 10) {
             pathPoints = movePath();
+            // if (worktableTogo == path->sellWorktableId && pathPoints.size() <= 2) {
+            //     refindsell(worktableTogo, id);
+            // }
         }
     }
     if (pathPoints.size() != 0 && pathPoints[0] == Vector2D(0,0) && Vector2D(linearSpeedX,linearSpeedY).length() < 1) {

@@ -16,32 +16,66 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
+#include <unordered_map>
 
 void solveGraph() {
-    std::vector<std::pair<int, double> > near7;
+    std::unordered_map<int, double> buyDis456, buySellDis456, buySellDis7;
     for (auto & i : worktables) {
-        if (i.type == 7) {
-            double dis = 1e8;
+        if (i.type == 4 || i.type == 5 || i.type == 6) {
+            double dis9 = 1e8;
+            double dis1 = 1e8;
+            double dis2 = 1e8;
+            double dis3 = 1e8;
             for (auto & j : worktables) {
-                if (j.type == 8 || j.type == 9) {
-                    dis = std::min(dis, WTtoWTwithItem[i.id][j.id]);
+                if (j.type == 9 || j.type == 7) {
+                    dis9 = std::min(dis9, WTtoWTwithItem[i.id][j.id]);
+                }
+                if (j.type == 1) {
+                    dis1 = std::min(dis1, WTtoWTwithItem[i.id][j.id]);
+                }
+                if (j.type == 2) {
+                    dis2 = std::min(dis2, WTtoWTwithItem[i.id][j.id]);
+                }
+                if (j.type == 3) {
+                    dis3 = std::min(dis3, WTtoWTwithItem[i.id][j.id]);
                 }
             }
-            near7.push_back(std::make_pair(i.id, dis));
+            double dis = 0;
+            if (i.type == 4) dis = dis1 + dis2;
+            if (i.type == 5) dis = dis1 + dis3;
+            if (i.type == 6) dis = dis2 + dis3;
+            buyDis456.insert(std::make_pair(i.id, dis));
+            buySellDis456.insert(std::make_pair(i.id, dis + dis9));
         }
     }
-    if (near7.size() == 0) {
-        // 没有7号工作台
-        for (auto & i : worktables) {
-            if (i.type == 4 || i.type == 5 || i.type == 6) {
-                double dis = 1e8;
-                for (auto & j : worktables) {
-                    if (j.type == 9) {
-                        dis = std::min(dis, WTtoWTwithItem[i.id][j.id]);
-                    }
+    for (auto & i : worktables) {
+        if (i.type == 7) {
+            double dis8 = 1e8;
+            double dis4 = 1e8;
+            double dis5 = 1e8;
+            double dis6 = 1e8;
+            for (auto & j : worktables) {
+                if (j.type == 8 || j.type == 9) {
+                    dis8 = std::min(dis8, WTtoWTwithItem[i.id][j.id]);
                 }
-                near7.push_back(std::make_pair(i.id, dis));
+                if (j.type == 4) {
+                    dis4 = std::min(dis4, WTtoWTwithItem[i.id][j.id] + buyDis456[j.id]);
+                }
+                if (j.type == 5) {
+                    dis5 = std::min(dis5, WTtoWTwithItem[i.id][j.id] + buyDis456[j.id]);
+                }
+                if (j.type == 6) {
+                    dis6 = std::min(dis6, WTtoWTwithItem[i.id][j.id] + buyDis456[j.id]);
+                }
             }
+            buySellDis7.insert(std::make_pair(i.id, dis8 + dis4 + dis5 + dis6));
+        }
+    }
+    if (buySellDis7.size() == 0) {
+        // 没有7号工作台
+        std::vector<std::pair<int, double> > near7;
+        for (auto &_ : buySellDis456) {
+            near7.push_back(std::make_pair(_.first, _.second));
         }
         std::sort(near7.begin(), near7.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
             return a.second < b.second;
@@ -91,6 +125,10 @@ void solveGraph() {
         // for (int id = worktableNum - 15 + 1; id <= worktableNum; id++) worktables[id].near7 = 0.01;
         return;
     }
+    std::vector<std::pair<int, double> > near7;
+    for (auto &_ : buySellDis7) {
+        near7.push_back(std::make_pair(_.first, _.second));
+    }
     // 有7号工作台  
     std::sort(near7.begin(), near7.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
         return a.second < b.second;
@@ -101,22 +139,22 @@ void solveGraph() {
         if (index++ < near7.size() / 2 || near7.size() == 1) {
             worktables[id7].near7 = 4;
         } else {
-            break;
+            worktables[id7].near7 = 0.5;
+            continue;
         }
-        // worktables[id7].near7 = 4;
         std::vector<std::pair<int, double> > near4, near5, near6;
         for (auto & i : worktables) {
             if (i.type == 4 && EQUAL(i.near7, 1, 1e-3)) {
                 double dis = WTtoWTwithItem[i.id][id7];
-                near4.push_back(std::make_pair(i.id, dis));
+                near4.push_back(std::make_pair(i.id, dis + buyDis456[i.id]));
             }
             if (i.type == 5 && EQUAL(i.near7, 1, 1e-3)) {
                 double dis = WTtoWTwithItem[i.id][id7];
-                near5.push_back(std::make_pair(i.id, dis));
+                near5.push_back(std::make_pair(i.id, dis + buyDis456[i.id]));
             }
             if (i.type == 6 && EQUAL(i.near7, 1, 1e-3)) {
                 double dis = WTtoWTwithItem[i.id][id7];
-                near6.push_back(std::make_pair(i.id, dis));
+                near6.push_back(std::make_pair(i.id, dis + buyDis456[i.id]));
             }
         }
         std::sort(near4.begin(), near4.end(), [](const std::pair<int, double> & a, const std::pair<int, double> & b) {
@@ -130,15 +168,15 @@ void solveGraph() {
         }); // 按照距离排序
         TESTOUTPUT(fout << "near with id=" << id7 << " is ";)
         if (near4.size() >= 1 ) {
-            worktables[near4[0].first].near7 = 2;
+            worktables[near4[0].first].near7 = 3;
             TESTOUTPUT(fout << near4[0].first << " ";)
         }
         if (near5.size() >= 1) {
-            worktables[near5[0].first].near7 = 2;
+            worktables[near5[0].first].near7 = 3;
             TESTOUTPUT(fout << near5[0].first << " ";)
         }
         if (near6.size() >= 1) {
-            worktables[near6[0].first].near7 = 2;
+            worktables[near6[0].first].near7 = 3;
             TESTOUTPUT(fout << near6[0].first << " ";)
         }
         TESTOUTPUT(fout << std::endl;)
@@ -346,31 +384,31 @@ void solveMapNum() {
         }
     }
     // 有可能图四红方
-    if (couldReachZero == 0 && worktableNumFoe > 0) {
+    // if (couldReachZero == 0 && worktableNumFoe > 0) {
         // 可怜的三号
-        if (numWT[9] < 3) {
-            if (RoB == RED) {
+        // if (numWT[9] < 3) {
+            // if (RoB == RED) {
                 robots[3].isGankRobot = true;
-            } else {
-                robots[2].isGankRobot = true;
-                robots[3].isGankRobot = true;
-            }
-        }
-    }
-    if (couldReachZero == 1) {
-        // 1:3的情况
-        for (int i = 0; i <= robotNum; i++) {
-            if (robots[i].couldReach.size() == 0) {
-                robots[i].isGankRobot = true;
-            }
-        }
-        flag2 = true;
-    }
-    if (couldReachZero == 4) {
-        for (int i = 0; i <= robotNum; i++) {
-            robots[i].isGankRobot = true;
-        }
-    }
+            // } else {
+            //     robots[2].isGankRobot = true;
+            //     robots[3].isGankRobot = true;
+            // }
+        // }
+    // }
+    // if (couldReachZero == 1) {
+    //     // 1:3的情况
+    //     for (int i = 0; i <= robotNum; i++) {
+    //         if (robots[i].couldReach.size() == 0) {
+    //             robots[i].isGankRobot = true;
+    //         }
+    //     }
+    //     flag2 = true;
+    // }
+    // if (couldReachZero == 4) {
+    //     for (int i = 0; i <= robotNum; i++) {
+    //         robots[i].isGankRobot = true;
+    //     }
+    // }
     if (couldReachZero == 0) couldReachZero++;
     for (int i = 0; i <= worktableNumFoe; i++) {
         if (worktablesFoe[i].type > 3 && worktablesFoe[i].type < 8) {
@@ -465,16 +503,7 @@ void inputMap(){
     fflush(stdout);
 }
 
-void checkDestory(int id) {
-    if (robots[id].willDestroy == true) {
-        robots[id].willDestroy = false;
-        printf("destroy %d\n", id);
-        TESTOUTPUT(fout << "destroy " << id << std::endl;)
-    }
-}
-void delayDestroy(int id) {
-    robots[id].willDestroy = true;
-}
+
 void solveWTblocked(std::vector<std::vector<double>> enemyWT) {
     std::vector<std::pair<double, double>> adds = {{0, 0.5}, {0.5, 0}, {0, -0.5}, {-0.5, 0}, {0.5, 0.5}, {-0.5, 0.5}, {0.5, -0.5}, {-0.5, -0.5}, {0, 0}};
     for (int i = 0; i <= worktableNum; i++) {
@@ -497,46 +526,7 @@ void solveWTblocked(std::vector<std::vector<double>> enemyWT) {
             if (robots[j].path->sellWorktableId == robots[j].worktableTogo) {
                 // 卖给的是这个工作台
                 if (robots[j].worktableTogo == i) {
-                    int newWorktable = -1;
-                    auto productId = robots[j].bringId;
-                    // 找一个新的工作台去卖
-                    for (auto & couldReachItem : robots[j].couldReach) {
-                        auto & sell = worktables[couldReachItem];
-                        if (sell.blocked == true) continue;
-                        // 确保这个工作台支持买,而且输入口是空的
-                        if (sellSet.find(std::make_pair(productId, sell.type)) == sellSet.end() || sell.inputId[productId] == 1) continue;
-                        // 确保不是墙角
-                        if (sell.isNearCorner) continue;
-                        /**
-                         * 确保没人预约卖
-                         * 或者类型是8 || 9
-                        */
-                        if (sell.someWillSell[productId] == 0 
-                            // 4 5 6有人预约卖,但是缺的这一个卖完就可以再卖
-                            || (sell.someWillSell[productId] == 1 && sell.waitPriority == 4 && (sell.type == 4 || sell.type == 5 || sell.type == 6) 
-                                && (sell.output == false || sell.remainTime == -1))
-                            // 7有人预约卖,但是缺的这一个卖完就可以再卖
-                            || (sell.someWillSell[productId] == 1 && sell.waitPriority == 5 && (sell.type == 7)
-                                && (sell.output == false || sell.remainTime == -1)) 
-                            // 8 9 直接卖
-                            || sell.type == 8 || sell.type == 9) {} else continue;      
-                        newWorktable = couldReachItem;
-                        break;        
-                    }
-                    if (newWorktable != -1) {
-                        robots[j].worktableTogo = newWorktable;
-                        robots[j].path->sellWorktableId = newWorktable;
-                        worktables[i].someWillSell[productId]--;
-                        worktables[newWorktable].someWillSell[productId]++;
-                        robots[j].pathPoints = robots[j].movePath();
-                        continue;
-                    }
-                    // 找不到则销毁 重新规划路径
-                    delayDestroy(j);
-                    robots[j].path = nullptr;
-                    robots[j].bringId = 0;
-                    worktables[i].someWillSell[robots[j].bringId]--;
-                    robots[j].worktableTogo = -1;
+                    refindsell(i, j);
                 }
             }
             // 正在去买 也就是 还没买
@@ -878,7 +868,7 @@ void solveFrame() {
                     robotFoeIndex.clear();
                     for (int j = 0; j < robots[i].visibleRobotPoint.size(); j++) robotFoeIndex.push_back(j);
                     std::sort(robotFoeIndex.begin(), robotFoeIndex.end(), [&](const int &a, const int &b) {
-                        return (Vector2D(robots[i].x, robots[i].y) - Vector2D(robots[i].visibleRobotPoint[a][0], robots[i].visibleRobotPoint[a][1])).length() - robots[i].visibleRobotCarry[a] < (Vector2D(robots[i].x, robots[i].y) - Vector2D(robots[i].visibleRobotPoint[b][0], robots[i].visibleRobotPoint[b][1])).length() - robots[i].visibleRobotCarry[b];
+                        return (Vector2D(robots[i].x, robots[i].y) - Vector2D(robots[i].visibleRobotPoint[a][0], robots[i].visibleRobotPoint[a][1])).length() < (Vector2D(robots[i].x, robots[i].y) - Vector2D(robots[i].visibleRobotPoint[b][0], robots[i].visibleRobotPoint[b][1])).length();
                     });
                     for (auto & foeIndex : robotFoeIndex) {
                         auto & robotFoe = robots[i].visibleRobotPoint[foeIndex];
@@ -896,6 +886,7 @@ void solveFrame() {
                         robots[i].moveToPoint(robots[i].gankPoint);
                         TESTOUTPUT(fout << "robot " << i << " gank " << robotFoe[0] << "," << robotFoe[1] << std::endl;)
                         robots[i].isGanking = true;
+                        break;
                     }
                 }
             } else {
